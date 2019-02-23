@@ -2,32 +2,15 @@
 % Please edit documentation in R/main.R
 \name{effective_second_moment_of_area}
 \alias{effective_second_moment_of_area}
-\title{critical_length_major_axis_Lcry (m)}
+\title{\eqn{I_{eff}} Effective second moment of area}
 \usage{
 effective_second_moment_of_area(h0, A)
 }
 \arguments{
-\item{x}{A description of the parameter 'x'. The
-description can span multiple lines.}
+\item{h0}{Distance between centroids of chords [m]}
 
-\item{y}{A description of the parameter 'y'.}
-}
-\value{
-Lcrz critical_length_major_axis_Lcrz [m]
+\item{A}{Cross-section area of strut [cm2]}
 }
 \description{
 This is the description.
-}
-\details{
-These are further details.
-}
-\section{A Custom Section}{
-
-
-Text accompanying the custom section.
-}
-
-\examples{
-add_numbers(1, 2) ## returns 3
-
 }

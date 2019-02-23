@@ -2,32 +2,20 @@
 % Please edit documentation in R/main.R
 \name{slenderness_reduction_factor}
 \alias{slenderness_reduction_factor}
-\title{critical_length_major_axis_Lcry (m)}
+\title{Calculate the slenderness reduction factor}
 \usage{
 slenderness_reduction_factor(alpha, lambda_bar)
 }
 \arguments{
-\item{x}{A description of the parameter 'x'. The
-description can span multiple lines.}
+\item{alpha}{- check 1: imperfection_factor_alpha_yy for rolled section [dimentionless]}
 
-\item{y}{A description of the parameter 'y'.}
+\item{lambda_bar, }{Relative slenderness [dimentionless]}
+
+\item{alpha}{- check 2 & 3: imperfection_factor_alpha_zz for rolled section [dimentionless]}
 }
 \value{
-Lcrz critical_length_major_axis_Lcrz [m]
+\eqn{X} Slenderness reduction factor [dimentionless]
 }
 \description{
 This is the description.
-}
-\details{
-These are further details.
-}
-\section{A Custom Section}{
-
-
-Text accompanying the custom section.
-}
-
-\examples{
-add_numbers(1, 2) ## returns 3
-
 }

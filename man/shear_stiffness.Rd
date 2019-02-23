@@ -7,10 +7,15 @@
 shear_stiffness(n = 2, Ad, Lch, E, ho)
 }
 \arguments{
-\item{x}{A description of the parameter 'x'. The
-description can span multiple lines.}
+\item{n}{Number of planes of lacing, default n=2}
 
-\item{y}{A description of the parameter 'y'.}
+\item{Ad}{Section area of diagonal (lacing), cm2}
+
+\item{Lch}{Length of chord of betwen restrains (lace points) [m]}
+
+\item{E}{Young modulus [\eqn{GPa} / \eqn{GN/m^2}]}
+
+\item{h0}{Distance between centroids of chords (m)}
 }
 \value{
 Lcrz critical_length_major_axis_Lcrz [m]
@@ -27,7 +32,3 @@ These are further details.
 Text accompanying the custom section.
 }
 
-\examples{
-add_numbers(1, 2) ## returns 3
-
-}

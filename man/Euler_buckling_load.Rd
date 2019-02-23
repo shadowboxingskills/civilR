@@ -2,32 +2,24 @@
 % Please edit documentation in R/main.R
 \name{Euler_buckling_load}
 \alias{Euler_buckling_load}
-\title{critical_length_major_axis_Lcry (m)}
+\title{Calculate the Euler buckling load}
 \usage{
 Euler_buckling_load(Le, E, I)
 }
 \arguments{
-\item{x}{A description of the parameter 'x'. The
-description can span multiple lines.}
+\item{Le}{Effective length of strut [mm]}
 
-\item{y}{A description of the parameter 'y'.}
+\item{E}{Young modulus [\eqn{GPa} / \eqn{GN/m^2}]}
+
+\item{I}{- check 1: \eqn{I_{yy}}, second moment of area Axis y-y [\eqn{cm^4}]}
+
+\item{I}{- check 2: \eqn{I_{eff}}, Effective second moment of area [\eqn{mm4}]}
+
+\item{I}{- check 3: \eqn{I_{eff}} or \eqn{I_{zz}} [\eqn{mm^4}]}
 }
 \value{
-Lcrz critical_length_major_axis_Lcrz [m]
+\eqn{N_{cr}} Euler buckling load [kN]
 }
 \description{
 This is the description.
-}
-\details{
-These are further details.
-}
-\section{A Custom Section}{
-
-
-Text accompanying the custom section.
-}
-
-\examples{
-add_numbers(1, 2) ## returns 3
-
 }

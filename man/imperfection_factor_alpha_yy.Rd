@@ -2,32 +2,20 @@
 % Please edit documentation in R/main.R
 \name{imperfection_factor_alpha_yy}
 \alias{imperfection_factor_alpha_yy}
-\title{critical_length_major_axis_Lcry (m)}
+\title{Calculate the imperfection factor \eqn{\alpha_{yy}} for rolled section [dimensionless]}
 \usage{
 imperfection_factor_alpha_yy(h, b, tf)
 }
 \arguments{
-\item{x}{A description of the parameter 'x'. The
-description can span multiple lines.}
+\item{h}{Member height [mm]}
 
-\item{y}{A description of the parameter 'y'.}
+\item{b}{Member width [mm]}
+
+\item{tf}{thickness of the flange [mm]}
 }
 \value{
-Lcrz critical_length_major_axis_Lcrz [m]
+\eqn{\alpha_{yy}} Imperfection factor for y-y axis
 }
 \description{
 This is the description.
-}
-\details{
-These are further details.
-}
-\section{A Custom Section}{
-
-
-Text accompanying the custom section.
-}
-
-\examples{
-add_numbers(1, 2) ## returns 3
-
 }

@@ -2,32 +2,24 @@
 % Please edit documentation in R/main.R
 \name{member_size_to_string}
 \alias{member_size_to_string}
-\title{critical_length_major_axis_Lcry (m)}
+\title{Convert the member size individual dimensions to a standard string}
 \usage{
 member_size_to_string(h, b, m)
 }
 \arguments{
-\item{x}{A description of the parameter 'x'. The
-description can span multiple lines.}
+\item{h}{Member height [mm]}
 
-\item{y}{A description of the parameter 'y'.}
+\item{b}{Member width [mm]}
+
+\item{m}{Member mass [kg]}
 }
 \value{
-Lcrz critical_length_major_axis_Lcrz [m]
+String of the member dimensions
 }
 \description{
 This is the description.
 }
-\details{
-These are further details.
-}
-\section{A Custom Section}{
-
-
-Text accompanying the custom section.
-}
-
 \examples{
-add_numbers(1, 2) ## returns 3
+member_size_to_string(h=610, b=229, m=140)
 
 }

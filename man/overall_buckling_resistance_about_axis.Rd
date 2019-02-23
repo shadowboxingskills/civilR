@@ -2,32 +2,18 @@
 % Please edit documentation in R/main.R
 \name{overall_buckling_resistance_about_axis}
 \alias{overall_buckling_resistance_about_axis}
-\title{critical_length_major_axis_Lcry (m)}
+\title{Calculate the overall buckling resistance of the struts about the axis}
 \usage{
 overall_buckling_resistance_about_axis(X, N_pl_Rd)
 }
 \arguments{
-\item{x}{A description of the parameter 'x'. The
-description can span multiple lines.}
+\item{X}{Slenderness reduction factor [dimentionless]}
 
-\item{y}{A description of the parameter 'y'.}
+\item{N_pl_Rd}{Plastic resistance of the cross-section to compression [kN]}
 }
 \value{
-Lcrz critical_length_major_axis_Lcrz [m]
+\eqn{N_{b,R_d}} Overall buckling resistance of the struts about the axis [kN]
 }
 \description{
 This is the description.
-}
-\details{
-These are further details.
-}
-\section{A Custom Section}{
-
-
-Text accompanying the custom section.
-}
-
-\examples{
-add_numbers(1, 2) ## returns 3
-
 }

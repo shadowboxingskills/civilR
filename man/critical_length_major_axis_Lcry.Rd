@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{critical_length_major_axis_Lcry}
 \alias{critical_length_major_axis_Lcry}
-\title{Lcry, critical_length_major_axis_Lcry [m]}
+\title{\eqn{L_{cry}}, critical_length_major_axis_Lcry}
 \usage{
 critical_length_major_axis_Lcry(L, Lkp, Lsp)
 }
@@ -14,7 +14,7 @@ critical_length_major_axis_Lcry(L, Lkp, Lsp)
 \item{Lsp}{Length from splays [m]}
 }
 \value{
-Lcry critical_length_major_axis_Lcry [m]
+\eqn{L_{cry}} critical_length_major_axis_Lcry [m]
 }
 \description{
 This is the description.

@@ -2,32 +2,18 @@
 % Please edit documentation in R/main.R
 \name{plastic_resistance_of_cross_section_to_compression}
 \alias{plastic_resistance_of_cross_section_to_compression}
-\title{critical_length_major_axis_Lcry (m)}
+\title{\eqn{N_{pl,R_d}} Plastic resistance of the cross-section to compression}
 \usage{
 plastic_resistance_of_cross_section_to_compression(A, fy)
 }
 \arguments{
-\item{x}{A description of the parameter 'x'. The
-description can span multiple lines.}
+\item{A}{Cross-section area of the strut [\eqn{cm^2}]}
 
-\item{y}{A description of the parameter 'y'.}
+\item{fy}{Yield strength [\eqn{kN/{mm}^2}]}
 }
 \value{
-Lcrz critical_length_major_axis_Lcrz [m]
+\eqn{N_{pl,R_d}} Plastic resistance of the cross-section to compression [kN]
 }
 \description{
 This is the description.
-}
-\details{
-These are further details.
-}
-\section{A Custom Section}{
-
-
-Text accompanying the custom section.
-}
-
-\examples{
-add_numbers(1, 2) ## returns 3
-
 }

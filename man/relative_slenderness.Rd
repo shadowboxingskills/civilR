@@ -2,32 +2,18 @@
 % Please edit documentation in R/main.R
 \name{relative_slenderness}
 \alias{relative_slenderness}
-\title{critical_length_major_axis_Lcry (m)}
+\title{Calculate the relative slenderness}
 \usage{
 relative_slenderness(N_pl_Rd, Ncr)
 }
 \arguments{
-\item{x}{A description of the parameter 'x'. The
-description can span multiple lines.}
+\item{N_pl_Rd}{Plastic resistance of the cross-section to compression [kN]}
 
-\item{y}{A description of the parameter 'y'.}
+\item{Ncr}{Euler buckling load [kN]}
 }
 \value{
-Lcrz critical_length_major_axis_Lcrz [m]
+\eqn{\bar{\lambda}} Relative slenderness [dimentionless]
 }
 \description{
 This is the description.
-}
-\details{
-These are further details.
-}
-\section{A Custom Section}{
-
-
-Text accompanying the custom section.
-}
-
-\examples{
-add_numbers(1, 2) ## returns 3
-
 }

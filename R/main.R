@@ -8,7 +8,7 @@ require(roxygen2)
 # roxygen2::roxygenise()
 # devtools::build_manual()
 
-#' Lcry, critical_length_major_axis_Lcry [m]
+#' \eqn{L_{cry}}, critical_length_major_axis_Lcry
 #'
 #' This is the description.
 #'
@@ -18,7 +18,7 @@ require(roxygen2)
 #'
 #' @export
 #'
-#' @return Lcry critical_length_major_axis_Lcry [m]
+#' @return \eqn{L_{cry}} critical_length_major_axis_Lcry [m]
 #'
 critical_length_major_axis_Lcry <- function (L, Lkp, Lsp) {
   Lkp <- L / 2
@@ -27,7 +27,7 @@ critical_length_major_axis_Lcry <- function (L, Lkp, Lsp) {
 }
 
 
-#' Lcrz, critical_length_major_axis_Lcrz [m]
+#' \eqn{L_{crz}}, critical_length_major_axis_Lcrz
 #'
 #' This is the description.
 #'
@@ -37,7 +37,7 @@ critical_length_major_axis_Lcry <- function (L, Lkp, Lsp) {
 #'
 #' @export
 #'
-#' @return Lcrz critical_length_major_axis_Lcrz [m]
+#' @return \eqn{L_{crz}} critical_length_major_axis_Lcrz [m]
 #'
 critical_length_minor_axis_Lcrz <- function (L, Lkp, Lsp) {
   Lcrz <- 0 # TBC
@@ -45,7 +45,7 @@ critical_length_minor_axis_Lcrz <- function (L, Lkp, Lsp) {
 }
 
 
-#' TL, temperature load [kN]
+#' \eqn{TL} Temperature load
 #'
 #' This is the description.
 #'
@@ -60,7 +60,7 @@ critical_length_minor_axis_Lcrz <- function (L, Lkp, Lsp) {
 #' @examples
 #' calculate_TL <- function(alpha_T=0.000012, delta_T=10, k_T=0.8, E=210, A=200)
 #'
-#' @return TL Temperature load [kN]
+#' @return \eqn{TL} Temperature load [kN]
 #'
 calculate_TL <- function(alpha_T=0.000012, delta_T=10, k_T=0.8, E=210, A) {
   TL <- alpha_T * delta_T * k_T * E * A
@@ -72,9 +72,9 @@ calculate_TL <- function(alpha_T=0.000012, delta_T=10, k_T=0.8, E=210, A) {
 #'
 #' This is the description.
 #'
-#' @param h Member height?? [mm]
-#' @param b Member width?? [mm]
-#' @param m Member mass [kg??]
+#' @param h Member height [mm]
+#' @param b Member width [mm]
+#' @param m Member mass [kg]
 #' @param member_type Member type, UB or UC
 #'
 #' @export
@@ -86,15 +86,13 @@ calculate_TL <- function(alpha_T=0.000012, delta_T=10, k_T=0.8, E=210, A) {
 #'
 #' @return
 #' \itemize{
-#'   \item \code{A} Area of section [cm2]
-#'   \item \code{Two} Second item \eqn{\sqrt{a + \frac{b}{c}}}
+#'   \item \eqn{A} Area of section [cm2]
+#'   \item \eqn{tw} Thickness of web [mm]
+#'   \item \eqn{tf} Thickness of flange [mm]
+#'   \item \eqn{Iyy} Second moment of area axis y-y [cm4]
+#'   \item \eqn{sh} Depth of section [mm]
+#'   \item \eqn{sb} Width of section [mm]
 #' }
-#' @return tw Thickness web [mm]
-#' @return tf Thickness flange tf [mm]
-#' @return Iyy Second moment of area Axis y-y [cm4]
-#' @return sh Depth of section h [mm]
-#' @return sb Width of section b [mm]
-#'
 #'
 member_dimensions <- function(h, b, m, member_type) {
   require(readxl)
@@ -140,88 +138,64 @@ member_dimensions <- function(h, b, m, member_type) {
 }
 
 
-# member_size_to_string
-#' critical_length_major_axis_Lcry (m)
+#' Convert the member size individual dimensions to a standard string
 #'
 #' This is the description.
 #'
-#' These are further details.
-#'
-#' @section A Custom Section:
-#'
-#' Text accompanying the custom section.
-#'
-#' @param x A description of the parameter 'x'. The
-#'   description can span multiple lines.
-#' @param y A description of the parameter 'y'.
+#' @param h Member height [mm]
+#' @param b Member width [mm]
+#' @param m Member mass [kg]
 #'
 #' @export
 #'
 #' @examples
-#' add_numbers(1, 2) ## returns 3
+#' member_size_to_string(h=610, b=229, m=140)
 #'
-#' @return Lcrz critical_length_major_axis_Lcrz [m]
+#' @return String of the member dimensions
 #'
 member_size_to_string <- function(h, b, m) {
   return( paste( h, b, m, sep=' x ' ) )
 }
-# member_size_to_string(h=610, b=229, m=140)
 
 
-# member_size_to_string
-#' critical_length_major_axis_Lcry (m)
+#' Convert individual member dimensions to a string
 #'
 #' This is the description.
 #'
-#' These are further details.
-#'
-#' @section A Custom Section:
-#'
-#' Text accompanying the custom section.
-#'
-#' @param x A description of the parameter 'x'. The
-#'   description can span multiple lines.
-#' @param y A description of the parameter 'y'.
+#' @param s String of the member dimensions
 #'
 #' @export
 #'
 #' @examples
-#' add_numbers(1, 2) ## returns 3
+#' member_size_string_to_elements("610 x 229 x 140")
 #'
-#' @return Lcrz critical_length_major_axis_Lcrz [m]
+#' @return
+#' \itemize{
+#'   \item \eqn{h} Member height [mm]
+#'   \item \eqn{b} Member width [mm]
+#'   \item \eqn{m} Member weight [kg]
+#' }
 #'
 member_size_string_to_elements <- function(s) {
   v <- as.numeric( unlist(strsplit(s, " x ")) )
   h <- v[1]
   b <- v[2]
   m <- v[3]
-
   return( list("h" = h, "b" = b, "m" = m) )
 }
-# member_size_string_to_elements("610 x 229 x 140")
 
 
-# imperfection_factor_alpha_yy for rolled section (dimensionless)
-#' critical_length_major_axis_Lcry (m)
+#' Calculate the imperfection factor \eqn{\alpha_{yy}} for rolled section [dimensionless]
 #'
 #' This is the description.
 #'
-#' These are further details.
-#'
-#' @section A Custom Section:
-#'
-#' Text accompanying the custom section.
-#'
-#' @param x A description of the parameter 'x'. The
-#'   description can span multiple lines.
-#' @param y A description of the parameter 'y'.
+#' @param h Member height [mm]
+#' @param b Member width [mm]
+#' @param tf thickness of the flange [mm]
 #'
 #' @export
 #'
-#' @examples
-#' add_numbers(1, 2) ## returns 3
-#'
-#' @return Lcrz critical_length_major_axis_Lcrz [m]
+#' @return \eqn{\alpha_{yy}} Imperfection factor for y-y axis
 #'
 imperfection_factor_alpha_yy <- function(h, b, tf) {
   if ( h/b > 1.2 ) {
@@ -241,27 +215,17 @@ imperfection_factor_alpha_yy <- function(h, b, tf) {
 }
 
 
-# imperfection_factor_alpha_zz for rolled section (dimensionless)
-#' critical_length_major_axis_Lcry (m)
+#' Calculate the imperfection factor \eqn{\alpha_{zz}} for rolled section [dimensionless]
 #'
 #' This is the description.
 #'
-#' These are further details.
-#'
-#' @section A Custom Section:
-#'
-#' Text accompanying the custom section.
-#'
-#' @param x A description of the parameter 'x'. The
-#'   description can span multiple lines.
-#' @param y A description of the parameter 'y'.
+#' @param h Member height [mm]
+#' @param b Member width [mm]
+#' @param tf thickness of the flange [mm]
 #'
 #' @export
 #'
-#' @examples
-#' add_numbers(1, 2) ## returns 3
-#'
-#' @return Lcrz critical_length_major_axis_Lcrz [m]
+#' @return \eqn{\alpha_{zz}} Imperfection factor for z-z axis
 #'
 imperfection_factor_alpha_zz <- function(h, b, tf) {
   if ( h/b > 1.2 ) {
@@ -281,34 +245,22 @@ imperfection_factor_alpha_zz <- function(h, b, tf) {
 }
 
 
-# fy, yield strength [N/mm2]
-#' critical_length_major_axis_Lcry (m)
+#' \eqn{f_y} Yield strength
 #'
 #' This is the description.
 #'
-#' These are further details.
-#'
-#' @section A Custom Section:
-#'
-#' Text accompanying the custom section.
-#'
-#' @param x A description of the parameter 'x'. The
-#'   description can span multiple lines.
-#' @param y A description of the parameter 'y'.
+#' @param tw Thickness of the web [mm]
+#' @param tf Thickness of the flange [mm]
 #'
 #' @export
 #'
 #' @examples
-#' add_numbers(1, 2) ## returns 3
+#' fy(tw=47.6, tf=77, steel_grade="S355")
 #'
-#' @return Lcrz critical_length_major_axis_Lcrz [m]
+#' @return \eqn{f_y} Yield strength [N/mm2]
 #'
 fy <- function(tw, tf, steel_grade) {
-  # tw thickness web [mm]
-  # tf thickness flange [mm]
-  # t maximum thickness [mm]
-
-  t <- max( tw, tf )
+  t <- max( tw, tf ) # t maximum thickness [mm]
 
   if ( steel_grade == "S275" ) {
     if ( t <= 16 ) {
@@ -367,216 +319,123 @@ fy <- function(tw, tf, steel_grade) {
 
   return( fy )
 }
-# fy(tw=47.6, tf=77, steel_grade="S355")
 
 
-# Le, effective length of strut (mm)
-#' critical_length_major_axis_Lcry (m)
+#' \eqn{L_e} Effective length of strut
 #'
 #' This is the description.
 #'
-#' These are further details.
-#'
-#' @section A Custom Section:
-#'
-#' Text accompanying the custom section.
-#'
-#' @param x A description of the parameter 'x'. The
-#'   description can span multiple lines.
-#' @param y A description of the parameter 'y'.
+#' @param \eqn{k} Effective lengh coefficient [dimensionless]
+#' @param \eqn{L} Length of strut between restraints [mm]
 #'
 #' @export
 #'
-#' @examples
-#' add_numbers(1, 2) ## returns 3
-#'
-#' @return Lcrz critical_length_major_axis_Lcrz [m]
+#' @return \eqn{L_e} Effective length of strut [mm]
 #'
 effective_length_of_strut <- function(k, L) {
-  # k, effective lengh coefficient (dimensionless)
-  # L, length of strut between restraints (mm)
-
   return( k * L )
 }
 
-# Ieff, Effective second moment of area (mm4)
-#' critical_length_major_axis_Lcry (m)
+
+#' \eqn{I_{eff}} Effective second moment of area
 #'
 #' This is the description.
 #'
-#' These are further details.
-#'
-#' @section A Custom Section:
-#'
-#' Text accompanying the custom section.
-#'
-#' @param x A description of the parameter 'x'. The
-#'   description can span multiple lines.
-#' @param y A description of the parameter 'y'.
+#' @param h0 Distance between centroids of chords [m]
+#' @param A Cross-section area of strut [cm2]
 #'
 #' @export
 #'
-#' @examples
-#' add_numbers(1, 2) ## returns 3
-#'
-#' @return Lcrz critical_length_major_axis_Lcrz [m]
+#' @return \eqn{I_{eff}} Effective second moment of area [\eqn{\text{mm}^4}}]
 #'
 effective_second_moment_of_area <- function(h0, A) {
-  # h0 - distance between centroids of chords (m)
-  # A - cross-section area of strut (cm2)
-
   return( 0.5 * h0^2 * A * 100 )
 }
 
-# N_pl_Rd, plastic resistance of the cross-section to compression (kN)
-#' critical_length_major_axis_Lcry (m)
+
+#' \eqn{N_{pl,R_d}} Plastic resistance of the cross-section to compression
 #'
 #' This is the description.
 #'
-#' These are further details.
-#'
-#' @section A Custom Section:
-#'
-#' Text accompanying the custom section.
-#'
-#' @param x A description of the parameter 'x'. The
-#'   description can span multiple lines.
-#' @param y A description of the parameter 'y'.
+#' @param A Cross-section area of the strut [\eqn{cm^2}]
+#' @param fy Yield strength [\eqn{kN/{mm}^2}]
 #'
 #' @export
 #'
-#' @examples
-#' add_numbers(1, 2) ## returns 3
-#'
-#' @return Lcrz critical_length_major_axis_Lcrz [m]
+#' @return \eqn{N_{pl,R_d}} Plastic resistance of the cross-section to compression [kN]
 #'
 plastic_resistance_of_cross_section_to_compression <- function(A, fy) {
-  # A, cross-section area of strut (cm2)
-  # fy, yield strength [kN/mm2]
-
   return( fy * A * 100 )
 }
 
-# Ncr, Euler buckling load (kN)
-#' critical_length_major_axis_Lcry (m)
+
+#' Calculate the Euler buckling load
 #'
 #' This is the description.
 #'
-#' These are further details.
-#'
-#' @section A Custom Section:
-#'
-#' Text accompanying the custom section.
-#'
-#' @param x A description of the parameter 'x'. The
-#'   description can span multiple lines.
-#' @param y A description of the parameter 'y'.
+#' @param Le Effective length of strut [mm]
+#' @param E Young modulus [\eqn{GPa} / \eqn{GN/m^2}]
+#' @param I - check 1: \eqn{I_{yy}}, second moment of area Axis y-y [\eqn{cm^4}]
+#' @param I - check 2: \eqn{I_{eff}}, Effective second moment of area [\eqn{mm4}]
+#' @param I - check 3: \eqn{I_{eff}} or \eqn{I_{zz}} [\eqn{mm^4}]
 #'
 #' @export
 #'
-#' @examples
-#' add_numbers(1, 2) ## returns 3
-#'
-#' @return Lcrz critical_length_major_axis_Lcrz [m]
+#' @return \eqn{N_{cr}} Euler buckling load [kN]
 #'
 Euler_buckling_load <- function(Le, E, I) {
-  # Le, effective length of strut (mm)
-  # E, Young modulus (GPa <-> GN/m2)
-  # I - check 1: Iyy, second moment of area Axis y-y (cm4)
-  # I - check 2: Ieff, Effective second moment of area (mm4)
-  # I - check 3: Ieff or Izz? (mm4)
-
   Ncr <- ( pi^2 * E * I ) / Le^2
   return( Ncr )
 }
 
-# lambda_bar, Relative slenderness (dimentionless)
-#' critical_length_major_axis_Lcry (m)
+
+#' Calculate the relative slenderness
 #'
 #' This is the description.
 #'
-#' These are further details.
-#'
-#' @section A Custom Section:
-#'
-#' Text accompanying the custom section.
-#'
-#' @param x A description of the parameter 'x'. The
-#'   description can span multiple lines.
-#' @param y A description of the parameter 'y'.
+#' @param N_pl_Rd Plastic resistance of the cross-section to compression [kN]
+#' @param Ncr Euler buckling load [kN]
 #'
 #' @export
 #'
-#' @examples
-#' add_numbers(1, 2) ## returns 3
-#'
-#' @return Lcrz critical_length_major_axis_Lcrz [m]
+#' @return \eqn{\bar{\lambda}} Relative slenderness [dimentionless]
 #'
 relative_slenderness <- function(N_pl_Rd, Ncr) {
-  # N_pl_Rd, Plastic resistance of the cross-section to compression (kN)
-  # Ncr, Euler buckling load (kN)
-
   return( sqrt( N_pl_Rd / Ncr ) )
 }
 
-# X, slenderness reduction factor (dimentionless)
-#' critical_length_major_axis_Lcry (m)
+
+#' Calculate the slenderness reduction factor
 #'
 #' This is the description.
 #'
-#' These are further details.
-#'
-#' @section A Custom Section:
-#'
-#' Text accompanying the custom section.
-#'
-#' @param x A description of the parameter 'x'. The
-#'   description can span multiple lines.
-#' @param y A description of the parameter 'y'.
+#' @param alpha - check 1: imperfection_factor_alpha_yy for rolled section [dimentionless]
+#' @param alpha - check 2 & 3: imperfection_factor_alpha_zz for rolled section [dimentionless]
+#' @param lambda_bar, Relative slenderness [dimentionless]
 #'
 #' @export
 #'
-#' @examples
-#' add_numbers(1, 2) ## returns 3
-#'
-#' @return Lcrz critical_length_major_axis_Lcrz [m]
+#' @return \eqn{X} Slenderness reduction factor [dimentionless]
 #'
 slenderness_reduction_factor <- function(alpha, lambda_bar) {
-  # alpha - check 1: imperfection_factor_alpha_yy for rolled section (dimensionless)
-  # alpha - check 2 & 3: imperfection_factor_alpha_zz for rolled section (dimensionless)
-  # lambda_bar, Relative slenderness (dimentionless)
-
   Phi <- 0.5 * ( 1 + alpha * (lambda_bar - 0.2) + lambda_bar^2 )
   X <- 1 / ( Phi + sqrt( Phi^2 - lambda_bar^2 )  )
   return(X)
 }
 
-# N_b_Rd, overall buckling resistance of the struts about the axis (kN)
-#' critical_length_major_axis_Lcry (m)
+
+#' Calculate the overall buckling resistance of the struts about the axis
 #'
 #' This is the description.
 #'
-#' These are further details.
-#'
-#' @section A Custom Section:
-#'
-#' Text accompanying the custom section.
-#'
-#' @param x A description of the parameter 'x'. The
-#'   description can span multiple lines.
-#' @param y A description of the parameter 'y'.
+#' @param X Slenderness reduction factor [dimentionless]
+#' @param N_pl_Rd Plastic resistance of the cross-section to compression [kN]
 #'
 #' @export
 #'
-#' @examples
-#' add_numbers(1, 2) ## returns 3
-#'
-#' @return Lcrz critical_length_major_axis_Lcrz [m]
+#' @return \eqn{N_{b,R_d}} Overall buckling resistance of the struts about the axis [kN]
 #'
 overall_buckling_resistance_about_axis <- function(X, N_pl_Rd) {
-  # X, slenderness reduction factor (dimentionless)
-  # N_pl_Rd, plastic resistance of the cross-section to compression (kN)
-
   return( X * N_pl_Rd )
 }
 
@@ -591,24 +450,17 @@ overall_buckling_resistance_about_axis <- function(X, N_pl_Rd) {
 #'
 #' Text accompanying the custom section.
 #'
-#' @param x A description of the parameter 'x'. The
-#'   description can span multiple lines.
-#' @param y A description of the parameter 'y'.
+#' @param n Number of planes of lacing, default n=2
+#' @param Ad Section area of diagonal (lacing), cm2
+#' @param Lch Length of chord of betwen restrains (lace points) [m]
+#' @param E Young modulus [\eqn{GPa} / \eqn{GN/m^2}]
+#' @param h0 Distance between centroids of chords (m)
 #'
 #' @export
-#'
-#' @examples
-#' add_numbers(1, 2) ## returns 3
 #'
 #' @return Lcrz critical_length_major_axis_Lcrz [m]
 #'
 shear_stiffness <- function(n=2, Ad, Lch, E, ho) {
-  # n, number of planes of lacing, default n=2
-  # Ad, section area of diagonal (lacing), cm2
-  # Lch, length of chord of betwen restrains (lace points), m
-  # E, Young modulus (GPa <-> GN/m2)
-  # h0 - distance between centroids of chords (m)
-
   d <- sqrt( h0^2 + Lch^2 )  # length of diagonal
   Sv <- ( n * E * Ad * Lch * h0^2 ) / d^3
   return(Sv)

@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{critical_length_minor_axis_Lcrz}
 \alias{critical_length_minor_axis_Lcrz}
-\title{Lcrz, critical_length_major_axis_Lcrz [m]}
+\title{\eqn{L_{crz}}, critical_length_major_axis_Lcrz}
 \usage{
 critical_length_minor_axis_Lcrz(L, Lkp, Lsp)
 }
@@ -14,7 +14,7 @@ critical_length_minor_axis_Lcrz(L, Lkp, Lsp)
 \item{Lsp}{Length from splays [m]}
 }
 \value{
-Lcrz critical_length_major_axis_Lcrz [m]
+\eqn{L_{crz}} critical_length_major_axis_Lcrz [m]
 }
 \description{
 This is the description.

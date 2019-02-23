@@ -2,32 +2,22 @@
 % Please edit documentation in R/main.R
 \name{fy}
 \alias{fy}
-\title{critical_length_major_axis_Lcry (m)}
+\title{\eqn{f_y} Yield strength}
 \usage{
 fy(tw, tf, steel_grade)
 }
 \arguments{
-\item{x}{A description of the parameter 'x'. The
-description can span multiple lines.}
+\item{tw}{Thickness of the web [mm]}
 
-\item{y}{A description of the parameter 'y'.}
+\item{tf}{Thickness of the flange [mm]}
 }
 \value{
-Lcrz critical_length_major_axis_Lcrz [m]
+\eqn{f_y} Yield strength [N/mm2]
 }
 \description{
 This is the description.
 }
-\details{
-These are further details.
-}
-\section{A Custom Section}{
-
-
-Text accompanying the custom section.
-}
-
 \examples{
-add_numbers(1, 2) ## returns 3
+fy(tw=47.6, tf=77, steel_grade="S355")
 
 }

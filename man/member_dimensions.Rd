@@ -7,29 +7,23 @@
 member_dimensions(h, b, m, member_type)
 }
 \arguments{
-\item{h}{Member height?? [mm]}
+\item{h}{Member height [mm]}
 
-\item{b}{Member width?? [mm]}
+\item{b}{Member width [mm]}
 
-\item{m}{Member mass [kg??]}
+\item{m}{Member mass [kg]}
 
 \item{member_type}{Member type, UB or UC}
 }
 \value{
 \itemize{
-  \item \code{A} Area of section [cm2]
-  \item \code{Two} Second item \eqn{\sqrt{a + \frac{b}{c}}}
+  \item \eqn{A} Area of section [cm2]
+  \item \eqn{tw} Thickness of web [mm]
+  \item \eqn{tf} Thickness of flange [mm]
+  \item \eqn{Iyy} Second moment of area axis y-y [cm4]
+  \item \eqn{sh} Depth of section [mm]
+  \item \eqn{sb} Width of section [mm]
 }
-
-tw Thickness web [mm]
-
-tf Thickness flange tf [mm]
-
-Iyy Second moment of area Axis y-y [cm4]
-
-sh Depth of section h [mm]
-
-sb Width of section b [mm]
 }
 \description{
 This is the description.
