@@ -95,6 +95,7 @@ calculate_TL <- function(alpha_T=0.000012, delta_T=10, k_T=0.8, E=210, A) {
 #' @return sh Depth of section h [mm]
 #' @return sb Width of section b [mm]
 #'
+#'
 member_dimensions <- function(h, b, m, member_type) {
   require(readxl)
 
