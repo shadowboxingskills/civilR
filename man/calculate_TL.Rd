@@ -22,9 +22,6 @@ calculate_TL(alpha_T = 1.2e-05, delta_T = 10, k_T = 0.8, E = 210,
 \eqn{TL} Temperature load [kN]
 }
 \description{
-This is the description.
-}
-\examples{
-calculate_TL <- function(alpha_T=0.000012, delta_T=10, k_T=0.8, E=210, A=200)
-
+Calculate Temperature Load as a function of a surface changes of temperature.
+Usually used for calculation of Axial Compression Force for the top level member. \deqn{TL = \alpha_T \, \delta_T \, k_T  \, E \, A}
 }

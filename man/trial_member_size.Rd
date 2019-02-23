@@ -13,15 +13,16 @@ trial_member_size(Lcry, Lcrz, Ned, steel_grade, member_type)
 
 \item{Ned}{Axial compression force [kN]}
 
-\item{steel}{grade, steel_grade [\eqn{N/mm^2}] - categorical: S355/S275}
+\item{steel_grade}{steel_grade [\eqn{N/mm^2}] - categorical: S355/S275}
 
-\item{member}{type, member_type (categorical: UC/UB)}
+\item{member_type}{member_type (categorical: UC/UB)}
 }
 \value{
 Member size [ height (mm) x width (mm) x mass (kg/m) ]
 }
 \description{
-This is the description.
+Find optimized designation (or can call it member size) for given Axial Compression Force and critical length for major and minor axis.
+Searching into the tables based on the 'Compression' tables of the Blue Book \url{https://www.steelforlifebluebook.co.uk/}
 }
 \examples{
 trial_member_size(Lcry=12.7, Lcrz=12.7, Ned=4926, steel_grade="S275", member_type="UC")

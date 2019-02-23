@@ -11,6 +11,9 @@ effective_second_moment_of_area(h0, A)
 
 \item{A}{Cross-section area of strut [cm2]}
 }
+\value{
+\eqn{I_{eff}} Effective second moment of area [\eqn{mm^4}]
+}
 \description{
 This is the description.
 }

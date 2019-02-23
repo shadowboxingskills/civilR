@@ -17,5 +17,5 @@ imperfection_factor_alpha_zz(h, b, tf)
 \eqn{\alpha_{zz}} Imperfection factor for z-z axis
 }
 \description{
-This is the description.
+Calculate the imperfection factor \eqn{\alpha_{zz}} for rolled section
 }

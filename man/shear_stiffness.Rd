@@ -4,7 +4,7 @@
 \alias{shear_stiffness}
 \title{Calculate the shear stiffness for K-shape lacing}
 \usage{
-shear_stiffness(n = 2, Ad, Lch, E, ho)
+shear_stiffness(n = 2, Ad, Lch, E, h0)
 }
 \arguments{
 \item{n}{Number of planes of lacing, default [\eqn{n=2}]}

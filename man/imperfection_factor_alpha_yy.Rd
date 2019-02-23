@@ -17,5 +17,5 @@ imperfection_factor_alpha_yy(h, b, tf)
 \eqn{\alpha_{yy}} Imperfection factor for y-y axis
 }
 \description{
-This is the description.
+Calculate the imperfection factor \eqn{\alpha_{yy}} for rolled section [dimensionless]
 }

@@ -7,9 +7,9 @@
 effective_length_of_strut(k, L)
 }
 \arguments{
-\item{\eqn{k}}{Effective lengh coefficient [dimensionless]}
+\item{k}{Effective lengh coefficient [dimensionless]}
 
-\item{\eqn{L}}{Length of strut between restraints [mm]}
+\item{L}{Length of strut between restraints [mm]}
 }
 \value{
 \eqn{L_e} Effective length of strut [mm]

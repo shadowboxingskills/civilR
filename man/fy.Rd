@@ -10,12 +10,14 @@ fy(tw, tf, steel_grade)
 \item{tw}{Thickness of the web [mm]}
 
 \item{tf}{Thickness of the flange [mm]}
+
+\item{steel_grade}{steel_grade [\eqn{N/mm^2}] - categorical: S355/S275}
 }
 \value{
 \eqn{f_y} Yield strength [N/mm2]
 }
 \description{
-This is the description.
+Calculate the yield strength
 }
 \examples{
 fy(tw=47.6, tf=77, steel_grade="S355")

@@ -7,11 +7,9 @@
 slenderness_reduction_factor(alpha, lambda_bar)
 }
 \arguments{
-\item{alpha}{- check 1: imperfection_factor_alpha_yy for rolled section [dimentionless]}
+\item{alpha}{- check 1: imperfection_factor_alpha_yy for rolled section [dimentionless]. Check 2 & 3: imperfection_factor_alpha_zz for rolled section [dimentionless]}
 
 \item{lambda_bar, }{Relative slenderness [dimentionless]}
-
-\item{alpha}{- check 2 & 3: imperfection_factor_alpha_zz for rolled section [dimentionless]}
 }
 \value{
 \eqn{X} Slenderness reduction factor [dimentionless]

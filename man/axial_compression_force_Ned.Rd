@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{axial_compression_force_Ned}
 \alias{axial_compression_force_Ned}
-\title{\eqn{N_{ed}} Axial compression force [kN]}
+\title{Calculate the axial compression force}
 \usage{
 axial_compression_force_Ned(DL = 1, LL = 1, L, AF, theta = 90,
   spacing = 6, Lcry = 12.7, Lcrz = 12.7, steel_grade = "S355",
@@ -26,6 +26,10 @@ axial_compression_force_Ned(DL = 1, LL = 1, L, AF, theta = 90,
 
 \item{Lcrz}{critical length minor axis [m]}
 
+\item{steel_grade}{steel_grade [\eqn{N/mm^2}] - categorical: S355/S275}
+
+\item{member_type}{member_type (categorical: UC/UB)}
+
 \item{alpha_T}{Thermal coef. of expansion [degC]}
 
 \item{delta_T}{Change in temperature from the Installation temperature [degC]}
@@ -35,20 +39,17 @@ axial_compression_force_Ned(DL = 1, LL = 1, L, AF, theta = 90,
 \item{E}{Young's Modulus of Elasticity [GPa]}
 
 \item{IL}{Accidental Impact Load [kN/m]}
-
-\item{steel}{grade, steel_grade [\eqn{N/mm^2}] - categorical: S355/S275}
-
-\item{member}{type, member_type (categorical: UC/UB)}
 }
 \value{
 \eqn{N_{ed}} Axial compression force [kN]
 }
 \description{
-This is the description.
+Compute Axial Compression Force, \eqn{N_{ed}} [kN], for member without including Temperature effect.
+Used as trial for the top level strut where temperature changes could not be neglected.
+As well can be used to calculate final \eqn{N_{ed}} for struts from low levels of excavation, where temperature effect could be neglected.
 }
-\examples{
-axial_compression_force_Ned( DL=1, LL=1, L=12.7, AF=582, theta=90, spacing=7,
-                        Lcry=12.7, Lcrz=12.7, steel_grade='S355', member_type='UB',
-                        alpha_T=0.000012, delta_T=10, k_T=0.8, E=210, IL=50 )
-
+\details{
+First of all function check which combination govern in ULS (Ultimate Limit State) without including Temperature load, TL [kN].
+Then include TL calculations for Load Combinations applying partial factors based on the Table A1.2(B), EN1990-2002, p53
+Compare maximum from ULS and ALS to define which mistake could govern.
 }

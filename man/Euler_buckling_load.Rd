@@ -11,11 +11,7 @@ Euler_buckling_load(Le, E, I)
 
 \item{E}{Young modulus [\eqn{GPa} / \eqn{GN/m^2}]}
 
-\item{I}{- check 1: \eqn{I_{yy}}, second moment of area Axis y-y [\eqn{cm^4}]}
-
-\item{I}{- check 2: \eqn{I_{eff}}, Effective second moment of area [\eqn{mm4}]}
-
-\item{I}{- check 3: \eqn{I_{eff}} or \eqn{I_{zz}} [\eqn{mm^4}]}
+\item{I}{- check 1: \eqn{I_{yy}}, second moment of area Axis y-y [\eqn{cm^4}]. Check 2: \eqn{I_{eff}}, Effective second moment of area [\eqn{mm4}]. Check 3: \eqn{I_{eff}} or \eqn{I_{zz}} [\eqn{mm^4}]}
 }
 \value{
 \eqn{N_{cr}} Euler buckling load [kN]

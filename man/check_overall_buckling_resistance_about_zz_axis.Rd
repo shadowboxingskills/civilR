@@ -10,23 +10,19 @@ check_overall_buckling_resistance_about_zz_axis(trial_member_size,
 \arguments{
 \item{trial_member_size}{Trial member size}
 
+\item{member_type}{member_type (categorical: UC/UB)}
+
+\item{steel_grade}{steel_grade [\eqn{N/mm^2}] - categorical: S355/S275}
+
 \item{k}{Coefficient [dimensionless]}
 
 \item{L}{Total length of member [m]}
 
 \item{E}{Young's Modulus of Elasticity [GPa]}
-
-\item{member}{type, member_type (categorical: UC/UB)}
-
-\item{steel}{grade, steel_grade [\eqn{N/mm^2}] - categorical: S355/S275}
 }
 \value{
 \eqn{N_{b,Rd,y}} Overall buckling resistance of struts about z-z axis [kN]
 }
 \description{
 This is the description.
-}
-\examples{
-check_overall_buckling_resistance_about_zz_axis(trial_member_size=trial_mb; member_type="UB"; steel_grade="S355"; k=0.8; L=12.7; E=210)
-
 }

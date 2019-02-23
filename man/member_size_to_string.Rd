@@ -11,13 +11,13 @@ member_size_to_string(h, b, m)
 
 \item{b}{Member width [mm]}
 
-\item{m}{Member mass [kg]}
+\item{m}{Member mass [kg/m]}
 }
 \value{
 String of the member dimensions
 }
 \description{
-This is the description.
+Generate a combined string from given three individual elements, separated by "x"
 }
 \examples{
 member_size_to_string(h=610, b=229, m=140)

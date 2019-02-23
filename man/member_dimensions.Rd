@@ -11,7 +11,7 @@ member_dimensions(h, b, m, member_type)
 
 \item{b}{Member width [mm]}
 
-\item{m}{Member mass [kg]}
+\item{m}{Member mass [kg/m]}
 
 \item{member_type}{Member type, UB or UC}
 }
@@ -26,7 +26,7 @@ member_dimensions(h, b, m, member_type)
 }
 }
 \description{
-This is the description.
+Function that looks into the Blue Book \url{https://www.steelforlifebluebook.co.uk/} for dimensions and properties.
 }
 \examples{
 l1 <- member_dimensions(h=610, b=229, m=140, member_type="UB")
