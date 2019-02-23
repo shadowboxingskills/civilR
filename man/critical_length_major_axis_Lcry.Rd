@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{critical_length_major_axis_Lcry}
 \alias{critical_length_major_axis_Lcry}
-\title{\eqn{L_{cry}}, critical_length_major_axis_Lcry}
+\title{Calculate the critical length along major \eqn{y} axis}
 \usage{
 critical_length_major_axis_Lcry(L, Lkp, Lsp)
 }

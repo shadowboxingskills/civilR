@@ -2,32 +2,24 @@
 % Please edit documentation in R/main.R
 \name{calculated_NEd}
 \alias{calculated_NEd}
-\title{critical_length_major_axis_Lcry (m)}
+\title{Generate calculated \eqn{N_{E_d}}}
 \usage{
 calculated_NEd(N_b_Rd, Ieff, MEd, h0, A)
 }
 \arguments{
-\item{x}{A description of the parameter 'x'. The
-description can span multiple lines.}
+\item{N_b_Rd}{Overall buckling resistance of the struts about the axis [\eqn{kN}]}
 
-\item{y}{A description of the parameter 'y'.}
+\item{Ieff}{Effective second moment of area [\eqn{mm^4}]}
+
+\item{MEd}{Second order moment [\eqn{kN.m}]}
+
+\item{h0}{Distance between centroids of chords [\eqn{m}]}
+
+\item{A}{Cross-section area of strut [\eqn{cm^2}]}
 }
 \value{
-Lcrz critical_length_major_axis_Lcrz [m]
+\eqn{N_{{E_d}_c}} Calculated \eqn{N_{E_d}} [kN]
 }
 \description{
 This is the description.
-}
-\details{
-These are further details.
-}
-\section{A Custom Section}{
-
-
-Text accompanying the custom section.
-}
-
-\examples{
-add_numbers(1, 2) ## returns 3
-
 }

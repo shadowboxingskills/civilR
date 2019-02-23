@@ -2,32 +2,18 @@
 % Please edit documentation in R/main.R
 \name{maximum_shear_force_in_the_lacing}
 \alias{maximum_shear_force_in_the_lacing}
-\title{critical_length_major_axis_Lcry (m)}
+\title{Calculate the maximum shear force in the lacing (for a laced strut subject to a compressive axial force only)}
 \usage{
 maximum_shear_force_in_the_lacing(MEd, L)
 }
 \arguments{
-\item{x}{A description of the parameter 'x'. The
-description can span multiple lines.}
+\item{MEd}{Second order moment [kN.m]}
 
-\item{y}{A description of the parameter 'y'.}
+\item{L}{Length of strut between restraints [mm]}
 }
 \value{
-Lcrz critical_length_major_axis_Lcrz [m]
+\eqn{V_{E_d}} Maximum shear force in the lacing (for a laced strut subject to a compressive axial force only)
 }
 \description{
 This is the description.
-}
-\details{
-These are further details.
-}
-\section{A Custom Section}{
-
-
-Text accompanying the custom section.
-}
-
-\examples{
-add_numbers(1, 2) ## returns 3
-
 }

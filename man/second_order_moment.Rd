@@ -2,32 +2,22 @@
 % Please edit documentation in R/main.R
 \name{second_order_moment}
 \alias{second_order_moment}
-\title{critical_length_major_axis_Lcry (m)}
+\title{Calculate the second order moment}
 \usage{
 second_order_moment(L, Ned, Sv, Ncr)
 }
 \arguments{
-\item{x}{A description of the parameter 'x'. The
-description can span multiple lines.}
+\item{L}{Length of strut between restraints [mm]}
 
-\item{y}{A description of the parameter 'y'.}
+\item{Ned}{Axial_compression_force_Ned [kN]}
+
+\item{Sv}{Shear stiffness for K-shape lacing}
+
+\item{Ncr}{Euler buckling load from check #2 global zz [kN]}
 }
 \value{
-Lcrz critical_length_major_axis_Lcrz [m]
+\eqn{M_{E_d}} Second order moment [kN.m]
 }
 \description{
 This is the description.
-}
-\details{
-These are further details.
-}
-\section{A Custom Section}{
-
-
-Text accompanying the custom section.
-}
-
-\examples{
-add_numbers(1, 2) ## returns 3
-
 }

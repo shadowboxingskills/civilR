@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{axial_compression_force_Ned}
 \alias{axial_compression_force_Ned}
-\title{critical_length_major_axis_Lcry (m)}
+\title{\eqn{N_{ed}} Axial compression force [kN]}
 \usage{
 axial_compression_force_Ned(DL = 1, LL = 1, L, AF, theta = 90,
   spacing = 6, Lcry = 12.7, Lcrz = 12.7, steel_grade = "S355",
@@ -10,27 +10,45 @@ axial_compression_force_Ned(DL = 1, LL = 1, L, AF, theta = 90,
   E = 210, IL = 50)
 }
 \arguments{
-\item{x}{A description of the parameter 'x'. The
-description can span multiple lines.}
+\item{DL}{Dead load / self-weight of member [kN/m]}
 
-\item{y}{A description of the parameter 'y'.}
+\item{LL}{Live load / imposed load [kN/m]}
+
+\item{L}{Total length of member [m]}
+
+\item{AF}{Axial compression force of member per meter [kN/m]}
+
+\item{theta}{Angle to wall [deg]}
+
+\item{spacing}{spacing [m]}
+
+\item{Lcry}{critical length major axis [m]}
+
+\item{Lcrz}{critical length minor axis [m]}
+
+\item{alpha_T}{Thermal coef. of expansion [degC]}
+
+\item{delta_T}{Change in temperature from the Installation temperature [degC]}
+
+\item{k_T}{Coefficient Of Temperature Effect [dimensionless]}
+
+\item{E}{Young's Modulus of Elasticity [GPa]}
+
+\item{IL}{Accidental Impact Load [kN/m]}
+
+\item{steel}{grade, steel_grade [\eqn{N/mm^2}] - categorical: S355/S275}
+
+\item{member}{type, member_type (categorical: UC/UB)}
 }
 \value{
-Lcrz critical_length_major_axis_Lcrz [m]
+\eqn{N_{ed}} Axial compression force [kN]
 }
 \description{
 This is the description.
 }
-\details{
-These are further details.
-}
-\section{A Custom Section}{
-
-
-Text accompanying the custom section.
-}
-
 \examples{
-add_numbers(1, 2) ## returns 3
+axial_compression_force_Ned( DL=1, LL=1, L=12.7, AF=582, theta=90, spacing=7,
+                        Lcry=12.7, Lcrz=12.7, steel_grade='S355', member_type='UB',
+                        alpha_T=0.000012, delta_T=10, k_T=0.8, E=210, IL=50 )
 
 }

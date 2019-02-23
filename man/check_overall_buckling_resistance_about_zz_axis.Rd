@@ -2,33 +2,31 @@
 % Please edit documentation in R/main.R
 \name{check_overall_buckling_resistance_about_zz_axis}
 \alias{check_overall_buckling_resistance_about_zz_axis}
-\title{critical_length_major_axis_Lcry (m)}
+\title{Perform check #2, calculating the overall buckling resistance of struts about z-z axis}
 \usage{
 check_overall_buckling_resistance_about_zz_axis(trial_member_size,
   member_type, steel_grade, k, L, E)
 }
 \arguments{
-\item{x}{A description of the parameter 'x'. The
-description can span multiple lines.}
+\item{trial_member_size}{Trial member size}
 
-\item{y}{A description of the parameter 'y'.}
+\item{k}{Coefficient [dimensionless]}
+
+\item{L}{Total length of member [m]}
+
+\item{E}{Young's Modulus of Elasticity [GPa]}
+
+\item{member}{type, member_type (categorical: UC/UB)}
+
+\item{steel}{grade, steel_grade [\eqn{N/mm^2}] - categorical: S355/S275}
 }
 \value{
-Lcrz critical_length_major_axis_Lcrz [m]
+\eqn{N_{b,Rd,y}} Overall buckling resistance of struts about z-z axis [kN]
 }
 \description{
 This is the description.
 }
-\details{
-These are further details.
-}
-\section{A Custom Section}{
-
-
-Text accompanying the custom section.
-}
-
 \examples{
-add_numbers(1, 2) ## returns 3
+check_overall_buckling_resistance_about_zz_axis(trial_member_size=trial_mb; member_type="UB"; steel_grade="S355"; k=0.8; L=12.7; E=210)
 
 }

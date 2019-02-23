@@ -2,32 +2,28 @@
 % Please edit documentation in R/main.R
 \name{trial_member_size}
 \alias{trial_member_size}
-\title{critical_length_major_axis_Lcry (m)}
+\title{Determine member size [ height (mm) x width (mm) x mass (kg/m) ]}
 \usage{
 trial_member_size(Lcry, Lcrz, Ned, steel_grade, member_type)
 }
 \arguments{
-\item{x}{A description of the parameter 'x'. The
-description can span multiple lines.}
+\item{Lcry}{critical length major axis [m]}
 
-\item{y}{A description of the parameter 'y'.}
+\item{Lcrz}{critical length minor axis [m]}
+
+\item{Ned}{Axial compression force [kN]}
+
+\item{steel}{grade, steel_grade [\eqn{N/mm^2}] - categorical: S355/S275}
+
+\item{member}{type, member_type (categorical: UC/UB)}
 }
 \value{
-Lcrz critical_length_major_axis_Lcrz [m]
+Member size [ height (mm) x width (mm) x mass (kg/m) ]
 }
 \description{
 This is the description.
 }
-\details{
-These are further details.
-}
-\section{A Custom Section}{
-
-
-Text accompanying the custom section.
-}
-
 \examples{
-add_numbers(1, 2) ## returns 3
+trial_member_size(Lcry=12.7, Lcrz=12.7, Ned=4926, steel_grade="S275", member_type="UC")
 
 }

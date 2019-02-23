@@ -2,33 +2,24 @@
 % Please edit documentation in R/main.R
 \name{shear_stiffness}
 \alias{shear_stiffness}
-\title{critical_length_major_axis_Lcry (m)}
+\title{Calculate the shear stiffness for K-shape lacing}
 \usage{
 shear_stiffness(n = 2, Ad, Lch, E, ho)
 }
 \arguments{
-\item{n}{Number of planes of lacing, default n=2}
+\item{n}{Number of planes of lacing, default [\eqn{n=2}]}
 
-\item{Ad}{Section area of diagonal (lacing), cm2}
+\item{Ad}{Section area of diagonal (lacing), [\eqn{cm^2}]}
 
 \item{Lch}{Length of chord of betwen restrains (lace points) [m]}
 
 \item{E}{Young modulus [\eqn{GPa} / \eqn{GN/m^2}]}
 
-\item{h0}{Distance between centroids of chords (m)}
+\item{h0}{Distance between centroids of chords [m]}
 }
 \value{
-Lcrz critical_length_major_axis_Lcrz [m]
+\eqn{S_v} Shear stiffness for K-shape lacing
 }
 \description{
 This is the description.
 }
-\details{
-These are further details.
-}
-\section{A Custom Section}{
-
-
-Text accompanying the custom section.
-}
-

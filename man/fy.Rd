@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{fy}
 \alias{fy}
-\title{\eqn{f_y} Yield strength}
+\title{Calculate the yield strength}
 \usage{
 fy(tw, tf, steel_grade)
 }

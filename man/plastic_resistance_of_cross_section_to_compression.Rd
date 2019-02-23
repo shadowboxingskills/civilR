@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{plastic_resistance_of_cross_section_to_compression}
 \alias{plastic_resistance_of_cross_section_to_compression}
-\title{\eqn{N_{pl,R_d}} Plastic resistance of the cross-section to compression}
+\title{Calculate the plastic resistance of the cross-section to compression}
 \usage{
 plastic_resistance_of_cross_section_to_compression(A, fy)
 }

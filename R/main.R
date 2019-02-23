@@ -8,7 +8,7 @@ require(roxygen2)
 # roxygen2::roxygenise()
 # devtools::build_manual()
 
-#' \eqn{L_{cry}}, critical_length_major_axis_Lcry
+#' Calculate the critical length along major \eqn{y} axis
 #'
 #' This is the description.
 #'
@@ -27,7 +27,7 @@ critical_length_major_axis_Lcry <- function (L, Lkp, Lsp) {
 }
 
 
-#' \eqn{L_{crz}}, critical_length_major_axis_Lcrz
+#' Calculate the critical length along major \eqn{z} axis
 #'
 #' This is the description.
 #'
@@ -45,7 +45,7 @@ critical_length_minor_axis_Lcrz <- function (L, Lkp, Lsp) {
 }
 
 
-#' \eqn{TL} Temperature load
+#' Calculate the temperature load
 #'
 #' This is the description.
 #'
@@ -215,7 +215,7 @@ imperfection_factor_alpha_yy <- function(h, b, tf) {
 }
 
 
-#' Calculate the imperfection factor \eqn{\alpha_{zz}} for rolled section [dimensionless]
+#' Calculate the imperfection factor \eqn{\alpha_{zz}} for rolled section
 #'
 #' This is the description.
 #'
@@ -245,7 +245,7 @@ imperfection_factor_alpha_zz <- function(h, b, tf) {
 }
 
 
-#' \eqn{f_y} Yield strength
+#' Calculate the yield strength
 #'
 #' This is the description.
 #'
@@ -321,7 +321,7 @@ fy <- function(tw, tf, steel_grade) {
 }
 
 
-#' \eqn{L_e} Effective length of strut
+#' Calculate the effective length of strut
 #'
 #' This is the description.
 #'
@@ -337,7 +337,7 @@ effective_length_of_strut <- function(k, L) {
 }
 
 
-#' \eqn{I_{eff}} Effective second moment of area
+#' Calculate the effective second moment of area
 #'
 #' This is the description.
 #'
@@ -353,7 +353,7 @@ effective_second_moment_of_area <- function(h0, A) {
 }
 
 
-#' \eqn{N_{pl,R_d}} Plastic resistance of the cross-section to compression
+#' Calculate the plastic resistance of the cross-section to compression
 #'
 #' This is the description.
 #'
@@ -439,26 +439,20 @@ overall_buckling_resistance_about_axis <- function(X, N_pl_Rd) {
   return( X * N_pl_Rd )
 }
 
-# Sv, shear stiffness for K-shape lacing
-#' critical_length_major_axis_Lcry (m)
+
+#' Calculate the shear stiffness for K-shape lacing
 #'
 #' This is the description.
 #'
-#' These are further details.
-#'
-#' @section A Custom Section:
-#'
-#' Text accompanying the custom section.
-#'
-#' @param n Number of planes of lacing, default n=2
-#' @param Ad Section area of diagonal (lacing), cm2
+#' @param n Number of planes of lacing, default [\eqn{n=2}]
+#' @param Ad Section area of diagonal (lacing), [\eqn{cm^2}]
 #' @param Lch Length of chord of betwen restrains (lace points) [m]
 #' @param E Young modulus [\eqn{GPa} / \eqn{GN/m^2}]
-#' @param h0 Distance between centroids of chords (m)
+#' @param h0 Distance between centroids of chords [m]
 #'
 #' @export
 #'
-#' @return Lcrz critical_length_major_axis_Lcrz [m]
+#' @return \eqn{S_v} Shear stiffness for K-shape lacing
 #'
 shear_stiffness <- function(n=2, Ad, Lch, E, ho) {
   d <- sqrt( h0^2 + Lch^2 )  # length of diagonal
@@ -467,124 +461,91 @@ shear_stiffness <- function(n=2, Ad, Lch, E, ho) {
 }
 
 
-# MEd, second order moment [kN.m]
-#' critical_length_major_axis_Lcry (m)
+#' Calculate the second order moment
 #'
 #' This is the description.
 #'
-#' These are further details.
-#'
-#' @section A Custom Section:
-#'
-#' Text accompanying the custom section.
-#'
-#' @param x A description of the parameter 'x'. The
-#'   description can span multiple lines.
-#' @param y A description of the parameter 'y'.
+#' @param L Length of strut between restraints [mm]
+#' @param Ned Axial_compression_force_Ned [kN]
+#' @param Sv Shear stiffness for K-shape lacing
+#' @param Ncr Euler buckling load from check #2 global zz [kN]
 #'
 #' @export
 #'
-#' @examples
-#' add_numbers(1, 2) ## returns 3
-#'
-#' @return Lcrz critical_length_major_axis_Lcrz [m]
+#' @return \eqn{M_{E_d}} Second order moment [kN.m]
 #'
 second_order_moment <- function(L, Ned, Sv, Ncr) {
-  # L, length of strut between restraints (mm)
-  # Ned, axial_compression_force_Ned (kN)
-  # Sv, shear stiffness for K-shape lacing
-  # Ncr, Euler buckling load from check2 global zz (kN)
-
   e0 <- L / 500 # e0, initial bow imperfection
   MEd_1 <- 0 # first order moment
   MEd <- ( Ned * e0 + MEd_1 ) / ( 1 - (Ned / Ncr) - (Ned / Sv))
-
   return(MEd)
 }
 
-# NEd_c, calculated NEd (kN)
-#' critical_length_major_axis_Lcry (m)
+
+#' Generate calculated \eqn{N_{E_d}}
 #'
 #' This is the description.
 #'
-#' These are further details.
 #'
-#' @section A Custom Section:
-#'
-#' Text accompanying the custom section.
-#'
-#' @param x A description of the parameter 'x'. The
-#'   description can span multiple lines.
-#' @param y A description of the parameter 'y'.
+#' @param N_b_Rd Overall buckling resistance of the struts about the axis [\eqn{kN}]
+#' @param Ieff Effective second moment of area [\eqn{mm^4}]
+#' @param MEd Second order moment [\eqn{kN.m}]
+#' @param h0 Distance between centroids of chords [\eqn{m}]
+#' @param A Cross-section area of strut [\eqn{cm^2}]
 #'
 #' @export
 #'
-#' @examples
-#' add_numbers(1, 2) ## returns 3
-#'
-#' @return Lcrz critical_length_major_axis_Lcrz [m]
+#' @return \eqn{N_{{E_d}_c}} Calculated \eqn{N_{E_d}} [kN]
 #'
 calculated_NEd <- function(N_b_Rd, Ieff, MEd, h0, A) {
-  # N_b_Rd, overall buckling resistance of the struts about the axis (kN)
-  # Ieff, Effective second moment of area (mm4)
-  # MEd, second order moment [kN.m]
-  # h0 - distance between centroids of chords (m)
-  # A, cross-section area of strut (cm2)
-
   return( 2 * ( N_b_Rd - (MEd*h0*A)/(2*Ieff) ) )
 }
 
-# VEd, maximum shear force in the lacing (for a laced strut subject to a compressive axial force only)
-#' critical_length_major_axis_Lcry (m)
+
+#' Calculate the maximum shear force in the lacing (for a laced strut subject to a compressive axial force only)
 #'
 #' This is the description.
 #'
-#' These are further details.
-#'
-#' @section A Custom Section:
-#'
-#' Text accompanying the custom section.
-#'
-#' @param x A description of the parameter 'x'. The
-#'   description can span multiple lines.
-#' @param y A description of the parameter 'y'.
+#' @param MEd Second order moment [kN.m]
+#' @param L Length of strut between restraints [mm]
 #'
 #' @export
 #'
-#' @examples
-#' add_numbers(1, 2) ## returns 3
-#'
-#' @return Lcrz critical_length_major_axis_Lcrz [m]
+#' @return \eqn{V_{E_d}} Maximum shear force in the lacing (for a laced strut subject to a compressive axial force only)
 #'
 maximum_shear_force_in_the_lacing <- function(MEd, L) {
-  # MEd, second order moment [kN.m]
-  # L, length of strut between restraints (mm)
-
   return( pi * MEd / L )
 }
 
 
-# axial_compression_force_Ned (kN)
-#' critical_length_major_axis_Lcry (m)
+#' \eqn{N_{ed}} Axial compression force [kN]
 #'
 #' This is the description.
 #'
-#' These are further details.
-#'
-#' @section A Custom Section:
-#'
-#' Text accompanying the custom section.
-#'
-#' @param x A description of the parameter 'x'. The
-#'   description can span multiple lines.
-#' @param y A description of the parameter 'y'.
+#' @param DL Dead load / self-weight of member [kN/m]
+#' @param LL Live load / imposed load [kN/m]
+#' @param L Total length of member [m]
+#' @param AF Axial compression force of member per meter [kN/m]
+#' @param theta Angle to wall [deg]
+#' @param spacing spacing [m]
+#' @param Lcry critical length major axis [m]
+#' @param Lcrz critical length minor axis [m]
+#' @param steel grade, steel_grade [\eqn{N/mm^2}] - categorical: S355/S275
+#' @param member type, member_type (categorical: UC/UB)
+#' @param alpha_T Thermal coef. of expansion [degC]
+#' @param delta_T Change in temperature from the Installation temperature [degC]
+#' @param k_T Coefficient Of Temperature Effect [dimensionless]
+#' @param E Young's Modulus of Elasticity [GPa]
+#' @param IL Accidental Impact Load [kN/m]
 #'
 #' @export
 #'
 #' @examples
-#' add_numbers(1, 2) ## returns 3
+#' axial_compression_force_Ned( DL=1, LL=1, L=12.7, AF=582, theta=90, spacing=7,
+#'                         Lcry=12.7, Lcrz=12.7, steel_grade='S355', member_type='UB',
+#'                         alpha_T=0.000012, delta_T=10, k_T=0.8, E=210, IL=50 )
 #'
-#' @return Lcrz critical_length_major_axis_Lcrz [m]
+#' @return \eqn{N_{ed}} Axial compression force [kN]
 #'
 axial_compression_force_Ned <- function(
   DL=1,
@@ -603,22 +564,6 @@ axial_compression_force_Ned <- function(
   E=210,
   IL=50
 ) {
-  # DL, dead load / self-weight of member (kN/m)
-  # LL, live load / imposed load (kN/m)
-  # L, total length of member (m)
-  # AF, axial compression force of member per meter (kN/m)
-  # theta, angle to wall (deg)
-  # spacing (m)
-  # critical_length_major_axis_Lcry (m)
-  # critical_length_minor_axis_Lcrz (m)
-  # steel grade, steel_grade (N/mm2) - categorical: S355/S275
-  # member type, member_type (categorical: UC/UB)
-  # alpha_T, Thermal coef. of expansion (degC)
-  # delta_T, Change in temperature from the Installation temperature (degC)
-  # k_T, Coefficient Of Temperature Effect (dimensionless)
-  # E, Young's Modulus of Elasticity (GPa)
-  # IL, Accidental Impact Load (kN/m)
-
   # DL=1; LL=1; L=12.7; AF=582; theta=90; spacing=7
   # Lcry=12.7; Lcrz=12.7; steel_grade='S355'; member_type='UB'
   # alpha_T=0.000012; delta_T=10; k_T=0.8; E=210; IL=50
@@ -669,44 +614,29 @@ axial_compression_force_Ned <- function(
   Ned_ALS <- max( lc1, lc2 )
 
   Ned <- round( max(Ned_ULS, Ned_ALS) )
-
   return(Ned)
 }
 
-# axial_compression_force_Ned( DL=1, LL=1, L=12.7, AF=582, theta=90, spacing=7,
-#                             Lcry=12.7, Lcrz=12.7, steel_grade='S355', member_type='UB',
-#                             alpha_T=0.000012, delta_T=10, k_T=0.8, E=210, IL=50 )
 
-
-# trial member size [ height (mm) x width (mm) x mass (kg/m) ]
-#' critical_length_major_axis_Lcry (m)
+#' Determine member size [ height (mm) x width (mm) x mass (kg/m) ]
 #'
 #' This is the description.
 #'
-#' These are further details.
-#'
-#' @section A Custom Section:
-#'
-#' Text accompanying the custom section.
-#'
-#' @param x A description of the parameter 'x'. The
-#'   description can span multiple lines.
-#' @param y A description of the parameter 'y'.
+#' @param Lcry critical length major axis [m]
+#' @param Lcrz critical length minor axis [m]
+#' @param Ned Axial compression force [kN]
+#' @param steel grade, steel_grade [\eqn{N/mm^2}] - categorical: S355/S275
+#' @param member type, member_type (categorical: UC/UB)
 #'
 #' @export
 #'
 #' @examples
-#' add_numbers(1, 2) ## returns 3
+#' trial_member_size(Lcry=12.7, Lcrz=12.7, Ned=4926, steel_grade="S275", member_type="UC")
 #'
-#' @return Lcrz critical_length_major_axis_Lcrz [m]
+#' @return Member size [ height (mm) x width (mm) x mass (kg/m) ]
 #'
 trial_member_size <- function(Lcry, Lcrz, Ned, steel_grade, member_type) {
   require(readxl)
-  # critical_length_major_axis_Lcry (m)
-  # critical_length_minor_axis_Lcrz (m)
-  # axial_compression_force_Ned (kN)
-  # steel grade, steel_grade (N/mm2) - categorical: S355/S275
-  # member type, member_type (categorical: UC/UB)
 
   # Lcry=13.2; Lcrz=1.9; Ned=9250; steel_grade="S275"; member_type="UC"
 
@@ -805,40 +735,32 @@ trial_member_size <- function(Lcry, Lcrz, Ned, steel_grade, member_type) {
   #
   # trial_member_size_Lcrz <- paste( h_Lcrz, b_Lcrz, m_Lcrz, sep=' x ' )
 
-
-  trial_member_size = trial_member_size_Lcry
-
+  trial_member_size <- trial_member_size_Lcry
   return(trial_member_size)
 }
-# trial_member_size(Lcry=12.7, Lcrz=12.7, Ned=4926, steel_grade="S275", member_type="UC")
 
 
-# Check 1: overall buckling resistance of struts about y-y axis
-# Output: N_b_Rd_X, overall_buckling_resistance_about_yy_axis (kN)
-#' critical_length_major_axis_Lcry (m)
+#' Perform check #1, calculating the overall buckling resistance of struts about y-y axis
 #'
 #' This is the description.
 #'
-#' These are further details.
-#'
-#' @section A Custom Section:
-#'
-#' Text accompanying the custom section.
-#'
-#' @param x A description of the parameter 'x'. The
-#'   description can span multiple lines.
-#' @param y A description of the parameter 'y'.
+#' @param trial_member_size Trial member size
+#' @param member type, member_type (categorical: UC/UB)
+#' @param steel grade, steel_grade [\eqn{N/mm^2}] - categorical: S355/S275
+#' @param k Coefficient [dimensionless]
+#' @param L Total length of member [m]
+#' @param E Young's Modulus of Elasticity [GPa]
 #'
 #' @export
 #'
 #' @examples
-#' add_numbers(1, 2) ## returns 3
+#' check_overall_buckling_resistance_about_yy_axis(trial_member_size=trial_mb; member_type="UB"; steel_grade="S355"; k=0.8; L=12.7; E=210)
 #'
-#' @return Lcrz critical_length_major_axis_Lcrz [m]
+#' @return \eqn{N_{b,Rd,X}} Overall buckling resistance of struts about y-y axis [kN]
 #'
 check_overall_buckling_resistance_about_yy_axis <- function(trial_member_size, member_type, steel_grade, k, L, E) {
 
-  trial_member_size=trial_mb; member_type="UB"; steel_grade="S355"; k=0.8; L=12.7; E=210
+  # trial_member_size=trial_mb; member_type="UB"; steel_grade="S355"; k=0.8; L=12.7; E=210
 
   s <- member_size_string_to_elements(trial_member_size)
 
@@ -873,27 +795,23 @@ check_overall_buckling_resistance_about_yy_axis <- function(trial_member_size, m
 }
 
 
-# Check 2: overall buckling resistance of struts about z-z axis
-#' critical_length_major_axis_Lcry (m)
+#' Perform check #2, calculating the overall buckling resistance of struts about z-z axis
 #'
 #' This is the description.
 #'
-#' These are further details.
-#'
-#' @section A Custom Section:
-#'
-#' Text accompanying the custom section.
-#'
-#' @param x A description of the parameter 'x'. The
-#'   description can span multiple lines.
-#' @param y A description of the parameter 'y'.
+#' @param trial_member_size Trial member size
+#' @param member type, member_type (categorical: UC/UB)
+#' @param steel grade, steel_grade [\eqn{N/mm^2}] - categorical: S355/S275
+#' @param k Coefficient [dimensionless]
+#' @param L Total length of member [m]
+#' @param E Young's Modulus of Elasticity [GPa]
 #'
 #' @export
 #'
 #' @examples
-#' add_numbers(1, 2) ## returns 3
+#' check_overall_buckling_resistance_about_zz_axis(trial_member_size=trial_mb; member_type="UB"; steel_grade="S355"; k=0.8; L=12.7; E=210)
 #'
-#' @return Lcrz critical_length_major_axis_Lcrz [m]
+#' @return \eqn{N_{b,Rd,y}} Overall buckling resistance of struts about z-z axis [kN]
 #'
 check_overall_buckling_resistance_about_zz_axis <- function(trial_member_size, member_type, steel_grade, k, L, E) {
   # 2: \alpha_zz, I=Ieff [mm4], Le=kL[m], Npl,Rk=Npl,Rd*2 [KN]
@@ -901,7 +819,7 @@ check_overall_buckling_resistance_about_zz_axis <- function(trial_member_size, m
   #
   # OUTPUT 2 : N_{b,Rd}=N_{b,Rd,y} [KN]
 
-  trial_member_size=trial_mb; member_type="UB"; steel_grade="S355"; k=0.8; L=12.7; E=210
+  # trial_member_size=trial_mb; member_type="UB"; steel_grade="S355"; k=0.8; L=12.7; E=210
 
   s <- member_size_string_to_elements(trial_member_size)
 
@@ -930,33 +848,29 @@ check_overall_buckling_resistance_about_zz_axis <- function(trial_member_size, m
   X <- slenderness_reduction_factor(alpha_yy, lambda_bar)
 
   # N_b_Rd, overall buckling resistance of the struts about the axis (kN)
-  N_b_Rd_X <- overall_buckling_resistance_about_axis(X, N_pl_Rd)
+  N_b_Rd_y <- overall_buckling_resistance_about_axis(X, N_pl_Rd)
 
-  return(N_b_Rd_X)
+  return(N_b_Rd_y)
 }
 
 
-# Check 3: local buckling resistance of strut about z-z axis
-#' critical_length_major_axis_Lcry (m)
+#' Perform check #3, calculating the local buckling resistance of struts about z-z axis
 #'
 #' This is the description.
 #'
-#' These are further details.
-#'
-#' @section A Custom Section:
-#'
-#' Text accompanying the custom section.
-#'
-#' @param x A description of the parameter 'x'. The
-#'   description can span multiple lines.
-#' @param y A description of the parameter 'y'.
+#' @param trial_member_size Trial member size
+#' @param member type, member_type (categorical: UC/UB)
+#' @param steel grade, steel_grade [\eqn{N/mm^2}] - categorical: S355/S275
+#' @param k Coefficient [dimensionless]
+#' @param L Total length of member [m]
+#' @param E Young's Modulus of Elasticity [GPa]
 #'
 #' @export
 #'
 #' @examples
-#' add_numbers(1, 2) ## returns 3
+#' check_local_buckling_resistance_about_zz_axis(trial_member_size=trial_mb; member_type="UB"; steel_grade="S355"; k=0.8; L=12.7; E=210)
 #'
-#' @return Lcrz critical_length_major_axis_Lcrz [m]
+#' @return \eqn{N_{b,Rd,X}} Local buckling resistance of struts about z-z axis [kN]
 #'
 check_local_buckling_resistance_about_zz_axis <- function(trial_member_size, member_type, steel_grade, k, L, E) {
   # 3: \alpha_zz, I=Ieff[mm4], Le=Lch [m], Npl,Rch=Npl,Rd [KN]
@@ -964,7 +878,7 @@ check_local_buckling_resistance_about_zz_axis <- function(trial_member_size, mem
   # OUTPUT 3 :
   #   take min OUTPUT 1, OUTPUT 2, OUTPUT 3
 
-  trial_member_size=trial_mb; member_type="UB"; steel_grade="S355"; k=0.8; L=12.7; E=210
+  # trial_member_size=trial_mb; member_type="UB"; steel_grade="S355"; k=0.8; L=12.7; E=210
 
   s <- member_size_string_to_elements(trial_member_size)
 
@@ -999,46 +913,65 @@ check_local_buckling_resistance_about_zz_axis <- function(trial_member_size, mem
 }
 
 
-# high-level flow
-#' critical_length_major_axis_Lcry (m)
+#' Run the high-level complete flow
 #'
 #' This is the description.
-#'
-#' These are further details.
-#'
-#' @section A Custom Section:
-#'
-#' Text accompanying the custom section.
-#'
-#' @param x A description of the parameter 'x'. The
-#'   description can span multiple lines.
-#' @param y A description of the parameter 'y'.
 #'
 #' @export
 #'
 #' @examples
-#' add_numbers(1, 2) ## returns 3
+#' # user inputs
+#' DL <- 1
+#' LL <- 1
+#' L <- 12.7
+#' AF <- 582
+#' theta <- 90
+#' spacing <- 7
+#' Lcry <- 12.7
+#' Lcrz <- 12.7
+#' steel_grade <- 'S355'
+#' member_type <- 'UB'
+#' alpha_T <- 0.000012
+#' delta_T <- 10
+#' k_T <- 0.8
+#' E <- 210
+#' IL <- 50
+#' k <- 1
 #'
-#' @return Lcrz critical_length_major_axis_Lcrz [m]
+#' # calculate Ned (kN)
+#' Ned <- axial_compression_force_Ned(DL, LL, L, AF, theta, spacing, Lcry, Lcrz, steel_grade, member_type, alpha_T, delta_T, k_T, E, IL)
+#'
+# determine member size
+#' member_size <- trial_member_size(Lcry, Lcrz, Ned, steel_grade, member_type)
+#'
+#' # apply 1st check
+#' check1 <- check_overall_buckling_resistance_about_yy_axis(member_size, member_type, steel_grade, k, L, E)
+#'
+#' # display results
+#' print( paste0('Ned = ', Ned, ' kN') )
+#' print( paste0('Selected trial member size: ', trial_mb) )
+#' print( paste0('check #1 = ', check1) )
+#'
+#' @return Final results
 #'
 main <- function() {
-
   # user inputs
-  DL=1
-  LL=1
-  L=12.7
-  AF=582
-  theta=90
-  spacing=7
-  Lcry=12.7
-  Lcrz=12.7
-  steel_grade='S355'
-  member_type='UB'
-  alpha_T=0.000012
-  delta_T=10
-  k_T=0.8
-  E=210
-  IL=50
+  DL <- 1
+  LL <- 1
+  L <- 12.7
+  AF <- 582
+  theta <- 90
+  spacing <- 7
+  Lcry <- 12.7
+  Lcrz <- 12.7
+  steel_grade <- 'S355'
+  member_type <- 'UB'
+  alpha_T <- 0.000012
+  delta_T <- 10
+  k_T <- 0.8
+  E <- 210
+  IL <- 50
+  k <- 1
 
   # calculate Ned (kN)
   Ned <- axial_compression_force_Ned(DL, LL, L, AF, theta, spacing, Lcry, Lcrz, steel_grade, member_type, alpha_T, delta_T, k_T, E, IL)
@@ -1047,7 +980,6 @@ main <- function() {
   member_size <- trial_member_size(Lcry, Lcrz, Ned, steel_grade, member_type)
 
   # apply 1st check
-  k=0.8
   check1 <- check_overall_buckling_resistance_about_yy_axis(member_size, member_type, steel_grade, k, L, E)
 
   # display results

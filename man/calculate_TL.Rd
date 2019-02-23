@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{calculate_TL}
 \alias{calculate_TL}
-\title{\eqn{TL} Temperature load}
+\title{Calculate the temperature load}
 \usage{
 calculate_TL(alpha_T = 1.2e-05, delta_T = 10, k_T = 0.8, E = 210,
   A)

@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{effective_second_moment_of_area}
 \alias{effective_second_moment_of_area}
-\title{\eqn{I_{eff}} Effective second moment of area}
+\title{Calculate the effective second moment of area}
 \usage{
 effective_second_moment_of_area(h0, A)
 }

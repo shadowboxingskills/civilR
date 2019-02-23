@@ -4,5 +4,4 @@
 #'
 #' @docType package
 #' @name civilR
-#' @import assertthat
 NULL

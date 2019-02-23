@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{effective_length_of_strut}
 \alias{effective_length_of_strut}
-\title{\eqn{L_e} Effective length of strut}
+\title{Calculate the effective length of strut}
 \usage{
 effective_length_of_strut(k, L)
 }

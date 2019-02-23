@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{critical_length_minor_axis_Lcrz}
 \alias{critical_length_minor_axis_Lcrz}
-\title{\eqn{L_{crz}}, critical_length_major_axis_Lcrz}
+\title{Calculate the critical length along major \eqn{z} axis}
 \usage{
 critical_length_minor_axis_Lcrz(L, Lkp, Lsp)
 }

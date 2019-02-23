@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{imperfection_factor_alpha_zz}
 \alias{imperfection_factor_alpha_zz}
-\title{Calculate the imperfection factor \eqn{\alpha_{zz}} for rolled section [dimensionless]}
+\title{Calculate the imperfection factor \eqn{\alpha_{zz}} for rolled section}
 \usage{
 imperfection_factor_alpha_zz(h, b, tf)
 }

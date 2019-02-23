@@ -2,32 +2,46 @@
 % Please edit documentation in R/main.R
 \name{main}
 \alias{main}
-\title{critical_length_major_axis_Lcry (m)}
+\title{Run the high-level complete flow}
 \usage{
 main()
 }
-\arguments{
-\item{x}{A description of the parameter 'x'. The
-description can span multiple lines.}
-
-\item{y}{A description of the parameter 'y'.}
-}
 \value{
-Lcrz critical_length_major_axis_Lcrz [m]
+Final results
 }
 \description{
 This is the description.
 }
-\details{
-These are further details.
-}
-\section{A Custom Section}{
-
-
-Text accompanying the custom section.
-}
-
 \examples{
-add_numbers(1, 2) ## returns 3
+# user inputs
+DL <- 1
+LL <- 1
+L <- 12.7
+AF <- 582
+theta <- 90
+spacing <- 7
+Lcry <- 12.7
+Lcrz <- 12.7
+steel_grade <- 'S355'
+member_type <- 'UB'
+alpha_T <- 0.000012
+delta_T <- 10
+k_T <- 0.8
+E <- 210
+IL <- 50
+k <- 1
+
+# calculate Ned (kN)
+Ned <- axial_compression_force_Ned(DL, LL, L, AF, theta, spacing, Lcry, Lcrz, steel_grade, member_type, alpha_T, delta_T, k_T, E, IL)
+
+member_size <- trial_member_size(Lcry, Lcrz, Ned, steel_grade, member_type)
+
+# apply 1st check
+check1 <- check_overall_buckling_resistance_about_yy_axis(member_size, member_type, steel_grade, k, L, E)
+
+# display results
+print( paste0('Ned = ', Ned, ' kN') )
+print( paste0('Selected trial member size: ', trial_mb) )
+print( paste0('check #1 = ', check1) )
 
 }
