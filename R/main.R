@@ -9,6 +9,182 @@ require(roxygen2)
 # devtools::build_manual()
 # system("R CMD Rd2pdf .")
 
+closest_critical_length_index
+#' Function that find closest critical length by rounding input.
+
+
+member_dimensions
+#' Function that look into the 'Dimensions and properties' table for chosen member type from the Blue Book and pool dimentions Area of section,  A (cm2), Thickness web,  tw (mm), Thickness flange tf, (mm), Second moment of area Axis y-y, I_yy, (cm4), Depth of section,  h (mm), `Width of section, b (mm)
+
+
+member_size_to_string
+#' Generate a combined string from given tree number separeted by"x"
+
+imperfection_factor_alpha_yy
+#' Function calculate Imperfection factor for bucking about major axis
+\eqn{\alpha_yy}
+#' Function calculate Imperfection factor based on the bucling curve, which depends on dementions of the section. For rolled section.
+
+
+imperfection_factor_alpha_zz
+#' Function calculate Imperfection factor for bucking about manor axis
+\eqn{\alpha_zz}
+#' Function calculate Imperfection factor based on the buckling curve, which depends on dimentions of the Rolled section.
+
+
+
+fy
+#' Function calculate yield strength for specified steel grade
+#' Function calculate  yield strength for specified steel grade, (N/mm20 or (MPa) based on Nominal thickness.
+
+
+
+check_overall_buckling_resistance_about_yy_axis
+#'Function check overall buckling resistance about major axis.
+
+#'Function check overall buckling resistance of member about major axis y-y based on EC3 Approach.
+\deqn{Le=kL},(mm).L- critical length for buckling about major axis
+#'Steps of the check performed for laced struts:
+#' 1. Plastic resistance of the cross-section to compression, (kN)
+\deqn{N_{pl,Rd}= 2(Afy)}
+#' 2. The Euler buckling load, (kN)
+\deqn{N_{cr, X}=\frac{\pi^2EI}{L_{e}^2}}
+#' 3. Relative slenderness, non-dimensional
+\deqn{\bar{\lambda_X}=\sqrt\frac{N_{pl,Rd}}{N_{cr, X}}}
+#' 4. Calculation \eqn{\Phi_X} parameter for slenderness reduction factor
+\deqn{\Phi_X=o.5[1+\alpha(\bar{\lambda_X}-0.2)+\bar{\lambda_X}^2}
+#' 5. Slenderness reduction factor, non-dimensional
+\deqn{X_x=\frac{1}{\Phi_X+\sqrt{\Phi_X^2-\bar{\lambda_X}^2}}}
+#' 6. Output Overall buckling resistance of the struts about y-y axis,(kN)
+\deqn{N_{b,Rd,X}=\frac{X_x N_{pl,Rd}}}
+
+#' The partial factors $γM$ that are applied to Resistance of members to instability:	$γ{M1}$ = 1.00
+
+
+
+check_local_buckling_resistance_about_zz_axis
+#'Function check overall buckling resistance about major axis.
+
+#'Function check overall buckling resistance of member about minor axis z-z. Based on EC3 Approach.
+\deqn{Le=kL},(mm).L- critical length for global buckling about minor axis
+
+The effective second moment of area
+\deqn{I_{eff}=0.5h0^2A
+#'Steps of the check performed for laced struts:
+#' 1. Plastic resistance of the cross-section to compression, (kN)
+\deqn{N_{pl,Rd}= 2(Afy)}
+#' 2. The Euler buckling load, (kN)
+\deqn{N_{cr, Y}=\frac{\pi^2EI_{eff}}{L_{e}^2}}
+#' 3. Relative slenderness, non-dimensional
+\deqn{\bar{\lambda_Y}=\sqrt\frac{N_{pl,Rd}}{N_{cr, Y}}}
+#' 4. Calculation \eqn{\Phi_X} parameter for slenderness reduction factor
+\deqn{\Phi_Y=o.5[1+\alpha(\bar{\lambda_Y}-0.2)+\bar{\lambda_Y}^2}
+#' 5. Slenderness reduction factor, non-dimensional
+\deqn{X_Y=\frac{1}{\Phi_Y+\sqrt{\Phi_Y^2-\bar{\lambda_Y}^2}}}
+#' 6. Output Overall buckling resistance of the struts about z-z axis,(kN)
+\deqn{ N_{bRdY}=X_Y N_{pl,Rd}}}
+#' The partial factors $γM$ that are applied to Resistance of members to instability: \eqn{γ{M1}= 1.00}
+
+
+
+
+check_local_buckling_resistance_about_zz_axis
+#'Function check lolocal buckling resistance of struts about minor axis
+#'Function Check local buckling resistance of struts about minor axis, z-z. Based on EC3 Approach.
+
+#'Steps of the check performed for laced struts:
+#' 1. Plastic resistance of the cross-section to compression, (kN)
+\deqn{N_{plRdch}=Afy}
+#' 2. The Euler buckling load, (kN)
+\deqn{N_{cr,ch}=\frac{\pi^2EI}{L_{e}^2}}
+#' 3. Relative slenderness, non-dimensional
+\deqn{\bar{\lambda_{ch}}=\sqrt\frac{N_{pl,Rd,ch}}{N_{cr, ch}}}
+#' 4. Calculation \eqn{\Phi_X} parameter for slenderness reduction factor
+\deqn{\Phi_{ch}=o.5[1+\alpha(\bar{\lambda_{ch}}-0.2)+\bar{\lambda_{ch}}^2}
+#' 5. Slenderness reduction factor, non-dimensional
+\deqn{X_{ch}=\frac{1}{\Phi_{ch}+\sqrt{\Phi_{ch}^2-\bar{\lambda_{ch}}^2}}}
+#' 6. Output local buckling resistance of the struts about z-z axis,(kN)
+\deqn{ N_{bRdch}=X_{ch}N_{plRdch}}
+#' The partial factors $γ_M$ that are applied to Resistance of members to instability:
+\eqn{γ_{M1}= 1.00}
+
+
+
+
+effective_second_moment_of_area
+#' Compute effective second moment of area
+
+
+
+#' The effective second moment of area,  (mm^4) is a function of the distance between the centroids of the chords and the section area of a chord.
+\eqn{I_{eff}=0.5h0^2A.
+
+
+
+
+
+plastic_resistance_of_cross_section_to_compression
+#' Function calculate plastic resistance
+
+#' Function calculate plastic resistance of cross section, (kN) to compression based on cross-section area, A  and  yield strength, fy.
+
+
+
+
+
+
+Euler_buckling_load
+#'Function calculate the Euler buckling load, (kN)
+\deqn{N_{cr,ch}=\frac{\pi^2EI}{L_{e}^2}}
+
+
+
+
+relative_slenderness
+#' Function compute, slenderness,   non-dimensional
+\deqn{\lambda}=\sqrt\frac{N_{pl,Rd}}{N_{cr}}
+
+
+
+
+slenderness_reduction_factor
+#'Function compute slenderness reduction factor for general case
+\deqn{\Phi=o.5[1+\alpha(\bar{\lambda}-0.2)+\bar{\lambda}^2}
+\deqn{X=\frac{1}{\Phi+\sqrt{\Phi^2-\bar{\lambda}^2}}}
+
+overall_buckling_resistance_about_axis
+#' General case to compute overall buckling resistance of the struts about the axis
+\deqn{N_{b,Rd}=X N_{pl,Rd}}
+
+
+shear_stiffness
+#'Shear stiffness calculation.
+
+#'Function compute, Shear stiffness. Case of K-shaped arrangement of lacings, (kN).
+#'The expression of shear stiffness is:
+\deqn{S_v= \frac{nEA_dL{ch}h_0^2}{d^3}}
+
+second_order_moment
+#'Function compute Second order moment
+
+#'Function compute Second order bending moment. The maximum bending moment, including the bow imperfection and the second order effects
+\deqn{M_{Ed}=\frac{N_{Ed}e_0+M_{Ed}^I} {1-{\frac{N_{Ed}}{N_{crY}}}-{\frac{N_{Ed}}{S_v}}}}
+
+maximum_shear_force_in_the_lacing
+#' Function compute maximum shear force in the lacing
+#' For a laced strut subject to a compressive axial force only:
+\deqn{V_{Ed}=\pi\frac{M_{Ed}}{L}}
+
+
+Maximum_compression_axial_force
+#' Function compute maximum compression axial force in diagonals
+#' Maximum compression axial force
+#' The expression of the compression axial force Nd,Ed in a diagonal is derived from the shear force \deqn{nN_{Ed} \leq\frac{V_{Ed}d}{nh_0}}
+
+
+
+
+
 
 #' Calculate the critical length along major \eqn{y} axis
 #'
