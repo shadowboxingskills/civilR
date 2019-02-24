@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{main}
 \alias{main}
-\title{Run the high-level complete flow}
+\title{Run the high-level main flow}
 \usage{
 main()
 }
@@ -10,5 +10,5 @@ main()
 Final results
 }
 \description{
-This is the description.
+Run the high-level main flow.
 }

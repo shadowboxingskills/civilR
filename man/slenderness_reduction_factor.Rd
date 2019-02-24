@@ -7,13 +7,15 @@
 slenderness_reduction_factor(alpha, lambda_bar)
 }
 \arguments{
-\item{alpha}{- check 1: imperfection_factor_alpha_yy for rolled section [dimentionless]. Check 2 & 3: imperfection_factor_alpha_zz for rolled section [dimentionless]}
+\item{alpha}{Check #1: imperfection factor \eqn{\alpha_{yy}} for rolled section [dimentionless]. Check 2 & 3: imperfection factor \eqn{\alpha_{zz}} for rolled section [dimentionless]}
 
-\item{lambda_bar, }{Relative slenderness [dimentionless]}
+\item{lambda_bar, }{Relative slenderness \eqn{\bar{\lambda}} [dimentionless]}
 }
 \value{
 \eqn{X} Slenderness reduction factor [dimentionless]
 }
 \description{
-This is the description.
+Calculate the slenderness reduction factor \eqn{X} [dimentionless] for the general case.
+\deqn{ \Phi = 0.5 \left[ 1 + \alpha \left( \bar{\lambda}-0.2 \right) + {\bar{\lambda}}^2 \right] }
+\deqn{ X = \frac{1}{\Phi + \sqrt{ \Phi^2 - {\bar{\lambda}}^2} } }
 }

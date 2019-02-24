@@ -2,24 +2,24 @@
 % Please edit documentation in R/main.R
 \name{calculated_NEd}
 \alias{calculated_NEd}
-\title{Generate calculated \eqn{N_{E_d}}}
+\title{Generate calculated Ned}
 \usage{
 calculated_NEd(N_b_Rd, Ieff, MEd, h0, A)
 }
 \arguments{
 \item{N_b_Rd}{Overall buckling resistance of the struts about the axis [\eqn{kN}]}
 
-\item{Ieff}{Effective second moment of area [\eqn{mm^4}]}
+\item{Ieff}{Effective second moment of area [\eqn{{mm}^4}]}
 
 \item{MEd}{Second order moment [\eqn{kN.m}]}
 
 \item{h0}{Distance between centroids of chords [\eqn{m}]}
 
-\item{A}{Cross-section area of strut [\eqn{cm^2}]}
+\item{A}{Cross-section area of strut [\eqn{{cm}^2}]}
 }
 \value{
-\eqn{N_{{E_d}_c}} Calculated \eqn{N_{E_d}} [kN]
+\eqn{N_{{E_d}_c}} Calculated \eqn{N_{E_d}} [\eqn{kN}]
 }
 \description{
-This is the description.
+Generate calculated \eqn{N_{E_d}}, \eqn{N_{{E_d}_c}} [\eqn{kN}].
 }

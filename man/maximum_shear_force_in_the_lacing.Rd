@@ -2,18 +2,19 @@
 % Please edit documentation in R/main.R
 \name{maximum_shear_force_in_the_lacing}
 \alias{maximum_shear_force_in_the_lacing}
-\title{Calculate the maximum shear force in the lacing (for a laced strut subject to a compressive axial force only)}
+\title{Calculate the maximum shear force in the lacing}
 \usage{
 maximum_shear_force_in_the_lacing(MEd, L)
 }
 \arguments{
-\item{MEd}{Second order moment [kN.m]}
+\item{MEd}{Second order moment [\eqn{kN.m}]}
 
-\item{L}{Length of strut between restraints [mm]}
+\item{L}{Length of strut between restraints [\eqn{m}]}
 }
 \value{
-\eqn{V_{E_d}} Maximum shear force in the lacing (for a laced strut subject to a compressive axial force only)
+\eqn{V_{E_d}} Maximum shear force in the lacing [\eqn{kN}] (for a laced strut subject to a compressive axial force only)
 }
 \description{
-This is the description.
+Calculate the maximum shear force in the lacing, \eqn{V_{E_d}} [\eqn{kN}] (for a laced strut subject to a compressive axial force only)
+\deqn{ V_{E_d}= \pi \, \frac{M_{E_d}}{L} }
 }

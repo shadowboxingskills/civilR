@@ -7,15 +7,15 @@
 Euler_buckling_load(Le, E, I)
 }
 \arguments{
-\item{Le}{Effective length of strut [mm]}
+\item{Le}{Effective length of strut [\eqn{mm}]}
 
-\item{E}{Young modulus [\eqn{GPa} / \eqn{GN/m^2}]}
+\item{E}{Young modulus [\eqn{GPa} or \eqn{GN/m^2}]}
 
-\item{I}{- check 1: \eqn{I_{yy}}, second moment of area Axis y-y [\eqn{cm^4}]. Check 2: \eqn{I_{eff}}, Effective second moment of area [\eqn{mm4}]. Check 3: \eqn{I_{eff}} or \eqn{I_{zz}} [\eqn{mm^4}]}
+\item{I}{- check 1: \eqn{I_{yy}}, second moment of area Axis \eqn{y-y} [\eqn{{cm}^4}]. Check 2: \eqn{I_{eff}}, Effective second moment of area [\eqn{{mm}^4}]. Check 3: \eqn{I_{eff}} or \eqn{I_{zz}} [\eqn{{mm}^4}]}
 }
 \value{
-\eqn{N_{cr}} Euler buckling load [kN]
+\eqn{N_{cr}} Euler buckling load [\eqn{kN}]
 }
 \description{
-This is the description.
+Calculate the Euler buckling load [\eqn{kN}] \deqn{ N_{cr,ch}=\frac{\pi^2 \, E \, I}{{L_e}^2} }
 }

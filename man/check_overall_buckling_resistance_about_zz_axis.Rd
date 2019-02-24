@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{check_overall_buckling_resistance_about_zz_axis}
 \alias{check_overall_buckling_resistance_about_zz_axis}
-\title{Perform check #2, calculating the overall buckling resistance of struts about z-z axis}
+\title{Perform check #2, calculating the overall buckling resistance of struts about major \eqn{z-z} axis}
 \usage{
 check_overall_buckling_resistance_about_zz_axis(trial_member_size,
   member_type, steel_grade, k, L, E)
@@ -10,19 +10,30 @@ check_overall_buckling_resistance_about_zz_axis(trial_member_size,
 \arguments{
 \item{trial_member_size}{Trial member size}
 
-\item{member_type}{member_type (categorical: UC/UB)}
+\item{member_type}{member_type, categorical: 'UC' or 'UB'}
 
-\item{steel_grade}{steel_grade [\eqn{N/mm^2}] - categorical: S355/S275}
+\item{steel_grade}{steel_grade [\eqn{N/{mm}^2}], categorical: 'S355' or 'S275'}
 
 \item{k}{Coefficient [dimensionless]}
 
-\item{L}{Total length of member [m]}
+\item{L}{Total length of member [\eqn{m}]}
 
-\item{E}{Young's Modulus of Elasticity [GPa]}
+\item{E}{Young's Modulus of Elasticity [\eqn{GPa}]}
 }
 \value{
-\eqn{N_{b,Rd,y}} Overall buckling resistance of struts about z-z axis [kN]
+\eqn{N_{b,Rd,Y}} Overall buckling resistance of struts about z-z axis [\eqn{kN}]
 }
 \description{
-This is the description.
+Calculate the overall buckling resistance of member about \eqn{z-z} axis, based on EC3 Approach. \deqn{L_e = k \, L} [\eqn{mm}]
+where \eqn{L} is the critical length for buckling about major axis \eqn{z-z}
+Steps of the check performed for laced struts:
+\enumerate{
+  \item Plastic resistance of the cross-section to compression [\eqn{kN}] \deqn{N_{pl,R_d}= 2(A \, fy)}
+  \item The Euler buckling load [\eqn{kN}] \deqn{N_{cr,Y}=\frac{\pi^2 \, E \, I}{{L_e}^2}}
+  \item Relative slenderness [dimensionless] \deqn{ \bar{\lambda_Y} = \sqrt{ \frac{N_{pl,R_d}}{N_{cr,Y}} } }
+  \item Calculate \eqn{\Phi_Y} parameter for slenderness reduction factor \deqn{ \Phi_Y = 0.5 \left[ 1 + \alpha \left( \bar{\lambda_Y}-0.2 \right) + {\bar{\lambda_Y}}^2 \right] }
+  \item Slenderness reduction factor [dimensionless] \deqn{ X_Y = \frac{1}{ \Phi_Y+\sqrt{{\Phi_Y}^2-{\bar{\lambda_Y}}^2} } }
+  \item Output overall buckling resistance of the struts about \eqn{z-z} axis [\eqn{kN}] \deqn{ N_{b,R_d,Y}=X_Y \, N_{pl,R_d} }
+}
+The partial factors \eqn{\gamma_M} that are applied to resistance of members to instability:	\eqn{\gamma_{M_1} = 1}
 }

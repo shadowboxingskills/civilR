@@ -2,29 +2,25 @@
 % Please edit documentation in R/main.R
 \name{trial_member_size}
 \alias{trial_member_size}
-\title{Determine member size [ height (mm) x width (mm) x mass (kg/m) ]}
+\title{Determine member size}
 \usage{
 trial_member_size(Lcry, Lcrz, Ned, steel_grade, member_type)
 }
 \arguments{
-\item{Lcry}{critical length major axis [m]}
+\item{Lcry}{critical length major axis [\eqn{m}]}
 
-\item{Lcrz}{critical length minor axis [m]}
+\item{Lcrz}{critical length minor axis [\eqn{m}]}
 
-\item{Ned}{Axial compression force [kN]}
+\item{Ned}{Axial compression force [\eqn{kN}]}
 
-\item{steel_grade}{steel_grade [\eqn{N/mm^2}] - categorical: S355/S275}
+\item{steel_grade}{steel_grade [\eqn{N/{mm}^2}], categorical: 'S355' or 'S275'}
 
-\item{member_type}{member_type (categorical: UC/UB)}
+\item{member_type}{member_type, categorical: 'UC' or 'UB'}
 }
 \value{
 Member size [ height (mm) x width (mm) x mass (kg/m) ]
 }
 \description{
-Find optimized designation (or can call it member size) for given Axial Compression Force and critical length for major and minor axis.
+Find optimized designation [ height (mm) x width (mm) x mass (kg/m) ] (also called member size) for given Axial Compression Force and critical length for major and minor axis.
 Searching into the tables based on the 'Compression' tables of the Blue Book \url{https://www.steelforlifebluebook.co.uk/}
-}
-\examples{
-trial_member_size(Lcry=12.7, Lcrz=12.7, Ned=4926, steel_grade="S275", member_type="UC")
-
 }

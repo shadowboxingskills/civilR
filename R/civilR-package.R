@@ -4,4 +4,5 @@
 #'
 #' @docType package
 #' @name civilR
+#' @importFrom graphics Axis
 NULL

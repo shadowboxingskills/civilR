@@ -7,13 +7,14 @@
 effective_second_moment_of_area(h0, A)
 }
 \arguments{
-\item{h0}{Distance between centroids of chords [m]}
+\item{h0}{Distance between centroids of chords [\eqn{m}]}
 
-\item{A}{Cross-section area of strut [cm2]}
+\item{A}{Cross-section area of strut [\eqn{{cm}^2}]}
 }
 \value{
-\eqn{I_{eff}} Effective second moment of area [\eqn{mm^4}]
+\eqn{I_{eff}} Effective second moment of area [\eqn{{mm}^4}]
 }
 \description{
-This is the description.
+Compute the effective second moment of area [\eqn{{mm}^4}].
+\eqn{I_{eff}} is a function of the distance between the centroids of the chords and the section area of a chord, calculated as \eqn{ I_{eff} = 0.5 \, {h_0}^2 \, A }.
 }

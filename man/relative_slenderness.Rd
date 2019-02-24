@@ -7,13 +7,13 @@
 relative_slenderness(N_pl_Rd, Ncr)
 }
 \arguments{
-\item{N_pl_Rd}{Plastic resistance of the cross-section to compression [kN]}
+\item{N_pl_Rd}{Plastic resistance of the cross-section to compression [\eqn{kN}]}
 
-\item{Ncr}{Euler buckling load [kN]}
+\item{Ncr}{Euler buckling load [\eqn{kN}]}
 }
 \value{
 \eqn{\bar{\lambda}} Relative slenderness [dimentionless]
 }
 \description{
-This is the description.
+Calculate the relative slenderness [dimensionless] \deqn{ \bar{\lambda}=\sqrt{ \frac{N_{pl,R_d}}{N_{cr}} } }
 }

@@ -2,18 +2,18 @@
 % Please edit documentation in R/main.R
 \name{overall_buckling_resistance_about_axis}
 \alias{overall_buckling_resistance_about_axis}
-\title{Calculate the overall buckling resistance of the struts about the axis}
+\title{Calculate the overall buckling resistance of the memeber about the axis}
 \usage{
 overall_buckling_resistance_about_axis(X, N_pl_Rd)
 }
 \arguments{
 \item{X}{Slenderness reduction factor [dimentionless]}
 
-\item{N_pl_Rd}{Plastic resistance of the cross-section to compression [kN]}
+\item{N_pl_Rd}{Plastic resistance of the cross-section to compression [\eqn{kN}]}
 }
 \value{
-\eqn{N_{b,R_d}} Overall buckling resistance of the struts about the axis [kN]
+\eqn{N_{b,R_d}} Overall buckling resistance of the struts about the axis [\eqn{kN}]
 }
 \description{
-This is the description.
+General case to compute the overall buckling resistance of the member, \eqn{N_{b,R_d}} [\eqn{kN}], about the axis, calculated as: \deqn{ N_{b,R_d}=X \, N_{pl,R_d} }
 }
