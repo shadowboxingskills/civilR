@@ -9,117 +9,6 @@ require(roxygen2)
 # devtools::build_manual()
 # system("R CMD Rd2pdf .")
 
-closest_critical_length_index
-#' Function that find closest critical length by rounding input.
-
-
-member_dimensions
-#' Function that look into the 'Dimensions and properties' table for chosen member type from the Blue Book and pool dimentions Area of section,  A (cm2), Thickness web,  tw (mm), Thickness flange tf, (mm), Second moment of area Axis y-y, I_yy, (cm4), Depth of section,  h (mm), `Width of section, b (mm)
-
-
-member_size_to_string
-#' Generate a combined string from given tree number separeted by"x"
-
-imperfection_factor_alpha_yy
-#' Function calculate Imperfection factor for bucking about major axis
-\eqn{\alpha_yy}
-#' Function calculate Imperfection factor based on the bucling curve, which depends on dementions of the section. For rolled section.
-
-
-imperfection_factor_alpha_zz
-#' Function calculate Imperfection factor for bucking about manor axis
-\eqn{\alpha_zz}
-#' Function calculate Imperfection factor based on the buckling curve, which depends on dimentions of the Rolled section.
-
-
-
-fy
-#' Function calculate yield strength for specified steel grade
-#' Function calculate  yield strength for specified steel grade, (N/mm20 or (MPa) based on Nominal thickness.
-
-
-
-check_overall_buckling_resistance_about_yy_axis
-#'Function check overall buckling resistance about major axis.
-
-#'Function check overall buckling resistance of member about major axis y-y based on EC3 Approach.
-\deqn{Le=kL},(mm).L- critical length for buckling about major axis
-#'Steps of the check performed for laced struts:
-#' 1. Plastic resistance of the cross-section to compression, (kN)
-\deqn{N_{pl,Rd}= 2(Afy)}
-#' 2. The Euler buckling load, (kN)
-\deqn{N_{cr, X}=\frac{\pi^2EI}{L_{e}^2}}
-#' 3. Relative slenderness, non-dimensional
-\deqn{\bar{\lambda_X}=\sqrt\frac{N_{pl,Rd}}{N_{cr, X}}}
-#' 4. Calculation \eqn{\Phi_X} parameter for slenderness reduction factor
-\deqn{\Phi_X=o.5[1+\alpha(\bar{\lambda_X}-0.2)+\bar{\lambda_X}^2}
-#' 5. Slenderness reduction factor, non-dimensional
-\deqn{X_x=\frac{1}{\Phi_X+\sqrt{\Phi_X^2-\bar{\lambda_X}^2}}}
-#' 6. Output Overall buckling resistance of the struts about y-y axis,(kN)
-\deqn{N_{b,Rd,X}=\frac{X_x N_{pl,Rd}}}
-
-#' The partial factors $γM$ that are applied to Resistance of members to instability:	$γ{M1}$ = 1.00
-
-
-
-check_local_buckling_resistance_about_zz_axis
-#'Function check overall buckling resistance about major axis.
-
-#'Function check overall buckling resistance of member about minor axis z-z. Based on EC3 Approach.
-\deqn{Le=kL},(mm).L- critical length for global buckling about minor axis
-
-The effective second moment of area
-\deqn{I_{eff}=0.5h0^2A
-#'Steps of the check performed for laced struts:
-#' 1. Plastic resistance of the cross-section to compression, (kN)
-\deqn{N_{pl,Rd}= 2(Afy)}
-#' 2. The Euler buckling load, (kN)
-\deqn{N_{cr, Y}=\frac{\pi^2EI_{eff}}{L_{e}^2}}
-#' 3. Relative slenderness, non-dimensional
-\deqn{\bar{\lambda_Y}=\sqrt\frac{N_{pl,Rd}}{N_{cr, Y}}}
-#' 4. Calculation \eqn{\Phi_X} parameter for slenderness reduction factor
-\deqn{\Phi_Y=o.5[1+\alpha(\bar{\lambda_Y}-0.2)+\bar{\lambda_Y}^2}
-#' 5. Slenderness reduction factor, non-dimensional
-\deqn{X_Y=\frac{1}{\Phi_Y+\sqrt{\Phi_Y^2-\bar{\lambda_Y}^2}}}
-#' 6. Output Overall buckling resistance of the struts about z-z axis,(kN)
-\deqn{ N_{bRdY}=X_Y N_{pl,Rd}}}
-#' The partial factors $γM$ that are applied to Resistance of members to instability: \eqn{γ{M1}= 1.00}
-
-
-
-
-check_local_buckling_resistance_about_zz_axis
-#'Function check lolocal buckling resistance of struts about minor axis
-#'Function Check local buckling resistance of struts about minor axis, z-z. Based on EC3 Approach.
-
-#'Steps of the check performed for laced struts:
-#' 1. Plastic resistance of the cross-section to compression, (kN)
-\deqn{N_{plRdch}=Afy}
-#' 2. The Euler buckling load, (kN)
-\deqn{N_{cr,ch}=\frac{\pi^2EI}{L_{e}^2}}
-#' 3. Relative slenderness, non-dimensional
-\deqn{\bar{\lambda_{ch}}=\sqrt\frac{N_{pl,Rd,ch}}{N_{cr, ch}}}
-#' 4. Calculation \eqn{\Phi_X} parameter for slenderness reduction factor
-\deqn{\Phi_{ch}=o.5[1+\alpha(\bar{\lambda_{ch}}-0.2)+\bar{\lambda_{ch}}^2}
-#' 5. Slenderness reduction factor, non-dimensional
-\deqn{X_{ch}=\frac{1}{\Phi_{ch}+\sqrt{\Phi_{ch}^2-\bar{\lambda_{ch}}^2}}}
-#' 6. Output local buckling resistance of the struts about z-z axis,(kN)
-\deqn{ N_{bRdch}=X_{ch}N_{plRdch}}
-#' The partial factors $γ_M$ that are applied to Resistance of members to instability:
-\eqn{γ_{M1}= 1.00}
-
-
-
-
-effective_second_moment_of_area
-#' Compute effective second moment of area
-
-
-
-#' The effective second moment of area,  (mm^4) is a function of the distance between the centroids of the chords and the section area of a chord.
-\eqn{I_{eff}=0.5h0^2A.
-
-
 
 
 
@@ -510,7 +399,8 @@ effective_length_of_strut <- function(k, L) {
 
 #' Calculate the effective second moment of area
 #'
-#' This is the description.
+#' Compute the effective second moment of area [\eqn{mm^4}].
+#' \eqn{I_{eff}} is a function of the distance between the centroids of the chords and the section area of a chord, calculated as \eqn{I_{eff}=0.5 \, {h_0}^2 \, A}.
 #'
 #' @param h0 Distance between centroids of chords [m]
 #' @param A Cross-section area of strut [cm2]
@@ -914,16 +804,16 @@ trial_member_size <- function(Lcry, Lcrz, Ned, steel_grade, member_type) {
 }
 
 
-#' Perform check #1, calculating the overall buckling resistance of member about \eqn{y-y} axis
+#' Perform check #1, calculating the overall buckling resistance of member about major \eqn{y-y} axis
 #'
 #' Calculate the overall buckling resistance of member about \eqn{y-y} axis, based on EC3 Approach. \deqn{L_e=kL} [mm]
 #' where \eqn{L} is the critical length for buckling about major axis \eqn{y-y}
 #' Steps of the check performed for laced struts:
 #' \enumerate{
-#'   \item Plastic resistance of the cross-section to compression [kN] \deqn{N_{pl,R_d}= 2(A   fy)}
-#'   \item The Euler buckling load [kN] \deqn{N_{cr,X}=\frac{\pi^2   E   I}{{L_e}^2}}
+#'   \item Plastic resistance of the cross-section to compression [kN] \deqn{N_{pl,R_d}= 2(A \, fy)}
+#'   \item The Euler buckling load [kN] \deqn{N_{cr,X}=\frac{\pi^2 \, E \, I}{{L_e}^2}}
 #'   \item Relative slenderness [dimensionless] \deqn{ \bar{\lambda_X} = \sqrt{ \frac{N_{pl,R_d}}{N_{cr,X}} } }
-#'   \item Calculate \eqn{\Phi_X} parameter for slenderness reduction factor \deqn{ \Phi_X = 0.5   \left[ 1 + \alpha \left( \bar{\lambda_X}-0.2 \right) + {\bar{\lambda_X}}^2 \right] }
+#'   \item Calculate \eqn{\Phi_X} parameter for slenderness reduction factor \deqn{ \Phi_X = 0.5 \left[ 1 + \alpha \left( \bar{\lambda_X}-0.2 \right) + {\bar{\lambda_X}}^2 \right] }
 #'   \item Slenderness reduction factor [dimensionless] \deqn{ X_x = \frac{1}{ \Phi_X+\sqrt{{\Phi_X}^2-{\bar{\lambda_X}}^2} } }
 #'   \item Output overall buckling resistance of the struts about \eqn{y-y} axis [kN] \deqn{ N_{b,R_d,X}=X_x   N_{pl,R_d} }
 #' }
@@ -938,7 +828,7 @@ trial_member_size <- function(Lcry, Lcrz, Ned, steel_grade, member_type) {
 #'
 #' @export
 #'
-#' @return \eqn{N_{b,Rd,X}} Overall buckling resistance of struts about y-y axis [kN]
+#' @return \eqn{N_{b,Rd,X}} Overall buckling resistance of struts about major y-y axis [kN]
 #'
 check_overall_buckling_resistance_about_yy_axis <- function(trial_member_size, member_type, steel_grade, k, L, E) {
 
@@ -977,9 +867,20 @@ check_overall_buckling_resistance_about_yy_axis <- function(trial_member_size, m
 }
 
 
-#' Perform check #2, calculating the overall buckling resistance of struts about z-z axis
+#' Perform check #2, calculating the overall buckling resistance of struts about major z-z axis
 #'
-#' This is the description.
+#' Calculate the overall buckling resistance of member about \eqn{z-z} axis, based on EC3 Approach. \deqn{L_e=kL} [mm]
+#' where \eqn{L} is the critical length for buckling about major axis \eqn{z-z}
+#' Steps of the check performed for laced struts:
+#' \enumerate{
+#'   \item Plastic resistance of the cross-section to compression [kN] \deqn{N_{pl,R_d}= 2(A \, fy)}
+#'   \item The Euler buckling load [kN] \deqn{N_{cr,Y}=\frac{\pi^2 \, E \, I}{{L_e}^2}}
+#'   \item Relative slenderness [dimensionless] \deqn{ \bar{\lambda_Y} = \sqrt{ \frac{N_{pl,R_d}}{N_{cr,Y}} } }
+#'   \item Calculate \eqn{\Phi_Y} parameter for slenderness reduction factor \deqn{ \Phi_Y = 0.5 \left[ 1 + \alpha \left( \bar{\lambda_Y}-0.2 \right) + {\bar{\lambda_Y}}^2 \right] }
+#'   \item Slenderness reduction factor [dimensionless] \deqn{ X_Y = \frac{1}{ \Phi_Y+\sqrt{{\Phi_Y}^2-{\bar{\lambda_Y}}^2} } }
+#'   \item Output overall buckling resistance of the struts about \eqn{z-z} axis [kN] \deqn{ N_{b,R_d,Y}=X_Y   N_{pl,R_d} }
+#' }
+#' The partial factors \eqn{\gamma_M} that are applied to resistance of members to instability:	\eqn{\gamma_{M_1} = 1}
 #'
 #' @param trial_member_size Trial member size
 #' @param member_type member_type (categorical: UC/UB)
@@ -990,7 +891,7 @@ check_overall_buckling_resistance_about_yy_axis <- function(trial_member_size, m
 #'
 #' @export
 #'
-#' @return \eqn{N_{b,Rd,y}} Overall buckling resistance of struts about z-z axis [kN]
+#' @return \eqn{N_{b,Rd,Y}} Overall buckling resistance of struts about z-z axis [kN]
 #'
 check_overall_buckling_resistance_about_zz_axis <- function(trial_member_size, member_type, steel_grade, k, L, E) {
   # 2: \alpha_zz, I=Ieff [mm4], Le=kL[m], Npl,Rk=Npl,Rd*2 [KN]
@@ -1027,15 +928,26 @@ check_overall_buckling_resistance_about_zz_axis <- function(trial_member_size, m
   X <- slenderness_reduction_factor(alpha_yy, lambda_bar)
 
   # N_b_Rd, overall buckling resistance of the struts about the axis (kN)
-  N_b_Rd_y <- overall_buckling_resistance_about_axis(X, N_pl_Rd)
+  N_b_Rd_Y <- overall_buckling_resistance_about_axis(X, N_pl_Rd)
 
-  return(N_b_Rd_y)
+  return(N_b_Rd_Y)
 }
 
 
-#' Perform check #3, calculating the local buckling resistance of struts about z-z axis
+#' Perform check #3, calculating the local buckling resistance of struts about minor z-z axis
 #'
-#' This is the description.
+#' Calculate the local buckling resistance of member about minor \eqn{z-z} axis, based on EC3 Approach. \deqn{L_e=kL} [mm]
+#' where \eqn{L} is the critical length for buckling about minor axis \eqn{z-z}
+#' Steps of the check performed for laced struts:
+#' \enumerate{
+#'   \item Plastic resistance of the cross-section to compression [kN] \deqn{N_{pl,R_d,ch}= 2(A  \, fy)}
+#'   \item The Euler buckling load [kN] \deqn{N_{cr,ch}=\frac{\pi^2 \,  E \,  I}{{L_e}^2}}
+#'   \item Relative slenderness [dimensionless] \deqn{ \bar{\lambda_{ch}} = \sqrt{ \frac{N_{pl,R_d,ch}}{N_{cr,ch}} } }
+#'   \item Calculate \eqn{\Phi_{ch}} parameter for slenderness reduction factor \deqn{ \Phi_{ch} = 0.5   \left[ 1 + \alpha \left( \bar{\lambda_{ch}}-0.2 \right) + {\bar{\lambda_{ch}}}^2 \right] }
+#'   \item Slenderness reduction factor [dimensionless] \deqn{ X_{ch} = \frac{1}{ \Phi_{ch}+\sqrt{{\Phi_{ch}}^2-{\bar{\lambda_{ch}}}^2} } }
+#'   \item Output overall buckling resistance of the struts about \eqn{z-z} minor axis [kN] \deqn{ N_{b,R_d,ch}=X_{ch}   N_{pl,R_d,ch} }
+#' }
+#' The partial factors \eqn{\gamma_M} that are applied to resistance of members to instability:	\eqn{\gamma_{M_1} = 1}
 #'
 #' @param trial_member_size Trial member size
 #' @param member_type member_type (categorical: UC/UB)
@@ -1083,9 +995,9 @@ check_local_buckling_resistance_about_zz_axis <- function(trial_member_size, mem
   X <- slenderness_reduction_factor(alpha_yy, lambda_bar)
 
   # N_b_Rd, overall buckling resistance of the struts about the axis (kN)
-  N_b_Rd_X <- overall_buckling_resistance_about_axis(X, N_pl_Rd)
+  N_b_Rd_ch <- overall_buckling_resistance_about_axis(X, N_pl_Rd)
 
-  return(N_b_Rd_X)
+  return(N_b_Rd_ch)
 }
 
 
