@@ -659,34 +659,47 @@ axial_compression_force <- function(
 trial_member_size <- function(Lcry, Lcrz, Ned, steel_grade, member_type) {
   require(readxl)
 
-  # Lcry=13.2; Lcrz=1.9; Ned=9250; steel_grade="S275"; member_type="UC"
+  # select file name
+  select_file_name <- function(steel_grade, member_type) {
+    if ( steel_grade == "S355" ) {
+      if ( member_type == "UC" ) {
+        axial_compression_table_name <- "./tables/s355/UC/UC-compression-S355.xlsx"
+        nmax <- 138
+      } else if ( member_type == "UB" ) {
+        axial_compression_table_name <- "./tables/s355/UB/UB-Axial compression-S355.xlsx"
+        nmax <- 321
+      } else {
+        print("member type unknown. please enter valid one.")
+      }
+    } else if ( steel_grade == "S275" ) {
+      if ( member_type == "UC" ) {
+        axial_compression_table_name <- "./tables/s275/UC/UC-compression-S275.xlsx"
+        nmax <- 138
+      } else if ( member_type == "UB" ) {
+        axial_compression_table_name <- "./tables/s275/UB/UB_Axial compression-S275.xlsx"
+        nmax <- 321
+      } else {
+        print("member type unknown. please enter valid one.")
+      }
+    } else {
+      print("steel grade unknown. please enter valid one.")
+    }
 
-  if ( steel_grade == "S355" ) {
-    if ( member_type == "UC" ) {
-      axial_compression_table_name <- "./tables/s355/UC/UC-compression-S355.xlsx"
-      nmax <- 138
-    } else if ( member_type == "UB" ) {
-      axial_compression_table_name <- "./tables/s355/UB/UB-Axial compression-S355.xlsx"
-      nmax <- 321
-    } else {
-      print("member type unknown. please enter valid one.")
-    }
-  } else if ( steel_grade == "S275" ) {
-    if ( member_type == "UC" ) {
-      axial_compression_table_name <- "./tables/s275/UC/UC-compression-S275.xlsx"
-      nmax <- 138
-    } else if ( member_type == "UB" ) {
-      axial_compression_table_name <- "./tables/s275/UB/UB_Axial compression-S275.xlsx"
-      nmax <- 321
-    } else {
-      print("member type unknown. please enter valid one.")
-    }
-  } else {
-    print("steel grade unknown. please enter valid one.")
+    return(axial_compression_table_name)
   }
 
-  #axial_compression_table_name <- "./s355/UB/UB-Axial compression-S355.xlsx"
-  t <- readxl::read_xlsx( axial_compression_table_name,
+  # function to select closest critical length
+  closest_critical_length_index <- function(t, Lcr, member_type) {
+    col_discrete_values <- colnames(t)
+    drops <- c("Axis", "h", "b", "m")
+    critical_length_vector <- as.numeric( col_discrete_values[!(col_discrete_values %in% drops)] )
+
+    return( which.min(abs(critical_length_vector-Lcr)) + 1 )
+  }
+
+  # Lcry=12.7; Lcrz=1.6; Ned=4076; steel_grade="S355"; member_type="UB"
+
+  t <- readxl::read_xlsx( path = select_file_name(steel_grade, member_type),
                           n_max = nmax,
                           skip = 5 )
 
@@ -706,57 +719,58 @@ trial_member_size <- function(Lcry, Lcrz, Ned, steel_grade, member_type) {
   drops <- c("..1", "..2", "..3")
   t <- t[ , !(names(t) %in% drops)]
 
-  # function to select closest critical length
-  closest_critical_length_index <- function(Lcr, member_type) {
-    col_discrete_values <- colnames(t)
-    drops <- c("Axis", "h", "b", "m")
-    critical_length_vector <- as.numeric( col_discrete_values[!(col_discrete_values %in% drops)] )
+  critical_length_Lcry_colname <- closest_critical_length_index(t, Lcry, member_type)
+  critical_length_Lcrz_colname <- closest_critical_length_index(t, Lcrz, member_type)
 
-    return( which.min(abs(critical_length_vector-Lcr)) + 1 )
+  determine_h_b_m_Ned_z_for_closest_Ned_y <- function(t, Ned) {
+    # Lcry
+    t_Nb_y <- subset( t, (Axis == "Nb,y,Rd") )
+    x_Nb_y <- t_Nb_y[, critical_length_Lcry_colname]
+
+    colnames(x_Nb_y) <- "Nb_y"
+    x_Nb_y <- as.numeric( x_Nb_y$"Nb_y" )
+
+    i <- which(abs(x_Nb_y-Ned)==min(abs(x_Nb_y-Ned)))
+
+    Ned_y <- x_Nb_y[i]
+
+    # height h(mm) x width b(mm) x mass m(kg/m) for Lcry
+    h <- as.numeric( t_Nb_y[i, "h"] )
+    b <- as.numeric( t_Nb_y[i, "b"] )
+    m <- as.numeric( t_Nb_y[i, "m"] )
+
+    trial_member_size <- paste(h, b, m, sep=' x ')
+
+
+    # Lcrz
+    t_Nb_z <- subset( t, (Axis == "Nb,z,Rd") )
+    x_Nb_z <- t_Nb_z[, critical_length_Lcrz_colname]
+
+    colnames(x_Nb_z) <- "Nb_z"
+    x_Nb_z <- as.numeric( x_Nb_z$"Nb_z" )
+
+    Ned_z <- x_Nb_z[i]
+
+    return( list("h" = h, "b" = b, "m" = m, "trial_member_size"=trial_member_size, "Ned_y"=Ned_y, "Ned_z"=Ned_z) )
   }
 
-  critical_length_Lcry_colname <- closest_critical_length_index(Lcry, member_type)
-  # critical_length_Lcrz_colname <- closest_critical_length_index(Lcrz, member_type)
+  # critical_length_Lcry_colname <- as.character(format(critical_length_Lcry_colname, nsmall = 1))
+  # critical_length_Lcrz_colname <- as.character(format(critical_length_Lcrz_colname, nsmall = 1))
 
-  # critical_length_Lcry_colname <- as.character(format(critical_length_Lcry, nsmall = 1))
-  # critical_length_Lcrz_colname <- as.character(format(critical_length_Lcrz, nsmall = 1))
+  # col_y <- colnames(t)[critical_length_Lcry_colname]
+  # col_z <- colnames(t)[critical_length_Lcrz_colname]
 
-  # Lcry
-  t_Nb_y <- subset( t, (Axis == "Nb,y,Rd") )
-  x_Nb_y <- t_Nb_y[, critical_length_Lcry_colname]
+  l <- determine_h_b_m_Ned_z_for_closest_Ned_y(t, Ned)
+  while ( (l$Ned_y < Ned) | (l$Ned_z < Ned) )
+  {
+    t_trimmed <- subset( t, (( sapply(t[,critical_length_Lcry_colname], as.numeric) > Ned ) & ( Axis == "Nb,y,Rd" )) | ( Axis == "Nb,z,Rd" ) )
 
-  colnames(x_Nb_y) <- "Nb_y"
-  x_Nb_y <- as.numeric( x_Nb_y$"Nb_y" )
+    l <- determine_h_b_m_Ned_z_for_closest_Ned_y(t_trimmed, Ned)
+  }
 
-  i <- which(abs(x_Nb_y-Ned)==min(abs(x_Nb_y-Ned)))
-  max(x_Nb_y[i])
-
-  # height h(mm) x width b(mm) x mass m(kg/m) for Lcry
-  h_Lcry <- as.numeric( t_Nb_y[i, "h"] )
-  b_Lcry <- as.numeric( t_Nb_y[i, "b"] )
-  m_Lcry <- as.numeric( t_Nb_y[i, "m"] )
-
-  trial_member_size_Lcry <- paste( h_Lcry, b_Lcry, m_Lcry, sep=' x ' )
-
-  # # Lcrz
-  # t_Nb_z <- subset( t, (Axis == "Nb,z,Rd") )
-  # x_Nb_z <- t_Nb_z[, critical_length_Lcrz_colname]
-  #
-  # colnames(x_Nb_z) <- "Nb_z"
-  # x_Nb_z <- as.numeric( x_Nb_z$"Nb_z" )
-  #
-  # i <- which(abs(x_Nb_z-Ned)==min(abs(x_Nb_z-Ned)))
-  # max(x_Nb_z[i])
-  #
-  # # height h(mm) x width b(mm) x mass m(kg/m) for Lcry
-  # h_Lcrz <- as.numeric( t_Nb_z[i, "h"] )
-  # b_Lcrz <- as.numeric( t_Nb_z[i, "b"] )
-  # m_Lcrz <- as.numeric( t_Nb_z[i, "m"] )
-  #
-  # trial_member_size_Lcrz <- paste( h_Lcrz, b_Lcrz, m_Lcrz, sep=' x ' )
-
-  trial_member_size <- trial_member_size_Lcry
-  return(trial_member_size)
+  # l$Ned_y
+  # l$Ned_z
+  return(l$trial_member_size)
 }
 
 
@@ -1037,23 +1051,23 @@ main <- function() {
   IL <- 50
   k <- 1
   isTopLevel <- T
-
+  print("kotik0")
   # calculate Ned (kN)
-  Ned <- axial_compression_force(isTopLevel, DL, LL, L, AF, theta, spacing, Lcry, Lcrz, steel_grade, member_type, alpha_T, delta_T, k_T, E, IL)
-
+  # Ned <- axial_compression_force(isTopLevel, DL, LL, L, AF, theta, spacing, Lcry, Lcrz, steel_grade, member_type, alpha_T, delta_T, k_T, E, IL)
+  print("kotik1")
   # calculate max compressive axial force in chords
   N_ch_Ed <- max_compressive_axial_force_in_chords(k, L, A=44.3, n=2, Ad=12.47, Lch=1, E, h0=8, Ned)
-
+  print("kotik2")
   # determine member size
-  member_size <- trial_member_size(Lcry, Lcrz, Ned, steel_grade, member_type)
-
+  member_size <- trial_member_size(Lcry, Lcrz, Ned=4087, steel_grade, member_type)
+  print("kotik3")
   # apply 1st check
-  check1 <- check_overall_buckling_resistance_about_yy_axis(member_size, member_type, steel_grade, k, L, E)
-
+  # check1 <- check_overall_buckling_resistance_about_yy_axis(member_size, member_type, steel_grade, k, L, E)
+  print("kotik4")
   # display results
   print( paste0('Ned = ', Ned, ' kN') )
   print( paste0('N_ch_Ed = ', N_ch_Ed, ' kN') )
   print( paste0('Selected trial member size: ', member_size) )
-  print( paste0('check #1 = ', check1) )
+  # print( paste0('check #1 = ', check1) )
 }
 
