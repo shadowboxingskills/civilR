@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{calculated_NEd}
 \alias{calculated_NEd}
-\title{Generate calculated Ned}
+\title{Generate calculated NEd}
 \usage{
 calculated_NEd(N_b_Rd, Ieff, MEd, h0, A)
 }

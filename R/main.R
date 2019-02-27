@@ -468,14 +468,15 @@ shear_stiffness <- function(n=2, Ad, Lch, E, h0) {
 #' @return \eqn{M_{E_d}} Second order moment [\eqn{kN.m}]
 #'
 second_order_bending_moment <- function(L, Ned, Sv, Ncr) {
-  e0 <- L / 500 # e0, initial bow imperfection
+  e0 <- L / 500 # e0, initial bow imperfection [mm]
+  e0 <- min(e0, 30) # cap e0 at 30mm
   MEd_1 <- 0 # first order moment
   MEd <- ( Ned * e0 + MEd_1 ) / ( 1 - (Ned / Ncr) - (Ned / Sv))
   return(MEd)
 }
 
 
-#' Generate calculated Ned
+#' Generate calculated NEd
 #'
 #' Generate calculated \eqn{N_{E_d}}, \eqn{N_{{E_d}_c}} [\eqn{kN}].
 #'
@@ -542,6 +543,7 @@ maximum_shear_force_in_the_lacing <- function(MEd, L) {
 #' @return \eqn{N_{ed}} Axial compression force [\eqn{kN}]
 #'
 axial_compression_force <- function(
+  isTopLevel=T,
   DL=1,
   LL=1,
   L,
@@ -570,49 +572,72 @@ axial_compression_force <- function(
   # SF <- f(AF, theta)
   SF <- ( AF * spacing ) / sin( theta * pi / 180 )
 
-  # load combination for strut design
-  lc1 <- 1.35 * DL + 1.35 * SF + 1.5 * LL
-  lc2 <- 1.35 * DL + 1.35 * SF + 1.05 *LL
-  lc3 <- 1.35 * DL + 1.0 * SF + 1.5 * LL
-  lc4 <- 1.35 * DL + 1.0 * SF + 1.05 * LL
+  if ( isTopLevel ) { # top level only
+    # ULS - load combination for strut design
+    lc1 <- 1.35 * DL + 1.35 * SF + 1.5 * LL
+    lc2 <- 1.35 * DL + 1.35 * SF + 1.05 *LL
+    lc3 <- 1.35 * DL + 1.0 * SF + 1.5 * LL
+    lc4 <- 1.35 * DL + 1.0 * SF + 1.05 * LL
 
-  # design limit state
-  da1_1 <- max( lc1, lc2 )
-  da1_2 <- max( lc3, lc4 )
+    # ALS
+    lc5 <- 1.0 * DL + 1.0 * SF + 0.7 * LL + 1.0 * IL
+    lc6 <- 1.0 * DL + 1.0 * SF + 0.6 * LL + 1.0 * IL
+    # lc7 <- 1.0 * DL + 1.0 * SF + 0.7* LL
+    # lc8 <- 1.0 * DL + 1.0 * SF + 0.6 * LL
 
-  # axial_compression_force (ULS) Ned_trial (kN)
-  Ned_trial <- max( da1_1, da1_2 )
+    Ned_no_TL <- max( lc1, lc2, lc3, lc4, lc5, lc6 )
 
-  # find trial member size
-  mb <- trial_member_size(Lcry, Lcrz, Ned_trial, steel_grade, member_type)
+    # find trial member size
+    mb_no_TL <- trial_member_size(Lcry, Lcrz, Ned_no_TL, steel_grade, member_type)
 
-  # extract member area from reference table
-  l <- convert_member_dimensions_string_to_elements(mb)
-  A <- extract_member_dimensions(l$h, l$b , l$m, member_type)$A
+    # extract member area from reference table
+    l <- convert_member_dimensions_string_to_elements(mb_no_TL)
+    A_no_TL <- extract_member_dimensions(l$h, l$b , l$m, member_type)$A
 
-  # calculate temperature load
-  TL <- temperature_load(alpha_T, delta_T, k_T, E, A)
+    # calculate temperature load
+    TL <- temperature_load(alpha_T, delta_T, k_T, E, A_no_TL)
 
-  # load combination for strut design
-  lc1 <- 1.35 * DL + 1.35 * SF + 1.5 * LL + 0.9 * TL
-  lc2 <- 1.35 * DL + 1.35 * SF + 1.05 *LL + 1.5 * TL
-  lc3 <- 1.35 * DL + 1.0 * SF + 1.5 * LL + 0.9 * TL
-  lc4 <- 1.35 * DL + 1.0 * SF + 1.05 * LL + 1.5 * TL
+    # ULS - load combination for strut design with TL
+    lc1 <- 1.35 * DL + 1.35 * SF + 1.5 * LL + 0.9 * TL
+    lc2 <- 1.35 * DL + 1.35 * SF + 1.05 *LL + 1.5 * TL
+    lc3 <- 1.35 * DL + 1.0 * SF + 1.5 * LL + 0.9 * TL
+    lc4 <- 1.35 * DL + 1.0 * SF + 1.05 * LL + 1.5 * TL
 
-  # axial_compression_force (ULS) Ned_ULS (kN)
-  Ned_ULS <- max( lc1, lc2, lc3, lc4 )
+    # ALS - load combination for strut design with TL
+    lc5 <- 1.0 * DL + 1.0 * SF + 0.7 * LL + 1.0 * IL
+    lc6 <- 1.0 * DL + 1.0 * SF + 0.6 * LL + 0.5 * TL + 1.0 * IL
+    # lc7 <- 1.0 * DL + 1.0 * SF + 0.7* LL
+    # lc8 <- 1.0 * DL + 1.0 * SF + 0.6 * LL + 0.5 * TL
 
-  # load combination for strut design
-  lc1 <- 1.0 * DL + 1.0 * SF + 0.7 * LL + 1.0 * IL
-  lc2 <- 1.0 * DL + 1.0 * SF + 0.6 * LL + 0.5 * TL + 1.0 * IL
-  # lc3 <- 1.0 * DL + 1.0 * SF + 0.7* LL
-  # lc4 <- 1.0 * DL + 1.0 * SF + 0.6 * LL + 0.5 * TL
+    # OFS
 
-  # Accidental Impact Load (ALS) Ned_ALS (kN)
-  Ned_ALS <- max( lc1, lc2 )
+    # axial_compression_force (ULS) Ned_ULS (kN)
+    Ned_TL <- round( max( lc1, lc2, lc3, lc4, lc5, lc6 ) )
 
-  Ned <- round( max(Ned_ULS, Ned_ALS) )
-  return(Ned)
+  } else { # all levels except top one
+
+    # ULS - load combination for strut design without TL
+    lc1 <- 1.35 * DL + 1.35 * SF + 1.5 * LL
+    lc2 <- 1.35 * DL + 1.35 * SF + 1.05 *LL
+    lc3 <- 1.35 * DL + 1.0 * SF + 1.5 * LL
+    lc4 <- 1.35 * DL + 1.0 * SF + 1.05 * LL
+
+    # ALS without TL
+    lc5 <- 1.0 * DL + 1.0 * SF + 0.7 * LL + 1.0 * IL
+    lc6 <- 1.0 * DL + 1.0 * SF + 0.6 * LL + 1.0 * IL
+    # lc7 <- 1.0 * DL + 1.0 * SF + 0.7* LL
+    # lc8 <- 1.0 * DL + 1.0 * SF + 0.6 * LL
+
+    # OFS
+
+    Ned_no_TL <- round( max( lc1, lc2, lc3, lc4, lc5, lc6 ) )
+  }
+
+  if ( isTopLevel ) {
+    return(Ned_TL)
+  } else {
+    return(Ned_no_TL)
+  }
 }
 
 
@@ -932,6 +957,59 @@ check_local_buckling_resistance_about_zz_axis <- function(trial_member_size, mem
 }
 
 
+#' Maximum compressive axial force in the chords
+#'
+#' Determine maximum compressive axial force in the chords at mid-length of the strut, \eqn{N_{ch,E_d}} [\eqn{kN}]
+#'
+#' Calculation steps are as follows:
+#' \enumerate{
+#'   \item Effective length \eqn{L_e = k \, L} [\eqn{mm}], where \eqn{L} is the length between two vertical supports of laced struts.
+#'   \item Effective second moment of area \deqn{I_{eff}=0.5 \, h_0 \, A_{ch}}  [\eqn{{mm}^4}]. \eqn{I_{eff}}, where \eqn{h_0} [\eqn{cm}] is the distance between centroids of the chords and \eqn{A_{ch}}, [\eqn{{cm}^4}] is the cross-sectional area of one chord.
+#'   \item Shear stiffness for K-shape lacing \eqn{S_v} [\eqn{kN}], where \eqn{d} is the lenth of diagonals \eqn{d = sqrt{ {h_0}^2 + L_{ch} }} [\eqn{mm}].
+#'   \item Calculate the Euler buckling load \eqn{N_{cr,ch}} [\eqn{kN}] \deqn{ N_{cr,ch}=\frac{\pi^2 \, E \, I} {{L_e}^2} }, where \eqn{L_e} is the effective length between two vertical supports.
+#'   \item Compute the second order bending moment \eqn{{M_{E_d}}^{II}} [\eqn{kN.m}].
+#'   \item Output maximum compressive axial force in the chords \eqn{N_{ch,E_d}} [\eqn{kN}] \deqn{ N_{ch,E_d} = \frac{N_{E_d}}{2} + \frac{M_{E_d} \, h_0 \, A}{ 2 \, I_{eff}} }
+#' }
+#'
+#' @param k Coefficient of length as function of wall rigidity [dimensionless]
+#' @param L Length between two restrains [\eqn{m}]
+#' @param n Number of lacing planes, default [\eqn{n=2}]
+#' @param Ad Section area of diagonal (lacing), [\eqn{cm^2}]
+#' @param Lch Length of chord of betwen restrains (lace points) [\eqn{m}]
+#' @param E Young modulus [\eqn{GPa} or \eqn{GN/m^2}]
+#' @param h0 Distance between centroids of chords [\eqn{m}]
+#' @param Ned Axial compression Force [\eqn{kN}]
+#' @param Ieff Effective second moment of area [\eqn{{mm}^4}]
+#' @param Sv Shear stiffness for K-shape lacing [\eqn{kN}]
+#'
+#' @export
+#'
+#' @return \eqn{N_{ch,E_d}} Maximum compressive axial force in the chords [\eqn{kN}]
+#'
+max_compressive_axial_force_in_chords <- function(k, L, A, n, Ad, Lch, E, h0, Ned) {
+
+  # Le, effective length of strut (mm)
+  Le <- effective_length_of_member(k, L)
+
+  # Ieff, effective second moment of area
+  Ieff <- effective_second_moment_of_area(h0, A)
+
+  # Shear stiffness for K-shape lacing
+  Sv <- shear_stiffness(n, Ad, Lch, E, h0)
+
+  # Ncr, Euler buckling load (kN)
+  Ncr <- Euler_buckling_load(Le, E, Ieff) / 1000
+
+  # The second order bending moment
+  MEd <- second_order_bending_moment(L, Ned, Sv, Ncr)
+
+  # Output maximum compressive axial force in the chords
+  N_ch_Ed <- round( (0.5 * Ned) + (MEd * h0 * A) / (2*Ieff) )
+
+  return(N_ch_Ed)
+}
+
+
 #' Run the high-level main flow
 #'
 #' Run the high-level main flow.
@@ -958,9 +1036,13 @@ main <- function() {
   E <- 210
   IL <- 50
   k <- 1
+  isTopLevel <- T
 
   # calculate Ned (kN)
-  Ned <- axial_compression_force(DL, LL, L, AF, theta, spacing, Lcry, Lcrz, steel_grade, member_type, alpha_T, delta_T, k_T, E, IL)
+  Ned <- axial_compression_force(isTopLevel, DL, LL, L, AF, theta, spacing, Lcry, Lcrz, steel_grade, member_type, alpha_T, delta_T, k_T, E, IL)
+
+  # calculate max compressive axial force in chords
+  N_ch_Ed <- max_compressive_axial_force_in_chords(k, L, A=44.3, n=2, Ad=12.47, Lch=1, E, h0=8, Ned)
 
   # determine member size
   member_size <- trial_member_size(Lcry, Lcrz, Ned, steel_grade, member_type)
@@ -970,6 +1052,7 @@ main <- function() {
 
   # display results
   print( paste0('Ned = ', Ned, ' kN') )
+  print( paste0('N_ch_Ed = ', N_ch_Ed, ' kN') )
   print( paste0('Selected trial member size: ', member_size) )
   print( paste0('check #1 = ', check1) )
 }

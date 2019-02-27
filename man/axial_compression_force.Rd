@@ -4,10 +4,10 @@
 \alias{axial_compression_force}
 \title{Calculate the axial compression force}
 \usage{
-axial_compression_force(DL = 1, LL = 1, L, AF, theta = 90,
-  spacing = 6, Lcry = 12.7, Lcrz = 12.7, steel_grade = "S355",
-  member_type = "UB", alpha_T = 1.2e-05, delta_T = 10, k_T = 0.8,
-  E = 210, IL = 50)
+axial_compression_force(isTopLevel = T, DL = 1, LL = 1, L, AF,
+  theta = 90, spacing = 6, Lcry = 12.7, Lcrz = 12.7,
+  steel_grade = "S355", member_type = "UB", alpha_T = 1.2e-05,
+  delta_T = 10, k_T = 0.8, E = 210, IL = 50)
 }
 \arguments{
 \item{DL}{Dead load / self-weight of member [\eqn{kN/m}]}
