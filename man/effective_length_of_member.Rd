@@ -9,11 +9,11 @@ effective_length_of_member(k, L)
 \arguments{
 \item{k}{Effective lengh coefficient [dimensionless]}
 
-\item{L}{Length of strut between restraints [\eqn{mm}]}
+\item{L}{Length of strut between restraints [\eqn{m}]}
 }
 \value{
-\eqn{L_e} Effective length of strut [\eqn{mm}]
+\eqn{L_e} Effective length of strut [\eqn{m}]
 }
 \description{
-Calculate the effective length of member, \eqn{L_e} [\eqn{mm}].
+Calculate the effective length of member, \eqn{L_e} [\eqn{m}].
 }

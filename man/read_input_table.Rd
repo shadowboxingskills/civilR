@@ -6,6 +6,9 @@
 \usage{
 read_input_table(file_name = "tables/input/trial1_kotik.xlsx")
 }
+\arguments{
+\item{file_name}{Path and file name of the input table}
+}
 \value{
 Input table
 }

@@ -29,7 +29,7 @@ where \eqn{L} is the critical length for buckling about major axis \eqn{y-y}
 Steps of the check performed for laced struts:
 \enumerate{
   \item Plastic resistance of the cross-section to compression [\eqn{kN}] \deqn{N_{pl,R_d}= 2(A \, fy)}
-  \item The Euler buckling load [\eqn{kN}] \deqn{N_{cr,X}=\frac{\pi^2 \, E \, I}{{L_e}^2}}
+  \item The Euler buckling load [\eqn{kN}] \deqn{N_{cr,X}=\frac{\pi^2 \, E \, I_{yy}}{{L_e}^2}}
   \item Relative slenderness [dimensionless] \deqn{ \bar{\lambda_X} = \sqrt{ \frac{N_{pl,R_d}}{N_{cr,X}} } }
   \item Calculate \eqn{\Phi_X} parameter for slenderness reduction factor \deqn{ \Phi_X = 0.5 \left[ 1 + \alpha \left( \bar{\lambda_X}-0.2 \right) + {\bar{\lambda_X}}^2 \right] }
   \item Slenderness reduction factor [dimensionless] \deqn{ X_x = \frac{1}{ \Phi_X+\sqrt{{\Phi_X}^2-{\bar{\lambda_X}}^2} } }

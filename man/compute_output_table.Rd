@@ -7,6 +7,9 @@
 
   compute_output_table(file_name = "tables/input/output_processed_table.xlsx")
 }
+\arguments{
+\item{file_name}{Path and file name of the output table}
+}
 \value{
 None
 }

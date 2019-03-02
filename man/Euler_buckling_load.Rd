@@ -9,7 +9,7 @@ Euler_buckling_load(Le, E, I)
 \arguments{
 \item{Le}{Effective length of strut [\eqn{mm}]}
 
-\item{E}{Young modulus [\eqn{GPa} or \eqn{GN/m^2}]}
+\item{E}{Young modulus [\eqn{MPa} or \eqn{MN/m^2}]}
 
 \item{I}{- check 1: \eqn{I_{yy}}, second moment of area Axis \eqn{y-y} [\eqn{{cm}^4}]. Check 2: \eqn{I_{eff}}, Effective second moment of area [\eqn{{mm}^4}]. Check 3: \eqn{I_{eff}} or \eqn{I_{zz}} [\eqn{{mm}^4}]}
 }

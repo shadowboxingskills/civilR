@@ -5,7 +5,7 @@
 \title{Perform check #3, calculating the local buckling resistance of struts about minor \eqn{z-z} axis}
 \usage{
 check_local_buckling_resistance_about_zz_axis(trial_member_size,
-  member_type, steel_grade, k, L, E)
+  member_type, steel_grade, k, Lch, E)
 }
 \arguments{
 \item{trial_member_size}{Trial member size}
@@ -16,7 +16,7 @@ check_local_buckling_resistance_about_zz_axis(trial_member_size,
 
 \item{k}{Coefficient [dimensionless]}
 
-\item{L}{Total length of member [\eqn{m}]}
+\item{Lch}{Length of chord [\eqn{mm}]}
 
 \item{E}{Young's Modulus of Elasticity [\eqn{GPa}]}
 }
@@ -24,12 +24,12 @@ check_local_buckling_resistance_about_zz_axis(trial_member_size,
 \eqn{N_{b,Rd,X}} Local buckling resistance of struts about \eqn{z-z} axis [\eqn{kN}]
 }
 \description{
-Calculate the local buckling resistance of member about minor \eqn{z-z} axis, based on EC3 Approach. \deqn{L_e=kL} [\eqn{mm}]
+Calculate the local buckling resistance of member about minor \eqn{z-z} axis, based on EC3 Approach. \deqn{L_e=kL_{ch}} [\eqn{mm}]
 where \eqn{L} is the critical length for buckling about minor axis \eqn{z-z}
 Steps of the check performed for laced struts:
 \enumerate{
   \item Plastic resistance of the cross-section to compression [\eqn{kN}] \deqn{N_{pl,R_d,ch}= 2(A  \, fy)}
-  \item The Euler buckling load [\eqn{kN}] \deqn{N_{cr,ch}=\frac{\pi^2 \,  E \,  I}{{L_e}^2}}
+  \item The Euler buckling load [\eqn{kN}] \deqn{N_{cr,ch}=\frac{\pi^2 \,  E \,  I_{zz}}{{L_e}^2}}
   \item Relative slenderness [dimensionless] \deqn{ \bar{\lambda_{ch}} = \sqrt{ \frac{N_{pl,R_d,ch}}{N_{cr,ch}} } }
   \item Calculate \eqn{\Phi_{ch}} parameter for slenderness reduction factor \deqn{ \Phi_{ch} = 0.5   \left[ 1 + \alpha \left( \bar{\lambda_{ch}}-0.2 \right) + {\bar{\lambda_{ch}}}^2 \right] }
   \item Slenderness reduction factor [dimensionless] \deqn{ X_{ch} = \frac{1}{ \Phi_{ch}+\sqrt{{\Phi_{ch}}^2-{\bar{\lambda_{ch}}}^2} } }

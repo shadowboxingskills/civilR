@@ -23,6 +23,7 @@ extract_member_dimensions(h, b, m, member_type)
   \item \eqn{Iyy} Second moment of area axis \eqn{y-y} [\eqn{{cm}^4}]
   \item \eqn{sh} Depth of section [\eqn{mm}]
   \item \eqn{sb} Width of section [\eqn{mm}]
+  \item \eqn{Izz} Second moment of area axis \eqn{z-z} [\eqn{{cm}^4}]
 }
 }
 \description{

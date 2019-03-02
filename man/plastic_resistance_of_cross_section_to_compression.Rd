@@ -12,8 +12,8 @@ plastic_resistance_of_cross_section_to_compression(A, fy)
 \item{fy}{Yield strength [\eqn{kN/{mm}^2}]}
 }
 \value{
-\eqn{N_{pl,R_d}} Plastic resistance of the cross-section to compression [\eqn{kN}]
+\eqn{N_{pl,R_d}} Plastic resistance of the cross-section to compression [\eqn{N}]
 }
 \description{
-Calculate the plastic resistance of the cross-section to compression [\eqn{kN}], based on cross-section area \eqn{A} and yield strength \eqn{f_y}.
+Calculate the plastic resistance of the cross-section to compression [\eqn{N}], based on cross-section area \eqn{A} and yield strength \eqn{f_y}.
 }

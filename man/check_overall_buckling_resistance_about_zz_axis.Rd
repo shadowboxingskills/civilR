@@ -5,7 +5,7 @@
 \title{Perform check #2, calculating the overall buckling resistance of struts about major \eqn{z-z} axis}
 \usage{
 check_overall_buckling_resistance_about_zz_axis(trial_member_size,
-  member_type, steel_grade, k, L, E)
+  member_type, steel_grade, k, L, E, h0)
 }
 \arguments{
 \item{trial_member_size}{Trial member size}
@@ -19,6 +19,8 @@ check_overall_buckling_resistance_about_zz_axis(trial_member_size,
 \item{L}{Total length of member [\eqn{m}]}
 
 \item{E}{Young's Modulus of Elasticity [\eqn{GPa}]}
+
+\item{h0}{Distance between centroids of chords [\eqn{mm}]}
 }
 \value{
 \eqn{N_{b,Rd,Y}} Overall buckling resistance of struts about z-z axis [\eqn{kN}]
@@ -29,7 +31,7 @@ where \eqn{L} is the critical length for buckling about major axis \eqn{z-z}
 Steps of the check performed for laced struts:
 \enumerate{
   \item Plastic resistance of the cross-section to compression [\eqn{kN}] \deqn{N_{pl,R_d}= 2(A \, fy)}
-  \item The Euler buckling load [\eqn{kN}] \deqn{N_{cr,Y}=\frac{\pi^2 \, E \, I}{{L_e}^2}}
+  \item The Euler buckling load [\eqn{kN}] \deqn{N_{cr,Y}=\frac{\pi^2 \, E \, I_{eff}}{{L_e}^2}}
   \item Relative slenderness [dimensionless] \deqn{ \bar{\lambda_Y} = \sqrt{ \frac{N_{pl,R_d}}{N_{cr,Y}} } }
   \item Calculate \eqn{\Phi_Y} parameter for slenderness reduction factor \deqn{ \Phi_Y = 0.5 \left[ 1 + \alpha \left( \bar{\lambda_Y}-0.2 \right) + {\bar{\lambda_Y}}^2 \right] }
   \item Slenderness reduction factor [dimensionless] \deqn{ X_Y = \frac{1}{ \Phi_Y+\sqrt{{\Phi_Y}^2-{\bar{\lambda_Y}}^2} } }

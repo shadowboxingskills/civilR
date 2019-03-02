@@ -4,8 +4,6 @@ usethis::use_package("readxl")
 usethis::use_package("writexl")
 usethis::use_package("dplyr")
 
-require(devtools)
-require(roxygen2)
 # usethis::use_vignette("civilR")
 # roxygen2::roxygenise()
 # devtools::build_manual(path="./doc")
@@ -61,8 +59,8 @@ critical_length_minor_axis_z <- function (L, Lkp, Lsp) {
 #' @return TL Temperature load [\eqn{kN}]
 #'
 temperature_load <- function(alpha_T=0.000012, delta_T=10, k_T=0.8, E=210, A=94.4) {
-  A_m2 <- A * 1e-4
-  E_kPa <- E * 1e6
+  A_m2 <- A * 1e-4 # convert A from cm2 to m2
+  E_kPa <- E * 1e6 # convert E from GPa to kPa
   TL <- alpha_T * delta_T * k_T * E_kPa * A_m2
   return(TL)
 }
@@ -87,10 +85,13 @@ temperature_load <- function(alpha_T=0.000012, delta_T=10, k_T=0.8, E=210, A=94.
 #'   \item \eqn{Iyy} Second moment of area axis \eqn{y-y} [\eqn{{cm}^4}]
 #'   \item \eqn{sh} Depth of section [\eqn{mm}]
 #'   \item \eqn{sb} Width of section [\eqn{mm}]
+#'   \item \eqn{Izz} Second moment of area axis \eqn{z-z} [\eqn{{cm}^4}]
 #' }
 #'
 extract_member_dimensions <- function(h, b, m, member_type) {
   require(readxl)
+
+  # h=533; b=165; m=66; member_type='UB'
 
   if ( member_type == "UB" ) {
     dimensions_table_name <- "./tables/UB-Dimensions_properties.xlsx"
@@ -126,8 +127,9 @@ extract_member_dimensions <- function(h, b, m, member_type) {
   Iyy <- t$`Second moment of area Axis y-y cm4`[(t$h == h) & (t$b == b) & (t$m == m)]
   sh <- t$`Depth of section h mm`[(t$h == h) & (t$b == b) & (t$m == m)]
   sb <- t$`Width of section b mm`[(t$h == h) & (t$b == b) & (t$m == m)]
+  Izz <- t$`Second moment of area Axis z-z cm4`[(t$h == h) & (t$b == b) & (t$m == m)]
 
-  l <- list("A" = A, "tw" = tw, "tf" = tf, "Iyy" = Iyy, "sh" = sh, "sb" = sb)
+  l <- list("A" = A, "tw" = tw, "tf" = tf, "Iyy" = Iyy, "sh" = sh, "sb" = sb, "Izz" = Izz)
 
   return(l)
 }
@@ -313,14 +315,14 @@ yield_strength <- function(tw, tf, steel_grade) {
 
 #' Calculate the effective length of member
 #'
-#' Calculate the effective length of member, \eqn{L_e} [\eqn{mm}].
+#' Calculate the effective length of member, \eqn{L_e} [\eqn{m}].
 #'
 #' @param k Effective lengh coefficient [dimensionless]
-#' @param L Length of strut between restraints [\eqn{mm}]
+#' @param L Length of strut between restraints [\eqn{m}]
 #'
 #' @export
 #'
-#' @return \eqn{L_e} Effective length of strut [\eqn{mm}]
+#' @return \eqn{L_e} Effective length of strut [\eqn{m}]
 #'
 effective_length_of_member <- function(k, L) {
   return( k * L )
@@ -332,7 +334,7 @@ effective_length_of_member <- function(k, L) {
 #' Compute the effective second moment of area [\eqn{{mm}^4}].
 #' \eqn{I_{eff}} is a function of the distance between the centroids of the chords and the section area of a chord, calculated as \eqn{ I_{eff} = 0.5 \, {h_0}^2 \, A }.
 #'
-#' @param h0 Distance between centroids of chords [\eqn{m}]
+#' @param h0 Distance between centroids of chords [\eqn{mm}]
 #' @param A Cross-section area of strut [\eqn{{cm}^2}]
 #'
 #' @export
@@ -346,14 +348,14 @@ effective_second_moment_of_area <- function(h0, A) {
 
 #' Calculate the plastic resistance of the cross-section to compression
 #'
-#' Calculate the plastic resistance of the cross-section to compression [\eqn{kN}], based on cross-section area \eqn{A} and yield strength \eqn{f_y}.
+#' Calculate the plastic resistance of the cross-section to compression [\eqn{N}], based on cross-section area \eqn{A} and yield strength \eqn{f_y}.
 #'
 #' @param A Cross-section area of the strut [\eqn{{cm}^2}]
 #' @param fy Yield strength [\eqn{kN/{mm}^2}]
 #'
 #' @export
 #'
-#' @return \eqn{N_{pl,R_d}} Plastic resistance of the cross-section to compression [\eqn{kN}]
+#' @return \eqn{N_{pl,R_d}} Plastic resistance of the cross-section to compression [\eqn{N}]
 #'
 plastic_resistance_of_cross_section_to_compression <- function(A, fy) {
   return( fy * A * 100 )
@@ -365,7 +367,7 @@ plastic_resistance_of_cross_section_to_compression <- function(A, fy) {
 #' Calculate the Euler buckling load [\eqn{kN}] \deqn{ N_{cr,ch}=\frac{\pi^2 \, E \, I}{{L_e}^2} }
 #'
 #' @param Le Effective length of strut [\eqn{mm}]
-#' @param E Young modulus [\eqn{GPa} or \eqn{GN/m^2}]
+#' @param E Young modulus [\eqn{MPa} or \eqn{MN/m^2}]
 #' @param I - check 1: \eqn{I_{yy}}, second moment of area Axis \eqn{y-y} [\eqn{{cm}^4}]. Check 2: \eqn{I_{eff}}, Effective second moment of area [\eqn{{mm}^4}]. Check 3: \eqn{I_{eff}} or \eqn{I_{zz}} [\eqn{{mm}^4}]
 #'
 #' @export
@@ -373,8 +375,9 @@ plastic_resistance_of_cross_section_to_compression <- function(A, fy) {
 #' @return \eqn{N_{cr}} Euler buckling load [\eqn{kN}]
 #'
 Euler_buckling_load <- function(Le, E, I) {
-  Ncr <- ( pi^2 * E * I ) / Le^2
-  return( Ncr )
+  Ncr <- ( pi^2 * E * I * 1e4 ) / Le^2 # [N]
+  Ncr <- Ncr * 1e-3 # [kN]
+  return(Ncr)
 }
 
 
@@ -522,10 +525,11 @@ maximum_shear_force_in_the_lacing <- function(MEd, L) {
 #' Then include TL calculations for Load Combinations applying partial factors based on the Table A1.2(B), EN1990-2002, p53
 #' Compare maximum from ULS and ALS to define which mistake could govern.
 #'
+#' @param isTopLevel Is member located at top level? [boolean]
 #' @param DL Dead load / self-weight of member [\eqn{kN/m}]
 #' @param LL Live load / imposed load [\eqn{kN/m}]
 #' @param L Total length of member [\eqn{m}]
-#' @param AF Axial compression force of member per meter [\eqn{kN/m}]
+#' @param P Axial compression force of member per meter [\eqn{kN/m}]
 #' @param theta Angle to wall [\eqn{deg}]
 #' @param spacing spacing [\eqn{m}]
 #' @param Lcry critical length major axis [\eqn{m}]
@@ -537,6 +541,7 @@ maximum_shear_force_in_the_lacing <- function(MEd, L) {
 #' @param k_T Coefficient Of Temperature Effect [dimensionless]
 #' @param E Young's Modulus of Elasticity [\eqn{GPa}]
 #' @param IL Accidental Impact Load [\eqn{kN/m}]
+#' @param gamma Partial factor for action [dimensionless], as per EN 1990:2002 standard
 #'
 #' @export
 #'
@@ -547,10 +552,10 @@ axial_compression_force <- function(
   DL=1,
   LL=1,
   L=12.5,
-  AF=582,
+  P=247,
   theta=90,
-  spacing=6,
-  Lcry=12.7,
+  spacing=6, # spacing [m]
+  Lcry=12.5,
   Lcrz=1.6,
   steel_grade='S355',
   member_type='UB',
@@ -558,33 +563,22 @@ axial_compression_force <- function(
   delta_T=10,
   k_T=0.8,
   E=210,
-  IL=50
+  IL=50,
+  gamma=1.35
 ) {
-  # DL=1; LL=1; L=12.5; AF=247; theta=90; spacing=7
-  # Lcry=12.7; Lcrz=1.6; steel_grade='S355'; member_type='UB'
+  # DL=1; LL=1; L=12.5; P=247; theta=90; spacing=6
+  # Lcry=12.5; Lcrz=1.6; steel_grade='S355'; member_type='UB'
   # alpha_T=0.000012; delta_T=10; k_T=0.8; E=210; IL=50
 
   # SF, axial force / strut force (kN)
-  SF <- ( AF * spacing ) / sin( theta * pi / 180 )
-  DL <- DL * spacing
-  LL <- LL * spacing
-  IL <- IL * spacing
+  SF <- ( P * spacing * gamma ) / sin( theta * pi / 180 ) # Axial compressional force, Ned [kN]
+
+  e <- 30 / 1000 # [m] = 30mm, eccentricity (e = 10% of d > 30mm)
+
+  Ned_no_TL <- round( SF * (1 + e) ) # correct for eccentricity
+
 
   if ( isTopLevel ) { # top level only
-    # ULS - load combination for strut design
-    lc1 <- 1.35 * DL + 1.35 * SF + 1.5 * LL
-    lc2 <- 1.35 * DL + 1.35 * SF + 1.05 * LL
-    lc3 <- 1.35 * DL + 1.0 * SF + 1.5 * LL
-    lc4 <- 1.35 * DL + 1.0 * SF + 1.05 * LL
-
-    # ALS
-    lc5 <- 1.0 * DL + 1.0 * SF + 0.7 * LL + 1.0 * IL
-    lc6 <- 1.0 * DL + 1.0 * SF + 0.6 * LL + 1.0 * IL
-    # lc7 <- 1.0 * DL + 1.0 * SF + 0.7* LL
-    # lc8 <- 1.0 * DL + 1.0 * SF + 0.6 * LL
-
-    Ned_no_TL <- round( max( lc1, lc2, lc3, lc4, lc5, lc6 ) )
-
     # find trial member size
     mb_no_TL <- trial_member_size(Lcry, Lcrz, Ned_no_TL, steel_grade, member_type)
 
@@ -595,40 +589,10 @@ axial_compression_force <- function(
     # calculate temperature load
     TL <- round( temperature_load(alpha_T, delta_T, k_T, E, A_no_TL) )
 
-    # ULS - load combination for strut design with TL
-    lc1 <- 1.35 * DL + 1.35 * SF + 1.5 * LL + 0.9 * TL
-    lc2 <- 1.35 * DL + 1.35 * SF + 1.05 *LL + 1.5 * TL
-    lc3 <- 1.35 * DL + 1.0 * SF + 1.5 * LL + 0.9 * TL
-    lc4 <- 1.35 * DL + 1.0 * SF + 1.05 * LL + 1.5 * TL
+    # leading temperature partial factor correction
+    TL <- TL * 1.5
 
-    # ALS - load combination for strut design with TL
-    lc5 <- 1.0 * DL + 1.0 * SF + 0.7 * LL + 1.0 * IL
-    lc6 <- 1.0 * DL + 1.0 * SF + 0.6 * LL + 0.5 * TL + 1.0 * IL
-    # lc7 <- 1.0 * DL + 1.0 * SF + 0.7* LL
-    # lc8 <- 1.0 * DL + 1.0 * SF + 0.6 * LL + 0.5 * TL
-
-    # OFS
-
-    # axial_compression_force (ULS) Ned_ULS (kN)
-    Ned_TL <- round( max( lc1, lc2, lc3, lc4, lc5, lc6 ) )
-
-  } else { # all levels except top one
-
-    # ULS - load combination for strut design without TL
-    lc1 <- 1.35 * DL + 1.35 * SF + 1.5 * LL
-    lc2 <- 1.35 * DL + 1.35 * SF + 1.05 * LL
-    lc3 <- 1.35 * DL + 1.0 * SF + 1.5 * LL
-    lc4 <- 1.35 * DL + 1.0 * SF + 1.05 * LL
-
-    # ALS without TL
-    lc5 <- 1.0 * DL + 1.0 * SF + 0.7 * LL + 1.0 * IL
-    lc6 <- 1.0 * DL + 1.0 * SF + 0.6 * LL + 1.0 * IL
-    # lc7 <- 1.0 * DL + 1.0 * SF + 0.7* LL
-    # lc8 <- 1.0 * DL + 1.0 * SF + 0.6 * LL
-
-    # OFS
-
-    Ned_no_TL <- round( max( lc1, lc2, lc3, lc4, lc5, lc6 ) )
+    Ned_TL <- round( Ned_no_TL + TL )
   }
 
   if ( isTopLevel ) {
@@ -803,7 +767,7 @@ trial_member_size <- function(Lcry, Lcrz, Ned, steel_grade, member_type) {
 #' Steps of the check performed for laced struts:
 #' \enumerate{
 #'   \item Plastic resistance of the cross-section to compression [\eqn{kN}] \deqn{N_{pl,R_d}= 2(A \, fy)}
-#'   \item The Euler buckling load [\eqn{kN}] \deqn{N_{cr,X}=\frac{\pi^2 \, E \, I}{{L_e}^2}}
+#'   \item The Euler buckling load [\eqn{kN}] \deqn{N_{cr,X}=\frac{\pi^2 \, E \, I_{yy}}{{L_e}^2}}
 #'   \item Relative slenderness [dimensionless] \deqn{ \bar{\lambda_X} = \sqrt{ \frac{N_{pl,R_d}}{N_{cr,X}} } }
 #'   \item Calculate \eqn{\Phi_X} parameter for slenderness reduction factor \deqn{ \Phi_X = 0.5 \left[ 1 + \alpha \left( \bar{\lambda_X}-0.2 \right) + {\bar{\lambda_X}}^2 \right] }
 #'   \item Slenderness reduction factor [dimensionless] \deqn{ X_x = \frac{1}{ \Phi_X+\sqrt{{\Phi_X}^2-{\bar{\lambda_X}}^2} } }
@@ -824,7 +788,7 @@ trial_member_size <- function(Lcry, Lcrz, Ned, steel_grade, member_type) {
 #'
 check_overall_buckling_resistance_about_yy_axis <- function(trial_member_size, member_type, steel_grade, k, L, E) {
 
-  # trial_member_size=trial_mb; member_type="UB"; steel_grade="S355"; k=1; L=12.7; E=210
+  # trial_member_size="533 x 165 x 66"; member_type="UB"; steel_grade="S355"; k=1; L=12.5; E=210
 
   s <- convert_member_dimensions_string_to_elements(trial_member_size)
 
@@ -834,17 +798,17 @@ check_overall_buckling_resistance_about_yy_axis <- function(trial_member_size, m
   # fy, yield strength [N/mm2]
   fy <- yield_strength(l$tw, l$tf, steel_grade)
 
-  # Le, effective length of strut (mm)
+  # Le, effective length of strut [m]
   Le <- effective_length_of_member(k, L)
 
-  # N_pl_Rd, plastic resistance of the cross-section to compression (kN)
-  N_pl_Rd <- plastic_resistance_of_cross_section_to_compression(l$A, fy) / 1000
+  # N_pl_Rd, plastic resistance of the cross-section to compression [kN]
+  N_pl_Rd <- 2 * plastic_resistance_of_cross_section_to_compression(l$A, fy) / 1000
 
-  # Ncr, Euler buckling load (kN)
-  Ncr <- Euler_buckling_load(Le, E, l$Iyy) / 1000
+  # Ncr, Euler buckling load [kN]
+  Ncr <- Euler_buckling_load(Le * 1000, E * 1000, l$Iyy)
 
   # lambda_bar, Relative slenderness (dimentionless)
-  lambda_bar <- relative_slenderness(N_pl_Rd * 2, Ncr)
+  lambda_bar <- relative_slenderness(N_pl_Rd, Ncr)
 
   # imperfection_factor_yy for rolled section (dimensionless)
   alpha_yy <- imperfection_factor_yy(s$h, s$b, l$tf)
@@ -866,7 +830,7 @@ check_overall_buckling_resistance_about_yy_axis <- function(trial_member_size, m
 #' Steps of the check performed for laced struts:
 #' \enumerate{
 #'   \item Plastic resistance of the cross-section to compression [\eqn{kN}] \deqn{N_{pl,R_d}= 2(A \, fy)}
-#'   \item The Euler buckling load [\eqn{kN}] \deqn{N_{cr,Y}=\frac{\pi^2 \, E \, I}{{L_e}^2}}
+#'   \item The Euler buckling load [\eqn{kN}] \deqn{N_{cr,Y}=\frac{\pi^2 \, E \, I_{eff}}{{L_e}^2}}
 #'   \item Relative slenderness [dimensionless] \deqn{ \bar{\lambda_Y} = \sqrt{ \frac{N_{pl,R_d}}{N_{cr,Y}} } }
 #'   \item Calculate \eqn{\Phi_Y} parameter for slenderness reduction factor \deqn{ \Phi_Y = 0.5 \left[ 1 + \alpha \left( \bar{\lambda_Y}-0.2 \right) + {\bar{\lambda_Y}}^2 \right] }
 #'   \item Slenderness reduction factor [dimensionless] \deqn{ X_Y = \frac{1}{ \Phi_Y+\sqrt{{\Phi_Y}^2-{\bar{\lambda_Y}}^2} } }
@@ -880,18 +844,15 @@ check_overall_buckling_resistance_about_yy_axis <- function(trial_member_size, m
 #' @param k Coefficient [dimensionless]
 #' @param L Total length of member [\eqn{m}]
 #' @param E Young's Modulus of Elasticity [\eqn{GPa}]
+#' @param h0 Distance between centroids of chords [\eqn{mm}]
 #'
 #' @export
 #'
 #' @return \eqn{N_{b,Rd,Y}} Overall buckling resistance of struts about z-z axis [\eqn{kN}]
 #'
-check_overall_buckling_resistance_about_zz_axis <- function(trial_member_size, member_type, steel_grade, k, L, E) {
-  # 2: \alpha_zz, I=Ieff [mm4], Le=kL[\eqn{m}], Npl,Rk=Npl,Rd*2 [\eqn{kN}]
-  # \lambda= \lambda_Y,  X=X_y, \Phi=\Phi_y
-  #
-  # OUTPUT 2 : N_{b,Rd}=N_{b,Rd,y} [\eqn{kN}]
+check_overall_buckling_resistance_about_zz_axis <- function(trial_member_size, member_type, steel_grade, k, L, E, h0) {
 
-  # trial_member_size=trial_mb; member_type="UB"; steel_grade="S355"; k=0.8; L=12.7; E=210
+  # trial_member_size="533 x 165 x 66"; member_type="UB"; steel_grade="S355"; k=1; L=12.5; E=210; h0=1000
 
   s <- convert_member_dimensions_string_to_elements(trial_member_size)
 
@@ -901,17 +862,20 @@ check_overall_buckling_resistance_about_zz_axis <- function(trial_member_size, m
   # fy, yield strength [N/mm2]
   fy <- yield_strength(l$tw, l$tf, steel_grade)
 
-  # Le, effective length of strut (mm)
+  # Le, effective length of strut [m]
   Le <- effective_length_of_member(k, L)
 
   # N_pl_Rd, plastic resistance of the cross-section to compression (kN)
-  N_pl_Rd <- plastic_resistance_of_cross_section_to_compression(l$A, fy) / 1000
+  N_pl_Rd <- 2 * plastic_resistance_of_cross_section_to_compression(l$A, fy) / 1000
 
-  # Ncr, Euler buckling load (kN)
-  Ncr <- Euler_buckling_load(Le, E, l$Iyy) / 1000
+  # Ieff, effective second moment of area [mm4 --> cm4]
+  Ieff <- effective_second_moment_of_area(h0, l$A) / 1e4
+
+  # Ncr, Euler buckling load [kN]
+  Ncr <- Euler_buckling_load(Le * 1000, E * 1000, Ieff)
 
   # lambda_bar, Relative slenderness (dimentionless)
-  lambda_bar <- relative_slenderness(N_pl_Rd * 2, Ncr)
+  lambda_bar <- relative_slenderness(N_pl_Rd, Ncr)
 
   # imperfection_factor_yy for rolled section (dimensionless)
   alpha_yy <- imperfection_factor_yy(s$h, s$b, l$tf)
@@ -920,7 +884,7 @@ check_overall_buckling_resistance_about_zz_axis <- function(trial_member_size, m
   X <- slenderness_reduction_factor(alpha_yy, lambda_bar)
 
   # N_b_Rd, overall buckling resistance of the struts about the axis (kN)
-  N_b_Rd_Y <- overall_buckling_resistance_about_axis(X, N_pl_Rd)
+  N_b_Rd_Y <- round( overall_buckling_resistance_about_axis(X, N_pl_Rd) )
 
   return(N_b_Rd_Y)
 }
@@ -928,12 +892,12 @@ check_overall_buckling_resistance_about_zz_axis <- function(trial_member_size, m
 
 #' Perform check #3, calculating the local buckling resistance of struts about minor \eqn{z-z} axis
 #'
-#' Calculate the local buckling resistance of member about minor \eqn{z-z} axis, based on EC3 Approach. \deqn{L_e=kL} [\eqn{mm}]
+#' Calculate the local buckling resistance of member about minor \eqn{z-z} axis, based on EC3 Approach. \deqn{L_e=kL_{ch}} [\eqn{mm}]
 #' where \eqn{L} is the critical length for buckling about minor axis \eqn{z-z}
 #' Steps of the check performed for laced struts:
 #' \enumerate{
 #'   \item Plastic resistance of the cross-section to compression [\eqn{kN}] \deqn{N_{pl,R_d,ch}= 2(A  \, fy)}
-#'   \item The Euler buckling load [\eqn{kN}] \deqn{N_{cr,ch}=\frac{\pi^2 \,  E \,  I}{{L_e}^2}}
+#'   \item The Euler buckling load [\eqn{kN}] \deqn{N_{cr,ch}=\frac{\pi^2 \,  E \,  I_{zz}}{{L_e}^2}}
 #'   \item Relative slenderness [dimensionless] \deqn{ \bar{\lambda_{ch}} = \sqrt{ \frac{N_{pl,R_d,ch}}{N_{cr,ch}} } }
 #'   \item Calculate \eqn{\Phi_{ch}} parameter for slenderness reduction factor \deqn{ \Phi_{ch} = 0.5   \left[ 1 + \alpha \left( \bar{\lambda_{ch}}-0.2 \right) + {\bar{\lambda_{ch}}}^2 \right] }
 #'   \item Slenderness reduction factor [dimensionless] \deqn{ X_{ch} = \frac{1}{ \Phi_{ch}+\sqrt{{\Phi_{ch}}^2-{\bar{\lambda_{ch}}}^2} } }
@@ -945,40 +909,37 @@ check_overall_buckling_resistance_about_zz_axis <- function(trial_member_size, m
 #' @param member_type member_type, categorical: 'UC' or 'UB'
 #' @param steel_grade steel_grade [\eqn{N/{mm}^2}], categorical: 'S355' or 'S275'
 #' @param k Coefficient [dimensionless]
-#' @param L Total length of member [\eqn{m}]
+#' @param Lch Length of chord [\eqn{mm}]
 #' @param E Young's Modulus of Elasticity [\eqn{GPa}]
 #'
 #' @export
 #'
 #' @return \eqn{N_{b,Rd,X}} Local buckling resistance of struts about \eqn{z-z} axis [\eqn{kN}]
 #'
-check_local_buckling_resistance_about_zz_axis <- function(trial_member_size, member_type, steel_grade, k, L, E) {
-  # 3: \alpha_zz, I=Ieff[mm4], Le=Lch [\eqn{m}], Npl,Rch=Npl,Rd [\eqn{kN}]
-  #
-  # OUTPUT 3 :
-  #   take min OUTPUT 1, OUTPUT 2, OUTPUT 3
+check_local_buckling_resistance_about_zz_axis <- function(trial_member_size, member_type, steel_grade, k, Lch, E) {
 
-  # trial_member_size=trial_mb; member_type="UB"; steel_grade="S355"; k=0.8; L=12.7; E=210
+  # trial_member_size="533 x 165 x 66"; member_type="UB"; steel_grade="S355"; k=1; Lch=1; E=210
+  # trial_member_size="686 x 254 x 125"; member_type="UB"; steel_grade="S355"; k=1; Lch=1; E=210
 
   s <- convert_member_dimensions_string_to_elements(trial_member_size)
 
   # extract member area from reference table
-  l <- extract_member_dimensions(s$h, s$b , s$m, member_type)
+  l <- civilR::extract_member_dimensions(s$h, s$b, s$m, member_type)
 
   # fy, yield strength [N/mm2]
   fy <- yield_strength(l$tw, l$tf, steel_grade)
 
-  # Le, effective length of strut (mm)
-  Le <- effective_length_of_member(k, L)
+  # Le, effective length of strut [m]
+  Le <- effective_length_of_member(k, Lch / 1000)
 
   # N_pl_Rd, plastic resistance of the cross-section to compression (kN)
   N_pl_Rd <- plastic_resistance_of_cross_section_to_compression(l$A, fy) / 1000
 
-  # Ncr, Euler buckling load (kN)
-  Ncr <- Euler_buckling_load(Le, E, l$Iyy) / 1000
+  # Ncr, Euler buckling load [kN]
+  Ncr <- Euler_buckling_load(Le * 1000, E * 1000, l$Izz)
 
   # lambda_bar, Relative slenderness (dimentionless)
-  lambda_bar <- relative_slenderness(N_pl_Rd * 2, Ncr)
+  lambda_bar <- relative_slenderness(N_pl_Rd, Ncr)
 
   # imperfection_factor_yy for rolled section (dimensionless)
   alpha_yy <- imperfection_factor_yy(s$h, s$b, l$tf)
@@ -987,7 +948,7 @@ check_local_buckling_resistance_about_zz_axis <- function(trial_member_size, mem
   X <- slenderness_reduction_factor(alpha_yy, lambda_bar)
 
   # N_b_Rd, overall buckling resistance of the struts about the axis (kN)
-  N_b_Rd_ch <- overall_buckling_resistance_about_axis(X, N_pl_Rd)
+  N_b_Rd_ch <- round( overall_buckling_resistance_about_axis(X, N_pl_Rd) )
 
   return(N_b_Rd_ch)
 }
@@ -1000,47 +961,55 @@ check_local_buckling_resistance_about_zz_axis <- function(trial_member_size, mem
 #' Calculation steps are as follows:
 #' \enumerate{
 #'   \item Effective length \eqn{L_e = k \, L} [\eqn{mm}], where \eqn{L} is the length between two vertical supports of laced struts.
-#'   \item Effective second moment of area \deqn{I_{eff}=0.5 \, h_0 \, A_{ch}}  [\eqn{{mm}^4}]. \eqn{I_{eff}}, where \eqn{h_0} [\eqn{cm}] is the distance between centroids of the chords and \eqn{A_{ch}}, [\eqn{{cm}^4}] is the cross-sectional area of one chord.
+#'   \item Effective second moment of area \deqn{I_{eff}=0.5 \, h_0 \, A  [\eqn{{mm}^4}]. \eqn{I_{eff}}, where \eqn{h_0} [\eqn{cm}] is the distance between centroids of the chords and \eqn{A_{ch}}, [\eqn{{cm}^4}] is the cross-sectional area of one chord.
 #'   \item Shear stiffness for K-shape lacing \eqn{S_v} [\eqn{kN}], where \eqn{d} is the lenth of diagonals \eqn{d = sqrt{ {h_0}^2 + L_{ch} }} [\eqn{mm}].
 #'   \item Calculate the Euler buckling load \eqn{N_{cr,ch}} [\eqn{kN}] \deqn{ N_{cr,ch}=\frac{\pi^2 \, E \, I} {{L_e}^2} }, where \eqn{L_e} is the effective length between two vertical supports.
 #'   \item Compute the second order bending moment \eqn{{M_{E_d}}^{II}} [\eqn{kN.m}].
 #'   \item Output maximum compressive axial force in the chords \eqn{N_{ch,E_d}} [\eqn{kN}] \deqn{ N_{ch,E_d} = \frac{N_{E_d}}{2} + \frac{M_{E_d} \, h_0 \, A}{ 2 \, I_{eff}} }
 #' }
 #'
+#' @param trial_member_size Trial member size
+#' @param member_type member_type, categorical: 'UC' or 'UB'
+#' @param steel_grade steel_grade [\eqn{N/{mm}^2}], categorical: 'S355' or 'S275'
 #' @param k Coefficient of length as function of wall rigidity [dimensionless]
-#' @param L Length between two restrains [\eqn{m}]
+#' @param L Length between two restraints [\eqn{m}]
 #' @param n Number of lacing planes, default [\eqn{n=2}]
 #' @param Ad Section area of diagonal (lacing), [\eqn{cm^2}]
 #' @param Lch Length of chord of betwen restrains (lace points) [\eqn{m}]
 #' @param E Young modulus [\eqn{GPa} or \eqn{GN/m^2}]
 #' @param h0 Distance between centroids of chords [\eqn{m}]
 #' @param Ned Axial compression Force [\eqn{kN}]
-#' @param Ieff Effective second moment of area [\eqn{{mm}^4}]
-#' @param Sv Shear stiffness for K-shape lacing [\eqn{kN}]
 #'
 #' @export
 #'
 #' @return \eqn{N_{ch,E_d}} Maximum compressive axial force in the chords [\eqn{kN}]
 #'
-max_compressive_axial_force_in_chords <- function(k, L, A, n, Ad, Lch, E, h0, Ned) {
+max_compressive_axial_force_in_chords <- function(trial_member_size, member_type, steel_grade, k, L, n, Ad, Lch, E, h0, Ned) {
 
-  # Le, effective length of strut (mm)
+  s <- convert_member_dimensions_string_to_elements(trial_member_size)
+
+  # extract member area from reference table
+  l <- extract_member_dimensions(s$h, s$b , s$m, member_type)
+
+  # Le, effective length of strut [m]
   Le <- effective_length_of_member(k, L)
 
-  # Ieff, effective second moment of area
-  Ieff <- effective_second_moment_of_area(h0, A)
+  # Ieff, effective second moment of area [mm4 --> cm4]
+  Ieff <- effective_second_moment_of_area(h0, l$A) / 1e4
+
+  # n=2; Ad=1552; Lch=1; E=210000; h0=1000
 
   # Shear stiffness for K-shape lacing
-  Sv <- shear_stiffness(n, Ad, Lch, E, h0)
+  Sv <- shear_stiffness(n, Ad, Lch, E * 1000, h0)
 
-  # Ncr, Euler buckling load (kN)
-  Ncr <- Euler_buckling_load(Le, E, Ieff) / 1000
+  # Ncr, Euler buckling load [kN]
+  Ncr <- Euler_buckling_load(Le * 1000, E * 1000, Ieff)
 
   # The second order bending moment
   MEd <- second_order_bending_moment(L, Ned, Sv, Ncr)
 
   # Output maximum compressive axial force in the chords
-  N_ch_Ed <- round( (0.5 * Ned) + (MEd * h0 * A) / (2*Ieff) )
+  N_ch_Ed <- round( (0.5 * Ned) + (MEd * h0 * l$A) / (2*Ieff) )
 
   return(N_ch_Ed)
 }
@@ -1049,6 +1018,8 @@ max_compressive_axial_force_in_chords <- function(k, L, A, n, Ad, Lch, E, h0, Ne
 #' Read input table from given Excel file
 #'
 #' Read input table from given Excel file.
+#'
+#' @param file_name Path and file name of the input table
 #'
 #' @export
 #'
@@ -1062,7 +1033,7 @@ read_input_table <- function(file_name="tables/input/trial1_kotik.xlsx") {
 
   names(t) <- c( "Strut.name", "L.m", "k", "s.m", "Lcry.m", "Lcrz.m", "theta.deg", "Lch.mm",
                  "h0.mm", "n", "Ad.mm2", "E.GPa", "top.level.y.n", "DL.kN.m", "LL.kN.m",
-                 "AF.kN.m", "IL.kN.m", "steel.grade", "member.type", "alpha_T", "k_T" )
+                 "P.kN.m", "IL.kN.m", "steel.grade", "member.type", "alpha_T", "k_T" )
   t$steel.grade <- paste0( 'S', t$steel.grade )
   t$top.level.y.n <- (t$top.level.y.n == "y")
 
@@ -1084,8 +1055,8 @@ process_input_table <- function() {
   # t <- head(t, rows)
   #t <- t[-c(2), ] # delete 2nd row
 
-  # add delta_T
   t$delta_T <- 10
+  t$gamma <- 1.35
 
   t_INPUT <- t
   View(t_INPUT)
@@ -1093,7 +1064,7 @@ process_input_table <- function() {
   # DL <- 1
   # LL <- 1
   # L <- 12.5
-  # AF <- 582
+  # P <- 582
   # theta <- 90
   # spacing <- 7
   # Lcry <- 12.7
@@ -1105,11 +1076,12 @@ process_input_table <- function() {
   # k_T <- 0.8
   # E <- 210
   # IL <- 50
+  # gamma <- 1.35
   # k <- 1
   # isTopLevel <- T
 
   # calculate Ned (kN)
-  # Ned <- axial_compression_force(isTopLevel, DL, LL, L, AF, theta, spacing, Lcry, Lcrz, steel_grade, member_type, alpha_T, delta_T, k_T, E, IL)
+  # Ned <- axial_compression_force(isTopLevel, DL, LL, L, P, theta, spacing, Lcry, Lcrz, steel_grade, member_type, alpha_T, delta_T, k_T, E, IL, gamma)
   # print(Ned)
   # Ned <- axial_compression_force()
 
@@ -1117,7 +1089,7 @@ process_input_table <- function() {
   # t$DL.kN.m <- 1
   # t$LL.kN.m <- 1
   # t$L.m <- 12.5
-  # t$AF.kN.m <- 582
+  # t$P.kN.m <- 582
   # t$theta.deg <- 90
   # t$s.m <- 7
   # t$Lcry.m <- 12.7
@@ -1133,7 +1105,7 @@ process_input_table <- function() {
   # DL <- 1
   # LL <- 1
   # L <- 12.7
-  # AF <- 582
+  # P <- 582
   # theta <- 90
   # spacing <- 7
   # Lcry <- 12.7
@@ -1153,7 +1125,7 @@ process_input_table <- function() {
   #                                  t$DL.kN.m,
   #                                  t$LL.kN.m,
   #                                  t$L.m,
-  #                                  t$AF.kN.m,
+  #                                  t$P.kN.m,
   #                                  t$theta.deg,
   #                                  t$s.m,
   #                                  t$Lcry.m,
@@ -1165,6 +1137,7 @@ process_input_table <- function() {
   #                                  t$k_T,
   #                                  t$E.GPa,
   #                                  t$IL.kN.m
+  #                                   ** +gamma **
   #                                  )
 
   t$Ned <- 0
@@ -1175,7 +1148,7 @@ process_input_table <- function() {
                                              as.numeric(t[row, "DL.kN.m"]),
                                              as.numeric(t[row, "LL.kN.m"]),
                                              as.numeric(t[row, "L.m"]),
-                                             as.numeric(t[row, "AF.kN.m"]),
+                                             as.numeric(t[row, "P.kN.m"]),
                                              as.numeric(t[row, "theta.deg"]),
                                              as.numeric(t[row, "s.m"]),
                                              as.numeric(t[row, "Lcry.m"]),
@@ -1186,7 +1159,8 @@ process_input_table <- function() {
                                              as.numeric(t[row, "delta_T"]),
                                              as.numeric(t[row, "k_T"]),
                                              as.numeric(t[row, "E.GPa"]),
-                                             as.numeric(t[row, "IL.kN.m"])
+                                             as.numeric(t[row, "IL.kN.m"]),
+                                             as.numeric(t[row, "gamma"])
                                              )
     print(as.numeric(t[row, "Ned"]))
   }
@@ -1211,8 +1185,69 @@ process_input_table <- function() {
     print(as.character(t[row, "selected_member_size"]))
   }
 
-  # apply 1st check
-  # check1 <- check_overall_buckling_resistance_about_yy_axis(member_size, member_type, steel_grade, k, L, E)
+  t$check1.kN <- 0
+  t$check2.kN <- 0
+  t$check3.kN <- 0
+  t$N_ch_Ed.kN <- 0
+  t$final_check <- F
+
+  for (row in 1:nrow(t)) {
+    # calculate check 1 [kN]
+    t[row, "check1.kN"] <- check_overall_buckling_resistance_about_yy_axis(as.character(t[row, "selected_member_size"]),
+                                                                           as.character(t[row, "member.type"]),
+                                                                           as.character(t[row, "steel.grade"]),
+                                                                           as.numeric(t[row, "k"]),
+                                                                           as.numeric(t[row, "L.m"]),
+                                                                           as.numeric(t[row, "E.GPa"])
+                                                                           )
+    print(as.character(t[row, "check1.kN"]))
+  }
+
+  for (row in 1:nrow(t)) {
+    # calculate check 2 [kN]
+    t[row, "check2.kN"] <- check_overall_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                           as.character(t[row, "member.type"]),
+                                                                           as.character(t[row, "steel.grade"]),
+                                                                           as.numeric(t[row, "k"]),
+                                                                           as.numeric(t[row, "L.m"]),
+                                                                           as.numeric(t[row, "E.GPa"]),
+                                                                           as.numeric(t[row, "h0.mm"])
+                                                                          )
+    print(as.character(t[row, "check2.kN"]))
+  }
+
+  for (row in 1:nrow(t)) {
+    # calculate check 3 [kN]
+    t[row, "check3.kN"] <- check_local_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                           as.character(t[row, "member.type"]),
+                                                                           as.character(t[row, "steel.grade"]),
+                                                                           as.numeric(t[row, "k"]),
+                                                                           as.numeric(t[row, "Lch.mm"]),
+                                                                           as.numeric(t[row, "E.GPa"])
+    )
+    print(as.character(t[row, "check3.kN"]))
+  }
+
+
+  for (row in 1:nrow(t)) {
+    # calculate N_ch_Ed [kN]
+    t[row, "N_ch_Ed.kN"] <- max_compressive_axial_force_in_chords(as.character(t[row, "selected_member_size"]),
+                                                                   as.character(t[row, "member.type"]),
+                                                                   as.character(t[row, "steel.grade"]),
+                                                                   as.numeric(t[row, "k"]),
+                                                                   as.numeric(t[row, "L.m"]),
+                                                                   as.numeric(t[row, "n"]),
+                                                                   as.numeric(t[row, "Ad.mm2"]),
+                                                                   as.numeric(t[row, "Lch.mm"]),
+                                                                   as.numeric(t[row, "E.GPa"]),
+                                                                   as.numeric(t[row, "h0.mm"]),
+                                                                   as.numeric(t[row, "Ned"])
+                                                                   )
+    print(as.character(t[row, "N_ch_Ed.kN"]))
+  }
+
+
+  t$final_check <- ( (t$N_ch_Ed.kN / min(t$check1.kN, t$check2.kN, t$check3.kN)) < 1.0 )
 
   return(t)
 }
@@ -1221,6 +1256,8 @@ process_input_table <- function() {
 #' Export output table to Excel file
 #'
 #' Export output table to Excel file.
+#'
+#' @param file_name Path and file name of the output table
 #'
 #' @export
 #'
@@ -1256,7 +1293,7 @@ main <- function() {
   DL <- 1
   LL <- 1
   L <- 12.7
-  AF <- 582
+  P <- 582
   theta <- 90
   spacing <- 7
   Lcry <- 12.7
@@ -1268,11 +1305,12 @@ main <- function() {
   k_T <- 0.8
   E <- 210
   IL <- 50
+  gamma <- 1.35
   k <- 1
   isTopLevel <- T
 
   # calculate Ned (kN)
-  # Ned <- axial_compression_force(isTopLevel, DL, LL, L, AF, theta, spacing, Lcry, Lcrz, steel_grade, member_type, alpha_T, delta_T, k_T, E, IL)
+  # Ned <- axial_compression_force(isTopLevel, DL, LL, L, P, theta, spacing, Lcry, Lcrz, steel_grade, member_type, alpha_T, delta_T, k_T, E, IL, gamma)
 
   # calculate max compressive axial force in chords
   N_ch_Ed <- max_compressive_axial_force_in_chords(k, L, A=44.3, n=2, Ad=12.47, Lch=1, E, h0=8, Ned)

@@ -7,7 +7,7 @@
 effective_second_moment_of_area(h0, A)
 }
 \arguments{
-\item{h0}{Distance between centroids of chords [\eqn{m}]}
+\item{h0}{Distance between centroids of chords [\eqn{mm}]}
 
 \item{A}{Cross-section area of strut [\eqn{{cm}^2}]}
 }
