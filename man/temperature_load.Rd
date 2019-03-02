@@ -5,7 +5,7 @@
 \title{Calculate the temperature load}
 \usage{
 temperature_load(alpha_T = 1.2e-05, delta_T = 10, k_T = 0.8,
-  E = 210, A)
+  E = 210, A = 94.4)
 }
 \arguments{
 \item{alpha_T}{Thermal coefficient of expansion [\eqn{degC}]}
@@ -14,7 +14,7 @@ temperature_load(alpha_T = 1.2e-05, delta_T = 10, k_T = 0.8,
 
 \item{k_T}{Coefficient Of temperature effect [dimensionless]}
 
-\item{E}{Young's Modulus of Elasticity [\eqn{GPa}]}
+\item{E}{Young's Modulus of Elasticity [\eqn{GPa} or \eqn{GN/m2}]}
 
 \item{A}{Sectional area from table for given member size [\eqn{cm^2}]}
 }

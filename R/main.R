@@ -1,6 +1,8 @@
 usethis::use_package("devtools")
 usethis::use_package("roxygen2")
 usethis::use_package("readxl")
+usethis::use_package("writexl")
+usethis::use_package("dplyr")
 
 require(devtools)
 require(roxygen2)
@@ -17,8 +19,6 @@ require(roxygen2)
 #' @param L Total length of member [\eqn{m}]
 #' @param Lkp Length to king post [\eqn{m}]
 #' @param Lsp Length from splays [\eqn{m}]
-#'
-#' @export
 #'
 #' @return \eqn{L_{cry}} Critical length along major \eqn{y} axis [\eqn{m}]
 #'
@@ -37,8 +37,6 @@ critical_length_major_axis_y <- function (L, Lkp, Lsp) {
 #' @param Lkp Length to king post [\eqn{m}]
 #' @param Lsp Length from splays [\eqn{m}]
 #'
-#' @export
-#'
 #' @return \eqn{L_{crz}} Critical length along major \eqn{z} axis [\eqn{m}]
 #'
 critical_length_minor_axis_z <- function (L, Lkp, Lsp) {
@@ -55,15 +53,17 @@ critical_length_minor_axis_z <- function (L, Lkp, Lsp) {
 #' @param alpha_T Thermal coefficient of expansion [\eqn{degC}]
 #' @param delta_T Change in temperature from the Installation temperature [\eqn{degC}]
 #' @param k_T Coefficient Of temperature effect [dimensionless]
-#' @param E Young's Modulus of Elasticity [\eqn{GPa}]
+#' @param E Young's Modulus of Elasticity [\eqn{GPa} or \eqn{GN/m2}]
 #' @param A Sectional area from table for given member size [\eqn{cm^2}]
 #'
 #' @export
 #'
 #' @return TL Temperature load [\eqn{kN}]
 #'
-temperature_load <- function(alpha_T=0.000012, delta_T=10, k_T=0.8, E=210, A) {
-  TL <- alpha_T * delta_T * k_T * E * A
+temperature_load <- function(alpha_T=0.000012, delta_T=10, k_T=0.8, E=210, A=94.4) {
+  A_m2 <- A * 1e-4
+  E_kPa <- E * 1e6
+  TL <- alpha_T * delta_T * k_T * E_kPa * A_m2
   return(TL)
 }
 
@@ -100,7 +100,7 @@ extract_member_dimensions <- function(h, b, m, member_type) {
     nmax <- 46
   }
 
-  t <- readxl::read_xlsx( dimensions_table_name,
+  t <- readxl::read_excel( dimensions_table_name,
                           col_types = c("text", "text", "skip", rep("numeric", 27)),
                           skip = 9,
                           n_max = nmax )
@@ -546,12 +546,12 @@ axial_compression_force <- function(
   isTopLevel=T,
   DL=1,
   LL=1,
-  L,
-  AF,
+  L=12.5,
+  AF=582,
   theta=90,
   spacing=6,
   Lcry=12.7,
-  Lcrz=12.7,
+  Lcrz=1.6,
   steel_grade='S355',
   member_type='UB',
   alpha_T=0.000012,
@@ -560,22 +560,20 @@ axial_compression_force <- function(
   E=210,
   IL=50
 ) {
-  # axial_compression_force( DL=1, LL=1, L=12.7, AF=582, theta=90, spacing=7,
-  # Lcry=12.7, Lcrz=12.7, steel_grade='S355', member_type='UB', alpha_T=0.000012,
-  # delta_T=10, k_T=0.8, E=210, IL=50 )
-
-  # DL=1; LL=1; L=12.7; AF=582; theta=90; spacing=7
-  # Lcry=12.7; Lcrz=12.7; steel_grade='S355'; member_type='UB'
+  # DL=1; LL=1; L=12.5; AF=247; theta=90; spacing=7
+  # Lcry=12.7; Lcrz=1.6; steel_grade='S355'; member_type='UB'
   # alpha_T=0.000012; delta_T=10; k_T=0.8; E=210; IL=50
 
-  # SF, axial force / strut force (kN/m)
-  # SF <- f(AF, theta)
+  # SF, axial force / strut force (kN)
   SF <- ( AF * spacing ) / sin( theta * pi / 180 )
+  DL <- DL * spacing
+  LL <- LL * spacing
+  IL <- IL * spacing
 
   if ( isTopLevel ) { # top level only
     # ULS - load combination for strut design
     lc1 <- 1.35 * DL + 1.35 * SF + 1.5 * LL
-    lc2 <- 1.35 * DL + 1.35 * SF + 1.05 *LL
+    lc2 <- 1.35 * DL + 1.35 * SF + 1.05 * LL
     lc3 <- 1.35 * DL + 1.0 * SF + 1.5 * LL
     lc4 <- 1.35 * DL + 1.0 * SF + 1.05 * LL
 
@@ -585,17 +583,17 @@ axial_compression_force <- function(
     # lc7 <- 1.0 * DL + 1.0 * SF + 0.7* LL
     # lc8 <- 1.0 * DL + 1.0 * SF + 0.6 * LL
 
-    Ned_no_TL <- max( lc1, lc2, lc3, lc4, lc5, lc6 )
+    Ned_no_TL <- round( max( lc1, lc2, lc3, lc4, lc5, lc6 ) )
 
     # find trial member size
     mb_no_TL <- trial_member_size(Lcry, Lcrz, Ned_no_TL, steel_grade, member_type)
 
     # extract member area from reference table
     l <- convert_member_dimensions_string_to_elements(mb_no_TL)
-    A_no_TL <- extract_member_dimensions(l$h, l$b , l$m, member_type)$A
+    A_no_TL <- extract_member_dimensions(l$h, l$b , l$m, member_type)$A # Area in cm2
 
     # calculate temperature load
-    TL <- temperature_load(alpha_T, delta_T, k_T, E, A_no_TL)
+    TL <- round( temperature_load(alpha_T, delta_T, k_T, E, A_no_TL) )
 
     # ULS - load combination for strut design with TL
     lc1 <- 1.35 * DL + 1.35 * SF + 1.5 * LL + 0.9 * TL
@@ -618,7 +616,7 @@ axial_compression_force <- function(
 
     # ULS - load combination for strut design without TL
     lc1 <- 1.35 * DL + 1.35 * SF + 1.5 * LL
-    lc2 <- 1.35 * DL + 1.35 * SF + 1.05 *LL
+    lc2 <- 1.35 * DL + 1.35 * SF + 1.05 * LL
     lc3 <- 1.35 * DL + 1.0 * SF + 1.5 * LL
     lc4 <- 1.35 * DL + 1.0 * SF + 1.05 * LL
 
@@ -658,6 +656,7 @@ axial_compression_force <- function(
 #'
 trial_member_size <- function(Lcry, Lcrz, Ned, steel_grade, member_type) {
   require(readxl)
+  require(dplyr)
 
   # select file name
   select_file_name <- function(steel_grade, member_type) {
@@ -697,9 +696,10 @@ trial_member_size <- function(Lcry, Lcrz, Ned, steel_grade, member_type) {
     return( which.min(abs(critical_length_vector-Lcr)) + 1 )
   }
 
-  # Lcry=12.7; Lcrz=1.6; Ned=4076; steel_grade="S355"; member_type="UB"
+  # Lcry=12.5; Lcrz=1; Ned=2269; steel_grade="S355"; member_type="UB"
 
-  t <- readxl::read_xlsx( path = select_file_name(steel_grade, member_type),
+  file_name <- select_file_name(steel_grade, member_type)
+  t <- readxl::read_excel( path = file_name,
                           n_max = nmax,
                           skip = 5 )
 
@@ -731,6 +731,7 @@ trial_member_size <- function(Lcry, Lcrz, Ned, steel_grade, member_type) {
     x_Nb_y <- as.numeric( x_Nb_y$"Nb_y" )
 
     i <- which(abs(x_Nb_y-Ned)==min(abs(x_Nb_y-Ned)))
+    i <- i[1]
 
     Ned_y <- x_Nb_y[i]
 
@@ -760,17 +761,38 @@ trial_member_size <- function(Lcry, Lcrz, Ned, steel_grade, member_type) {
   # col_y <- colnames(t)[critical_length_Lcry_colname]
   # col_z <- colnames(t)[critical_length_Lcrz_colname]
 
-  l <- determine_h_b_m_Ned_z_for_closest_Ned_y(t, Ned)
-  while ( (l$Ned_y < Ned) | (l$Ned_z < Ned) )
-  {
-    t_trimmed <- subset( t, (( sapply(t[,critical_length_Lcry_colname], as.numeric) > Ned ) & ( Axis == "Nb,y,Rd" )) | ( Axis == "Nb,z,Rd" ) )
 
-    l <- determine_h_b_m_Ned_z_for_closest_Ned_y(t_trimmed, Ned)
+  t$hbm <- civilR::convert_member_dimensions_to_string(t$h, t$b, t$m)
+  t_trimmed_z <- subset( t, Axis == "Nb,z,Rd" )
+
+  l <- determine_h_b_m_Ned_z_for_closest_Ned_y(t, Ned)
+
+  while ( ((l$Ned_y < Ned) | (l$Ned_z < Ned)) & (dim(t)[1] >= 2) )
+  {
+    t_trimmed_y <- subset( t, ( sapply(t[,critical_length_Lcry_colname], as.numeric) > Ned ) & ( Axis == "Nb,y,Rd" ) )
+    t_b <- rbind(t_trimmed_y, t_trimmed_z)
+    t_b <- dplyr::group_by(t_b, hbm)
+    t_b <- dplyr::filter(t_b, n()>1)
+
+    t <- t_b
+
+    if ( dim(t)[1] >= 2 ) {
+      l <- determine_h_b_m_Ned_z_for_closest_Ned_y(t, Ned)
+    }
+
+    # print(l$Ned_y)
+    # print(l$Ned_z)
+    # print(l$trial_member_size)
   }
 
   # l$Ned_y
   # l$Ned_z
-  return(l$trial_member_size)
+  if ( dim(t)[1] >= 2 ) {
+    return(l$trial_member_size)
+  } else {
+    return("undetermined")
+  }
+
 }
 
 
@@ -1024,6 +1046,203 @@ max_compressive_axial_force_in_chords <- function(k, L, A, n, Ad, Lch, E, h0, Ne
 }
 
 
+#' Read input table from given Excel file
+#'
+#' Read input table from given Excel file.
+#'
+#' @export
+#'
+#' @return Input table
+#'
+read_input_table <- function(file_name="tables/input/trial1_kotik.xlsx") {
+  require(readxl)
+
+  t <- readxl::read_excel(path = file_name,
+                          col_types = c("text", rep("numeric", 11), "text", rep("numeric", 4), "text", "text", "numeric", "numeric") )
+
+  names(t) <- c( "Strut.name", "L.m", "k", "s.m", "Lcry.m", "Lcrz.m", "theta.deg", "Lch.mm",
+                 "h0.mm", "n", "Ad.mm2", "E.GPa", "top.level.y.n", "DL.kN.m", "LL.kN.m",
+                 "AF.kN.m", "IL.kN.m", "steel.grade", "member.type", "alpha_T", "k_T" )
+  t$steel.grade <- paste0( 'S', t$steel.grade )
+  t$top.level.y.n <- (t$top.level.y.n == "y")
+
+  return(t)
+}
+
+
+#' Process input table
+#'
+#' Process input table.
+#'
+#' @export
+#'
+#' @return Processed table, adding computed outputs:
+#'
+process_input_table <- function() {
+  t <- read_input_table()
+
+  # t <- head(t, rows)
+  #t <- t[-c(2), ] # delete 2nd row
+
+  # add delta_T
+  t$delta_T <- 10
+
+  t_INPUT <- t
+  View(t_INPUT)
+
+  # DL <- 1
+  # LL <- 1
+  # L <- 12.5
+  # AF <- 582
+  # theta <- 90
+  # spacing <- 7
+  # Lcry <- 12.7
+  # Lcrz <- 1.6
+  # steel_grade <- 'S355'
+  # member_type <- 'UB'
+  # alpha_T <- 0.000012
+  # delta_T <- 10
+  # k_T <- 0.8
+  # E <- 210
+  # IL <- 50
+  # k <- 1
+  # isTopLevel <- T
+
+  # calculate Ned (kN)
+  # Ned <- axial_compression_force(isTopLevel, DL, LL, L, AF, theta, spacing, Lcry, Lcrz, steel_grade, member_type, alpha_T, delta_T, k_T, E, IL)
+  # print(Ned)
+  # Ned <- axial_compression_force()
+
+  # t$top.level.y.n <- T
+  # t$DL.kN.m <- 1
+  # t$LL.kN.m <- 1
+  # t$L.m <- 12.5
+  # t$AF.kN.m <- 582
+  # t$theta.deg <- 90
+  # t$s.m <- 7
+  # t$Lcry.m <- 12.7
+  # t$Lcrz.m <- 1.6
+  # t$steel.grade <- 'S355'
+  # t$member.type <- 'UB'
+  # t$alpha_T <- 0.000012
+  # t$delta_T <- 10
+  # t$k_T <- 0.8
+  # t$E.GPa <- 210
+  # t$IL.kN.m <- 50
+
+  # DL <- 1
+  # LL <- 1
+  # L <- 12.7
+  # AF <- 582
+  # theta <- 90
+  # spacing <- 7
+  # Lcry <- 12.7
+  # Lcrz <- 1.6
+  # steel_grade <- 'S355'
+  # member_type <- 'UB'
+  # alpha_T <- 0.000012
+  # delta_T <- 10
+  # k_T <- 0.8
+  # E <- 210
+  # IL <- 50
+  # k <- 1
+  # isTopLevel <- T
+
+  # calculate Ned (kN)
+  # t$Ned <- axial_compression_force(t$top.level.y.n,
+  #                                  t$DL.kN.m,
+  #                                  t$LL.kN.m,
+  #                                  t$L.m,
+  #                                  t$AF.kN.m,
+  #                                  t$theta.deg,
+  #                                  t$s.m,
+  #                                  t$Lcry.m,
+  #                                  t$Lcrz.m,
+  #                                  t$steel.grade,
+  #                                  t$member.type,
+  #                                  t$alpha_T,
+  #                                  t$delta_T,
+  #                                  t$k_T,
+  #                                  t$E.GPa,
+  #                                  t$IL.kN.m
+  #                                  )
+
+  t$Ned <- 0
+
+  for (row in 1:nrow(t)) {
+    # calculate Ned (kN)
+    t[row, "Ned"] <- axial_compression_force(as.logical(t[row, "top.level.y.n"]),
+                                             as.numeric(t[row, "DL.kN.m"]),
+                                             as.numeric(t[row, "LL.kN.m"]),
+                                             as.numeric(t[row, "L.m"]),
+                                             as.numeric(t[row, "AF.kN.m"]),
+                                             as.numeric(t[row, "theta.deg"]),
+                                             as.numeric(t[row, "s.m"]),
+                                             as.numeric(t[row, "Lcry.m"]),
+                                             as.numeric(t[row, "Lcrz.m"]),
+                                             as.character(t[row, "steel.grade"]),
+                                             as.character(t[row, "member.type"]),
+                                             as.numeric(t[row, "alpha_T"]),
+                                             as.numeric(t[row, "delta_T"]),
+                                             as.numeric(t[row, "k_T"]),
+                                             as.numeric(t[row, "E.GPa"]),
+                                             as.numeric(t[row, "IL.kN.m"])
+                                             )
+    print(as.numeric(t[row, "Ned"]))
+  }
+
+  # select member size
+  # t$selected_member_size <- trial_member_size( t$Lcry.m,
+  #                                              t$Lcrz.m,
+  #                                              t$Ned,
+  #                                              t$steel.grade,
+  #                                              t$member.type
+  #                                              )
+
+  t$selected_member_size <- "undetermined"
+  for (row in 1:nrow(t)) {
+    # calculate Ned (kN)
+    t[row, "selected_member_size"] <- trial_member_size(as.numeric(t[row, "Lcry.m"]),
+                                                        as.numeric(t[row, "Lcrz.m"]),
+                                                        as.numeric(t[row, "Ned"]),
+                                                        as.character(t[row, "steel.grade"]),
+                                                        as.character(t[row, "member.type"])
+    )
+    print(as.character(t[row, "selected_member_size"]))
+  }
+
+  # apply 1st check
+  # check1 <- check_overall_buckling_resistance_about_yy_axis(member_size, member_type, steel_grade, k, L, E)
+
+  return(t)
+}
+
+
+#' Export output table to Excel file
+#'
+#' Export output table to Excel file.
+#'
+#' @export
+#'
+#' @return None
+#'
+compute_output_table <- function(file_name="tables/input/output_processed_table.xlsx") {
+  require(writexl)
+
+  t_OUTPUT <- process_input_table()
+  writexl::write_xlsx(t_OUTPUT, path = file_name)
+  View(t_OUTPUT)
+
+  print("")
+  print("")
+  print("Completed OK")
+  print("")
+  print("================================================================")
+  print("Processed table has been exported to output_processed_table.xlsx")
+  print("================================================================")
+}
+
+
 #' Run the high-level main flow
 #'
 #' Run the high-level main flow.
@@ -1051,19 +1270,19 @@ main <- function() {
   IL <- 50
   k <- 1
   isTopLevel <- T
-  print("kotik0")
+
   # calculate Ned (kN)
   # Ned <- axial_compression_force(isTopLevel, DL, LL, L, AF, theta, spacing, Lcry, Lcrz, steel_grade, member_type, alpha_T, delta_T, k_T, E, IL)
-  print("kotik1")
+
   # calculate max compressive axial force in chords
   N_ch_Ed <- max_compressive_axial_force_in_chords(k, L, A=44.3, n=2, Ad=12.47, Lch=1, E, h0=8, Ned)
-  print("kotik2")
+
   # determine member size
   member_size <- trial_member_size(Lcry, Lcrz, Ned=4087, steel_grade, member_type)
-  print("kotik3")
+
   # apply 1st check
   # check1 <- check_overall_buckling_resistance_about_yy_axis(member_size, member_type, steel_grade, k, L, E)
-  print("kotik4")
+
   # display results
   print( paste0('Ned = ', Ned, ' kN') )
   print( paste0('N_ch_Ed = ', N_ch_Ed, ' kN') )

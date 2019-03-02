@@ -4,8 +4,8 @@
 \alias{axial_compression_force}
 \title{Calculate the axial compression force}
 \usage{
-axial_compression_force(isTopLevel = T, DL = 1, LL = 1, L, AF,
-  theta = 90, spacing = 6, Lcry = 12.7, Lcrz = 12.7,
+axial_compression_force(isTopLevel = T, DL = 1, LL = 1, L = 12.5,
+  AF = 582, theta = 90, spacing = 6, Lcry = 12.7, Lcrz = 1.6,
   steel_grade = "S355", member_type = "UB", alpha_T = 1.2e-05,
   delta_T = 10, k_T = 0.8, E = 210, IL = 50)
 }

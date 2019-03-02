@@ -12,7 +12,9 @@ RoxygenNote: 6.1.1
 Imports: 
     roxygen2,
     readxl,
-    devtools
+    devtools,
+    dplyr,
+    writexl
 Suggests: 
     knitr,
     rmarkdown
