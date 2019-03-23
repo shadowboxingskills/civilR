@@ -31,7 +31,7 @@ max_compressive_axial_force_in_chords(trial_member_size, member_type,
 \item{Ned}{Axial compression Force [\eqn{kN}]}
 }
 \value{
-\eqn{N_{ch,E_d}} Maximum compressive axial force in the chords [\eqn{kN}]
+\eqn{N_{ch,E_d}} Maximum compressive axial force in the chords [\eqn{kN}], \eqn{S_v}, \eqn{N_{cr,ch}}, \eqn{{M_{E_d}}}
 }
 \description{
 Determine maximum compressive axial force in the chords at mid-length of the strut, \eqn{N_{ch,E_d}} [\eqn{kN}]

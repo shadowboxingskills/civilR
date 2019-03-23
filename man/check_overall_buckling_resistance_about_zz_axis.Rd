@@ -23,7 +23,7 @@ check_overall_buckling_resistance_about_zz_axis(trial_member_size,
 \item{h0}{Distance between centroids of chords [\eqn{mm}]}
 }
 \value{
-\eqn{N_{b,Rd,Y}} Overall buckling resistance of struts about z-z axis [\eqn{kN}]
+\eqn{N_{b,Rd,Y}} Overall buckling resistance of struts about z-z axis [\eqn{kN}], \eqn{N_{b,R_d,Y}}, \eqn{f_y}, \eqn{N_{pl,R_d}}, \eqn{I_{eff}}, \eqn{N_{cr,Y}}, \eqn{{\bar{\lambda_Y}}}, \eqn{\alpha_{yy}}, \eqn{X}
 }
 \description{
 Calculate the overall buckling resistance of member about \eqn{z-z} axis, based on EC3 Approach. \deqn{L_e = k \, L} [\eqn{mm}]

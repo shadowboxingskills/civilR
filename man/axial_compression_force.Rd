@@ -5,7 +5,7 @@
 \title{Calculate the axial compression force}
 \usage{
 axial_compression_force(isTopLevel = T, DL = 1, LL = 1, L = 12.5,
-  P = 247, theta = 90, spacing = 6, Lcry = 12.5, Lcrz = 1.6,
+  P = 247, theta = 90, spacing = 6, Lcry = 12.7, Lcrz = 1,
   steel_grade = "S355", member_type = "UB", alpha_T = 1.2e-05,
   delta_T = 10, k_T = 0.8, E = 210, IL = 50, gamma = 1.35)
 }
@@ -45,7 +45,7 @@ axial_compression_force(isTopLevel = T, DL = 1, LL = 1, L = 12.5,
 \item{gamma}{Partial factor for action [dimensionless], as per EN 1990:2002 standard}
 }
 \value{
-\eqn{N_{ed}} Axial compression force [\eqn{kN}]
+\eqn{N_{ed}} Axial compression force [\eqn{kN}], \eqn{TL} Temperature Load [\eqn{kN}]
 }
 \description{
 Compute Axial Compression Force, \eqn{N_{ed}} [\eqn{kN}], for member without including Temperature effect.

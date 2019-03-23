@@ -9,40 +9,6 @@ usethis::use_package("dplyr")
 # devtools::build_manual(path="./doc")
 # system("R CMD Rd2pdf .")
 
-
-#' Calculate the critical length along major \eqn{y} axis
-#'
-#' Calculate the critical length along major \eqn{y} axis, \eqn{L_{cry}} [\eqn{m}]
-#'
-#' @param L Total length of member [\eqn{m}]
-#' @param Lkp Length to king post [\eqn{m}]
-#' @param Lsp Length from splays [\eqn{m}]
-#'
-#' @return \eqn{L_{cry}} Critical length along major \eqn{y} axis [\eqn{m}]
-#'
-critical_length_major_axis_y <- function (L, Lkp, Lsp) {
-  Lkp <- L / 2
-  Lcry <- Lkp - Lsp
-  return(Lcry)
-}
-
-
-#' Calculate the critical length along major \eqn{z} axis
-#'
-#' Calculate the critical length along major \eqn{z} axis, \eqn{L_{crz}} [\eqn{m}]
-#'
-#' @param L Total length of member [\eqn{m}]
-#' @param Lkp Length to king post [\eqn{m}]
-#' @param Lsp Length from splays [\eqn{m}]
-#'
-#' @return \eqn{L_{crz}} Critical length along major \eqn{z} axis [\eqn{m}]
-#'
-critical_length_minor_axis_z <- function (L, Lkp, Lsp) {
-  Lcrz <- 0 # TBC
-  return( Lcrz )
-}
-
-
 #' Calculate the temperature load
 #'
 #' Calculate Temperature Load as a function of a surface changes of temperature, TL [\eqn{kN}].
@@ -545,27 +511,12 @@ maximum_shear_force_in_the_lacing <- function(MEd, L) {
 #'
 #' @export
 #'
-#' @return \eqn{N_{ed}} Axial compression force [\eqn{kN}]
+#' @return \eqn{N_{ed}} Axial compression force [\eqn{kN}], \eqn{TL} Temperature Load [\eqn{kN}]
 #'
-axial_compression_force <- function(
-  isTopLevel=T,
-  DL=1,
-  LL=1,
-  L=12.5,
-  P=247,
-  theta=90,
-  spacing=6, # spacing [m]
-  Lcry=12.5,
-  Lcrz=1.6,
-  steel_grade='S355',
-  member_type='UB',
-  alpha_T=0.000012,
-  delta_T=10,
-  k_T=0.8,
-  E=210,
-  IL=50,
-  gamma=1.35
-) {
+axial_compression_force <- function( isTopLevel=T, DL=1, LL=1, L=12.5, P=247, theta=90, spacing=6,
+                                     Lcry=12.7, Lcrz=1.0, steel_grade='S355', member_type='UB',
+                                     alpha_T=0.000012, delta_T=10, k_T=0.8, E=210, IL=50, gamma=1.35 )
+  {
   # DL=1; LL=1; L=12.5; P=247; theta=90; spacing=6
   # Lcry=12.5; Lcrz=1.6; steel_grade='S355'; member_type='UB'
   # alpha_T=0.000012; delta_T=10; k_T=0.8; E=210; IL=50
@@ -575,7 +526,9 @@ axial_compression_force <- function(
 
   e <- 30 / 1000 # [m] = 30mm, eccentricity (e = 10% of d > 30mm)
 
-  Ned_no_TL <- round( SF * (1 + e) ) # correct for eccentricity
+  Ned_no_TL <- SF * (1 + e) # correct for eccentricity
+
+  Ned_no_TL <- round( Ned_no_TL / 2 ) # divide by 2 (force distributed between 2 struts)
 
 
   if ( isTopLevel ) { # top level only
@@ -592,14 +545,20 @@ axial_compression_force <- function(
     # leading temperature partial factor correction
     TL <- TL * 1.5
 
-    Ned_TL <- round( Ned_no_TL + TL )
+    Ned_TL <- Ned_no_TL + TL
+
+    Ned_TL <- round( Ned_TL / 2 ) # divide by 2 (force distributed between 2 struts)
   }
 
   if ( isTopLevel ) {
-    return(Ned_TL)
+    Ned_output <- Ned_TL
+    TL_output <- round(TL)
   } else {
-    return(Ned_no_TL)
+    Ned_output <- Ned_no_TL
+    TL_output <- NA
   }
+
+  return( list("Ned" = Ned_output, "TL" = TL_output) )
 }
 
 
@@ -622,33 +581,31 @@ trial_member_size <- function(Lcry, Lcrz, Ned, steel_grade, member_type) {
   require(readxl)
   require(dplyr)
 
-  # select file name
-  select_file_name <- function(steel_grade, member_type) {
-    if ( steel_grade == "S355" ) {
-      if ( member_type == "UC" ) {
-        axial_compression_table_name <- "./tables/s355/UC/UC-compression-S355.xlsx"
-        nmax <- 138
-      } else if ( member_type == "UB" ) {
-        axial_compression_table_name <- "./tables/s355/UB/UB-Axial compression-S355.xlsx"
-        nmax <- 321
-      } else {
-        print("member type unknown. please enter valid one.")
-      }
-    } else if ( steel_grade == "S275" ) {
-      if ( member_type == "UC" ) {
-        axial_compression_table_name <- "./tables/s275/UC/UC-compression-S275.xlsx"
-        nmax <- 138
-      } else if ( member_type == "UB" ) {
-        axial_compression_table_name <- "./tables/s275/UB/UB_Axial compression-S275.xlsx"
-        nmax <- 321
-      } else {
-        print("member type unknown. please enter valid one.")
-      }
-    } else {
-      print("steel grade unknown. please enter valid one.")
-    }
+  # Lcry=12.7; Lcrz=1; Ned=3638; steel_grade="S355"; member_type="UB"
 
-    return(axial_compression_table_name)
+  # select file name
+  if ( steel_grade == "S355" ) {
+    if ( member_type == "UC" ) {
+      axial_compression_table_name <- "./tables/s355/UC/UC-compression-S355.xlsx"
+      nmax <- 138
+    } else if ( member_type == "UB" ) {
+      axial_compression_table_name <- "./tables/s355/UB/UB-Axial compression-S355.xlsx"
+      nmax <- 321
+    } else {
+      print("member type unknown. please enter valid one.")
+    }
+  } else if ( steel_grade == "S275" ) {
+    if ( member_type == "UC" ) {
+      axial_compression_table_name <- "./tables/s275/UC/UC-compression-S275.xlsx"
+      nmax <- 138
+    } else if ( member_type == "UB" ) {
+      axial_compression_table_name <- "./tables/s275/UB/UB_Axial compression-S275.xlsx"
+      nmax <- 321
+    } else {
+      print("member type unknown. please enter valid one.")
+    }
+  } else {
+    print("steel grade unknown. please enter valid one.")
   }
 
   # function to select closest critical length
@@ -659,8 +616,6 @@ trial_member_size <- function(Lcry, Lcrz, Ned, steel_grade, member_type) {
 
     return( which.min(abs(critical_length_vector-Lcr)) + 1 )
   }
-
-  # Lcry=12.5; Lcrz=1; Ned=2269; steel_grade="S355"; member_type="UB"
 
   file_name <- select_file_name(steel_grade, member_type)
   t <- readxl::read_excel( path = file_name,
@@ -784,7 +739,7 @@ trial_member_size <- function(Lcry, Lcrz, Ned, steel_grade, member_type) {
 #'
 #' @export
 #'
-#' @return \eqn{N_{b,Rd,X}} Overall buckling resistance of struts about major y-y axis [\eqn{kN}]
+#' @return \eqn{N_{b,Rd,X}} Overall buckling resistance of struts about major y-y axis [\eqn{kN}], \eqn{N_{b,R_d,X}}, \eqn{f_y}, \eqn{N_{pl,R_d}}, \eqn{N_{cr,X}}, \eqn{{\bar{\lambda_X}}}, \eqn{\alpha_{yy}}, \eqn{X}
 #'
 check_overall_buckling_resistance_about_yy_axis <- function(trial_member_size, member_type, steel_grade, k, L, E) {
 
@@ -819,7 +774,16 @@ check_overall_buckling_resistance_about_yy_axis <- function(trial_member_size, m
   # N_b_Rd, overall buckling resistance of the struts about the axis (kN)
   N_b_Rd_X <- round( overall_buckling_resistance_about_axis(X, N_pl_Rd) )
 
-  return(N_b_Rd_X)
+  return(
+    list("N_b_Rd_X" = round(N_b_Rd_X),
+         "fy" = round(fy),
+         "N_pl_Rd" = round(N_pl_Rd),
+         "Ncr" = round(Ncr),
+         "lambda_bar" = round(lambda_bar, 2),
+         "alpha_yy" = round(alpha_yy, 2),
+         "X" = round(X, 2)
+         )
+    )
 }
 
 
@@ -848,7 +812,7 @@ check_overall_buckling_resistance_about_yy_axis <- function(trial_member_size, m
 #'
 #' @export
 #'
-#' @return \eqn{N_{b,Rd,Y}} Overall buckling resistance of struts about z-z axis [\eqn{kN}]
+#' @return \eqn{N_{b,Rd,Y}} Overall buckling resistance of struts about z-z axis [\eqn{kN}], \eqn{N_{b,R_d,Y}}, \eqn{f_y}, \eqn{N_{pl,R_d}}, \eqn{I_{eff}}, \eqn{N_{cr,Y}}, \eqn{{\bar{\lambda_Y}}}, \eqn{\alpha_{yy}}, \eqn{X}
 #'
 check_overall_buckling_resistance_about_zz_axis <- function(trial_member_size, member_type, steel_grade, k, L, E, h0) {
 
@@ -886,7 +850,17 @@ check_overall_buckling_resistance_about_zz_axis <- function(trial_member_size, m
   # N_b_Rd, overall buckling resistance of the struts about the axis (kN)
   N_b_Rd_Y <- round( overall_buckling_resistance_about_axis(X, N_pl_Rd) )
 
-  return(N_b_Rd_Y)
+  return(
+    list("N_b_Rd_Y" = round(N_b_Rd_Y),
+         "fy" = round(fy),
+         "N_pl_Rd" = round(N_pl_Rd),
+         "Ieff" = round(Ieff),
+         "Ncr" = round(Ncr),
+         "lambda_bar" = round(lambda_bar, 2),
+         "alpha_yy" = round(alpha_yy, 2),
+         "X" = round(X, 2)
+    )
+  )
 }
 
 
@@ -914,7 +888,7 @@ check_overall_buckling_resistance_about_zz_axis <- function(trial_member_size, m
 #'
 #' @export
 #'
-#' @return \eqn{N_{b,Rd,X}} Local buckling resistance of struts about \eqn{z-z} axis [\eqn{kN}]
+#' @return \eqn{N_{b,Rd,X}} Local buckling resistance of struts about \eqn{z-z} axis [\eqn{kN}], \eqn{f_y}, \eqn{N_{pl,R_d}}, \eqn{N_{cr}}, \eqn{{\bar{\lambda}}}, \eqn{\alpha_{yy}}, \eqn{X}
 #'
 check_local_buckling_resistance_about_zz_axis <- function(trial_member_size, member_type, steel_grade, k, Lch, E) {
 
@@ -947,10 +921,19 @@ check_local_buckling_resistance_about_zz_axis <- function(trial_member_size, mem
   # X, slenderness reduction factor (dimentionless)
   X <- slenderness_reduction_factor(alpha_yy, lambda_bar)
 
-  # N_b_Rd, overall buckling resistance of the struts about the axis (kN)
+  # N_b_Rd_ch, overall buckling resistance of the struts about the axis (kN)
   N_b_Rd_ch <- round( overall_buckling_resistance_about_axis(X, N_pl_Rd) )
 
-  return(N_b_Rd_ch)
+  return(
+    list("N_b_Rd_ch" = round(N_b_Rd_ch),
+         "fy" = round(fy),
+         "N_pl_Rd" = round(N_pl_Rd),
+         "Ncr" = round(Ncr),
+         "lambda_bar" = round(lambda_bar, 2),
+         "alpha_yy" = round(alpha_yy, 2),
+         "X" = round(X, 2)
+    )
+  )
 }
 
 
@@ -982,7 +965,7 @@ check_local_buckling_resistance_about_zz_axis <- function(trial_member_size, mem
 #'
 #' @export
 #'
-#' @return \eqn{N_{ch,E_d}} Maximum compressive axial force in the chords [\eqn{kN}]
+#' @return \eqn{N_{ch,E_d}} Maximum compressive axial force in the chords [\eqn{kN}], \eqn{S_v}, \eqn{N_{cr,ch}}, \eqn{{M_{E_d}}}
 #'
 max_compressive_axial_force_in_chords <- function(trial_member_size, member_type, steel_grade, k, L, n, Ad, Lch, E, h0, Ned) {
 
@@ -1011,7 +994,13 @@ max_compressive_axial_force_in_chords <- function(trial_member_size, member_type
   # Output maximum compressive axial force in the chords
   N_ch_Ed <- round( (0.5 * Ned) + (MEd * h0 * l$A) / (2*Ieff) )
 
-  return(N_ch_Ed)
+  return(
+    list("N_ch_Ed" = round(N_ch_Ed),
+         "Sv" = round(Sv),
+         "Ncr" = round(Ncr),
+         "MEd" = round(lambda_bar)
+         )
+    )
 }
 
 
@@ -1037,6 +1026,9 @@ read_input_table <- function(file_name="tables/input/trial1_kotik.xlsx") {
   t$steel.grade <- paste0( 'S', t$steel.grade )
   t$top.level.y.n <- (t$top.level.y.n == "y")
 
+  t$delta_T <- 10
+  t$gamma <- 1.35
+
   return(t)
 }
 
@@ -1052,95 +1044,73 @@ read_input_table <- function(file_name="tables/input/trial1_kotik.xlsx") {
 process_input_table <- function() {
   t <- read_input_table()
 
-  # t <- head(t, rows)
-  #t <- t[-c(2), ] # delete 2nd row
+  # t_INPUT <- t
+  # View(t_INPUT)
 
-  t$delta_T <- 10
-  t$gamma <- 1.35
-
-  t_INPUT <- t
-  View(t_INPUT)
-
-  # DL <- 1
-  # LL <- 1
-  # L <- 12.5
-  # P <- 582
-  # theta <- 90
-  # spacing <- 7
-  # Lcry <- 12.7
-  # Lcrz <- 1.6
-  # steel_grade <- 'S355'
-  # member_type <- 'UB'
-  # alpha_T <- 0.000012
-  # delta_T <- 10
-  # k_T <- 0.8
-  # E <- 210
-  # IL <- 50
-  # gamma <- 1.35
-  # k <- 1
-  # isTopLevel <- T
-
-  # calculate Ned (kN)
-  # Ned <- axial_compression_force(isTopLevel, DL, LL, L, P, theta, spacing, Lcry, Lcrz, steel_grade, member_type, alpha_T, delta_T, k_T, E, IL, gamma)
-  # print(Ned)
-  # Ned <- axial_compression_force()
-
-  # t$top.level.y.n <- T
-  # t$DL.kN.m <- 1
-  # t$LL.kN.m <- 1
-  # t$L.m <- 12.5
-  # t$P.kN.m <- 582
-  # t$theta.deg <- 90
-  # t$s.m <- 7
-  # t$Lcry.m <- 12.7
-  # t$Lcrz.m <- 1.6
-  # t$steel.grade <- 'S355'
-  # t$member.type <- 'UB'
-  # t$alpha_T <- 0.000012
-  # t$delta_T <- 10
-  # t$k_T <- 0.8
-  # t$E.GPa <- 210
-  # t$IL.kN.m <- 50
-
-  # DL <- 1
-  # LL <- 1
-  # L <- 12.7
-  # P <- 582
-  # theta <- 90
-  # spacing <- 7
-  # Lcry <- 12.7
-  # Lcrz <- 1.6
-  # steel_grade <- 'S355'
-  # member_type <- 'UB'
-  # alpha_T <- 0.000012
-  # delta_T <- 10
-  # k_T <- 0.8
-  # E <- 210
-  # IL <- 50
-  # k <- 1
-  # isTopLevel <- T
-
-  # calculate Ned (kN)
-  # t$Ned <- axial_compression_force(t$top.level.y.n,
-  #                                  t$DL.kN.m,
-  #                                  t$LL.kN.m,
-  #                                  t$L.m,
-  #                                  t$P.kN.m,
-  #                                  t$theta.deg,
-  #                                  t$s.m,
-  #                                  t$Lcry.m,
-  #                                  t$Lcrz.m,
-  #                                  t$steel.grade,
-  #                                  t$member.type,
-  #                                  t$alpha_T,
-  #                                  t$delta_T,
-  #                                  t$k_T,
-  #                                  t$E.GPa,
-  #                                  t$IL.kN.m
-  #                                   ** +gamma **
-  #                                  )
-
+  t$TL <- NA
+  t$Ned_2 <- 0
   t$Ned <- 0
+  t$selected_member_size <- "undetermined"
+
+  # Check 1
+  t$fy_1 <- NA
+  t$N_pl_Rd_1 <- NA
+  t$Ncr_1 <- NA
+  t$lambda_bar_1 <- NA
+  t$alpha_yy_1 <- NA
+  t$X_1 <- NA
+  t$N_b_Rd_X <- NA
+
+  # Check 2
+  t$fy_2 <- NA
+  t$N_pl_Rd_2 <- NA
+  t$Ieff_2 <- NA
+  t$Ncr_2 <- NA
+  t$lambda_bar_2 <- NA
+  t$alpha_yy_2 <- NA
+  t$X_2 <- NA
+  t$N_b_Rd_Y <- NA
+
+  # Check 3
+  t$fy_3 <- NA
+  t$N_pl_Rd_3 <- NA
+  t$Ncr_3 <- NA
+  t$lambda_bar_3 <- NA
+  t$alpha_yy_3 <- NA
+  t$X_3 <- NA
+  t$N_b_Rd_ch <- NA
+
+  # Check 4
+  t$Sv <- NA
+  t$Ncr <- NA
+  t$MEd <- NA
+  t$N_ch_Ed <- NA
+
+  t$final_check <- F
+
+
+  for (row in 1:nrow(t)) {
+    # calculate TL (kN)
+    t[row, "TL"] <- axial_compression_force(as.logical(t[row, "top.level.y.n"]),
+                                             as.numeric(t[row, "DL.kN.m"]),
+                                             as.numeric(t[row, "LL.kN.m"]),
+                                             as.numeric(t[row, "L.m"]),
+                                             as.numeric(t[row, "P.kN.m"]),
+                                             as.numeric(t[row, "theta.deg"]),
+                                             as.numeric(t[row, "s.m"]),
+                                             as.numeric(t[row, "Lcry.m"]),
+                                             as.numeric(t[row, "Lcrz.m"]),
+                                             as.character(t[row, "steel.grade"]),
+                                             as.character(t[row, "member.type"]),
+                                             as.numeric(t[row, "alpha_T"]),
+                                             as.numeric(t[row, "delta_T"]),
+                                             as.numeric(t[row, "k_T"]),
+                                             as.numeric(t[row, "E.GPa"]),
+                                             as.numeric(t[row, "IL.kN.m"]),
+                                             as.numeric(t[row, "gamma"])
+    )$TL
+    print(as.numeric(t[row, "TL"]))
+  }
 
   for (row in 1:nrow(t)) {
     # calculate Ned (kN)
@@ -1161,19 +1131,14 @@ process_input_table <- function() {
                                              as.numeric(t[row, "E.GPa"]),
                                              as.numeric(t[row, "IL.kN.m"]),
                                              as.numeric(t[row, "gamma"])
-                                             )
+                                             )$Ned
     print(as.numeric(t[row, "Ned"]))
   }
 
-  # select member size
-  # t$selected_member_size <- trial_member_size( t$Lcry.m,
-  #                                              t$Lcrz.m,
-  #                                              t$Ned,
-  #                                              t$steel.grade,
-  #                                              t$member.type
-  #                                              )
+  for (row in 1:nrow(t)) {
+    t[row, "Ned_2"] <- round( as.numeric(t[row, "Ned"]) * 2 )
+  }
 
-  t$selected_member_size <- "undetermined"
   for (row in 1:nrow(t)) {
     # calculate Ned (kN)
     t[row, "selected_member_size"] <- trial_member_size(as.numeric(t[row, "Lcry.m"]),
@@ -1185,53 +1150,300 @@ process_input_table <- function() {
     print(as.character(t[row, "selected_member_size"]))
   }
 
-  t$check1.kN <- 0
-  t$check2.kN <- 0
-  t$check3.kN <- 0
-  t$N_ch_Ed.kN <- 0
-  t$final_check <- F
+  #-----------------------------------#
+  #            Check 1                #
+  #-----------------------------------#
 
   for (row in 1:nrow(t)) {
-    # calculate check 1 [kN]
-    t[row, "check1.kN"] <- check_overall_buckling_resistance_about_yy_axis(as.character(t[row, "selected_member_size"]),
+    # calculate N_b_Rd_X for check 1 [kN]
+    t[row, "N_b_Rd_X"] <- check_overall_buckling_resistance_about_yy_axis(as.character(t[row, "selected_member_size"]),
                                                                            as.character(t[row, "member.type"]),
                                                                            as.character(t[row, "steel.grade"]),
                                                                            as.numeric(t[row, "k"]),
                                                                            as.numeric(t[row, "L.m"]),
                                                                            as.numeric(t[row, "E.GPa"])
-                                                                           )
-    print(as.character(t[row, "check1.kN"]))
+    )$N_b_Rd_X
+    print(as.character(t[row, "N_b_Rd_X"]))
   }
 
   for (row in 1:nrow(t)) {
-    # calculate check 2 [kN]
-    t[row, "check2.kN"] <- check_overall_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+    # calculate fy for check 1
+    t[row, "fy_1"] <- check_overall_buckling_resistance_about_yy_axis(as.character(t[row, "selected_member_size"]),
+                                                                           as.character(t[row, "member.type"]),
+                                                                           as.character(t[row, "steel.grade"]),
+                                                                           as.numeric(t[row, "k"]),
+                                                                           as.numeric(t[row, "L.m"]),
+                                                                           as.numeric(t[row, "E.GPa"])
+    )$fy
+    print(as.character(t[row, "fy_1"]))
+  }
+
+  for (row in 1:nrow(t)) {
+    # calculate N_pl_Rd for check 1
+    t[row, "N_pl_Rd_1"] <- check_overall_buckling_resistance_about_yy_axis(as.character(t[row, "selected_member_size"]),
+                                                                           as.character(t[row, "member.type"]),
+                                                                           as.character(t[row, "steel.grade"]),
+                                                                           as.numeric(t[row, "k"]),
+                                                                           as.numeric(t[row, "L.m"]),
+                                                                           as.numeric(t[row, "E.GPa"])
+    )$N_pl_Rd
+    print(as.character(t[row, "N_pl_Rd_1"]))
+  }
+
+  for (row in 1:nrow(t)) {
+    # calculate Ncr for check 1
+    t[row, "Ncr_1"] <- check_overall_buckling_resistance_about_yy_axis(as.character(t[row, "selected_member_size"]),
+                                                                           as.character(t[row, "member.type"]),
+                                                                           as.character(t[row, "steel.grade"]),
+                                                                           as.numeric(t[row, "k"]),
+                                                                           as.numeric(t[row, "L.m"]),
+                                                                           as.numeric(t[row, "E.GPa"])
+    )$Ncr
+    print(as.character(t[row, "Ncr_1"]))
+  }
+
+  for (row in 1:nrow(t)) {
+    # calculate lambda_bar for check 1
+    t[row, "lambda_bar_1"] <- check_overall_buckling_resistance_about_yy_axis(as.character(t[row, "selected_member_size"]),
+                                                                           as.character(t[row, "member.type"]),
+                                                                           as.character(t[row, "steel.grade"]),
+                                                                           as.numeric(t[row, "k"]),
+                                                                           as.numeric(t[row, "L.m"]),
+                                                                           as.numeric(t[row, "E.GPa"])
+    )$lambda_bar
+    print(as.character(t[row, "lambda_bar_1"]))
+  }
+
+  for (row in 1:nrow(t)) {
+    # calculate alpha_yy for check 1
+    t[row, "alpha_yy_1"] <- check_overall_buckling_resistance_about_yy_axis(as.character(t[row, "selected_member_size"]),
+                                                                           as.character(t[row, "member.type"]),
+                                                                           as.character(t[row, "steel.grade"]),
+                                                                           as.numeric(t[row, "k"]),
+                                                                           as.numeric(t[row, "L.m"]),
+                                                                           as.numeric(t[row, "E.GPa"])
+    )$alpha_yy
+    print(as.character(t[row, "alpha_yy_1"]))
+  }
+
+  for (row in 1:nrow(t)) {
+    # calculate X for check 1
+    t[row, "X_1"] <- check_overall_buckling_resistance_about_yy_axis(as.character(t[row, "selected_member_size"]),
+                                                                           as.character(t[row, "member.type"]),
+                                                                           as.character(t[row, "steel.grade"]),
+                                                                           as.numeric(t[row, "k"]),
+                                                                           as.numeric(t[row, "L.m"]),
+                                                                           as.numeric(t[row, "E.GPa"])
+                                                                           )$X
+    print(as.character(t[row, "X_1"]))
+  }
+
+
+  #-----------------------------------#
+  #            Check 2                #
+  #-----------------------------------#
+
+  for (row in 1:nrow(t)) {
+    # calculate N_b_Rd_Y for check 2 [kN]
+    t[row, "N_b_Rd_Y"] <- check_overall_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
                                                                            as.character(t[row, "member.type"]),
                                                                            as.character(t[row, "steel.grade"]),
                                                                            as.numeric(t[row, "k"]),
                                                                            as.numeric(t[row, "L.m"]),
                                                                            as.numeric(t[row, "E.GPa"]),
                                                                            as.numeric(t[row, "h0.mm"])
-                                                                          )
-    print(as.character(t[row, "check2.kN"]))
+                                                                          )$N_b_Rd_Y
+    print(as.character(t[row, "N_b_Rd_Y"]))
   }
 
   for (row in 1:nrow(t)) {
-    # calculate check 3 [kN]
-    t[row, "check3.kN"] <- check_local_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+    # calculate fy for check 2
+    t[row, "fy_2"] <- check_overall_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                          as.character(t[row, "member.type"]),
+                                                                          as.character(t[row, "steel.grade"]),
+                                                                          as.numeric(t[row, "k"]),
+                                                                          as.numeric(t[row, "L.m"]),
+                                                                          as.numeric(t[row, "E.GPa"]),
+                                                                          as.numeric(t[row, "h0.mm"])
+    )$fy
+    print(as.character(t[row, "fy_2"]))
+  }
+
+  for (row in 1:nrow(t)) {
+    # calculate N_pl_Rd for check 2
+    t[row, "N_pl_Rd_2"] <- check_overall_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                          as.character(t[row, "member.type"]),
+                                                                          as.character(t[row, "steel.grade"]),
+                                                                          as.numeric(t[row, "k"]),
+                                                                          as.numeric(t[row, "L.m"]),
+                                                                          as.numeric(t[row, "E.GPa"]),
+                                                                          as.numeric(t[row, "h0.mm"])
+    )$N_pl_Rd
+    print(as.character(t[row, "N_pl_Rd_2"]))
+  }
+
+  for (row in 1:nrow(t)) {
+    # calculate Ieff for check 2
+    t[row, "Ieff_2"] <- check_overall_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                          as.character(t[row, "member.type"]),
+                                                                          as.character(t[row, "steel.grade"]),
+                                                                          as.numeric(t[row, "k"]),
+                                                                          as.numeric(t[row, "L.m"]),
+                                                                          as.numeric(t[row, "E.GPa"]),
+                                                                          as.numeric(t[row, "h0.mm"])
+    )$Ieff
+    print(as.character(t[row, "Ieff_2"]))
+  }
+
+  for (row in 1:nrow(t)) {
+    # calculate Ncr for check 2
+    t[row, "Ncr_2"] <- check_overall_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                          as.character(t[row, "member.type"]),
+                                                                          as.character(t[row, "steel.grade"]),
+                                                                          as.numeric(t[row, "k"]),
+                                                                          as.numeric(t[row, "L.m"]),
+                                                                          as.numeric(t[row, "E.GPa"]),
+                                                                          as.numeric(t[row, "h0.mm"])
+    )$Ncr
+    print(as.character(t[row, "Ncr_2"]))
+  }
+
+  for (row in 1:nrow(t)) {
+    # calculate lambda_bar for check 2
+    t[row, "lambda_bar_2"] <- check_overall_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                          as.character(t[row, "member.type"]),
+                                                                          as.character(t[row, "steel.grade"]),
+                                                                          as.numeric(t[row, "k"]),
+                                                                          as.numeric(t[row, "L.m"]),
+                                                                          as.numeric(t[row, "E.GPa"]),
+                                                                          as.numeric(t[row, "h0.mm"])
+    )$lambda_bar
+    print(as.character(t[row, "lambda_bar_2"]))
+  }
+
+  for (row in 1:nrow(t)) {
+    # calculate alpha_yy for check 2
+    t[row, "alpha_yy_2"] <- check_overall_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                          as.character(t[row, "member.type"]),
+                                                                          as.character(t[row, "steel.grade"]),
+                                                                          as.numeric(t[row, "k"]),
+                                                                          as.numeric(t[row, "L.m"]),
+                                                                          as.numeric(t[row, "E.GPa"]),
+                                                                          as.numeric(t[row, "h0.mm"])
+    )$alpha_yy
+    print(as.character(t[row, "alpha_yy_2"]))
+  }
+
+  for (row in 1:nrow(t)) {
+    # calculate X for check 2
+    t[row, "X_2"] <- check_overall_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                          as.character(t[row, "member.type"]),
+                                                                          as.character(t[row, "steel.grade"]),
+                                                                          as.numeric(t[row, "k"]),
+                                                                          as.numeric(t[row, "L.m"]),
+                                                                          as.numeric(t[row, "E.GPa"]),
+                                                                          as.numeric(t[row, "h0.mm"])
+    )$X
+    print(as.character(t[row, "X_2"]))
+  }
+
+
+  #-----------------------------------#
+  #            Check 3                #
+  #-----------------------------------#
+
+  for (row in 1:nrow(t)) {
+    # calculate N_b_Rd_ch for check 3 [kN]
+    t[row, "N_b_Rd_ch"] <- check_local_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
                                                                            as.character(t[row, "member.type"]),
                                                                            as.character(t[row, "steel.grade"]),
                                                                            as.numeric(t[row, "k"]),
                                                                            as.numeric(t[row, "Lch.mm"]),
                                                                            as.numeric(t[row, "E.GPa"])
-    )
-    print(as.character(t[row, "check3.kN"]))
+                                                                         )$N_b_Rd_ch
+    print(as.character(t[row, "N_b_Rd_ch"]))
+  }
+
+  for (row in 1:nrow(t)) {
+    # calculate fy for check 3
+    t[row, "fy_3"] <- check_local_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                         as.character(t[row, "member.type"]),
+                                                                         as.character(t[row, "steel.grade"]),
+                                                                         as.numeric(t[row, "k"]),
+                                                                         as.numeric(t[row, "Lch.mm"]),
+                                                                         as.numeric(t[row, "E.GPa"])
+    )$fy
+    print(as.character(t[row, "fy_3"]))
+  }
+
+  for (row in 1:nrow(t)) {
+    # calculate N_pl_Rd for check 3
+    t[row, "N_pl_Rd_3"] <- check_local_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                         as.character(t[row, "member.type"]),
+                                                                         as.character(t[row, "steel.grade"]),
+                                                                         as.numeric(t[row, "k"]),
+                                                                         as.numeric(t[row, "Lch.mm"]),
+                                                                         as.numeric(t[row, "E.GPa"])
+    )$N_pl_Rd
+    print(as.character(t[row, "N_pl_Rd_3"]))
+  }
+
+  for (row in 1:nrow(t)) {
+    # calculate Ncr for check 3
+    t[row, "Ncr_3"] <- check_local_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                         as.character(t[row, "member.type"]),
+                                                                         as.character(t[row, "steel.grade"]),
+                                                                         as.numeric(t[row, "k"]),
+                                                                         as.numeric(t[row, "Lch.mm"]),
+                                                                         as.numeric(t[row, "E.GPa"])
+    )$Ncr
+    print(as.character(t[row, "Ncr_3"]))
+  }
+
+  for (row in 1:nrow(t)) {
+    # calculate lambda_bar for check 3
+    t[row, "lambda_bar_3"] <- check_local_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                         as.character(t[row, "member.type"]),
+                                                                         as.character(t[row, "steel.grade"]),
+                                                                         as.numeric(t[row, "k"]),
+                                                                         as.numeric(t[row, "Lch.mm"]),
+                                                                         as.numeric(t[row, "E.GPa"])
+    )$lambda_bar
+    print(as.character(t[row, "lambda_bar_3"]))
+  }
+
+  for (row in 1:nrow(t)) {
+    # calculate alpha_yy for check 3
+    t[row, "alpha_yy_3"] <- check_local_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                         as.character(t[row, "member.type"]),
+                                                                         as.character(t[row, "steel.grade"]),
+                                                                         as.numeric(t[row, "k"]),
+                                                                         as.numeric(t[row, "Lch.mm"]),
+                                                                         as.numeric(t[row, "E.GPa"])
+    )$alpha_yy
+    print(as.character(t[row, "alpha_yy_3"]))
+  }
+
+  for (row in 1:nrow(t)) {
+    # calculate X for check 3
+    t[row, "X_3"] <- check_local_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                         as.character(t[row, "member.type"]),
+                                                                         as.character(t[row, "steel.grade"]),
+                                                                         as.numeric(t[row, "k"]),
+                                                                         as.numeric(t[row, "Lch.mm"]),
+                                                                         as.numeric(t[row, "E.GPa"])
+    )$X
+    print(as.character(t[row, "X_3"]))
   }
 
 
+  #-----------------------------------#
+  #            Check 4                #
+  #-----------------------------------#
+
   for (row in 1:nrow(t)) {
     # calculate N_ch_Ed [kN]
-    t[row, "N_ch_Ed.kN"] <- max_compressive_axial_force_in_chords(as.character(t[row, "selected_member_size"]),
+    t[row, "N_ch_Ed"] <- max_compressive_axial_force_in_chords(as.character(t[row, "selected_member_size"]),
                                                                    as.character(t[row, "member.type"]),
                                                                    as.character(t[row, "steel.grade"]),
                                                                    as.numeric(t[row, "k"]),
@@ -1242,12 +1454,67 @@ process_input_table <- function() {
                                                                    as.numeric(t[row, "E.GPa"]),
                                                                    as.numeric(t[row, "h0.mm"]),
                                                                    as.numeric(t[row, "Ned"])
-                                                                   )
-    print(as.character(t[row, "N_ch_Ed.kN"]))
+                                                                   )$N_ch_Ed
+    print(as.character(t[row, "N_ch_Ed"]))
+  }
+
+  for (row in 1:nrow(t)) {
+    # calculate Sv
+    t[row, "Sv"] <- max_compressive_axial_force_in_chords(as.character(t[row, "selected_member_size"]),
+                                                               as.character(t[row, "member.type"]),
+                                                               as.character(t[row, "steel.grade"]),
+                                                               as.numeric(t[row, "k"]),
+                                                               as.numeric(t[row, "L.m"]),
+                                                               as.numeric(t[row, "n"]),
+                                                               as.numeric(t[row, "Ad.mm2"]),
+                                                               as.numeric(t[row, "Lch.mm"]),
+                                                               as.numeric(t[row, "E.GPa"]),
+                                                               as.numeric(t[row, "h0.mm"]),
+                                                               as.numeric(t[row, "Ned"])
+    )$Sv
+    print(as.character(t[row, "Sv"]))
+  }
+
+  for (row in 1:nrow(t)) {
+    # calculate Ncr
+    t[row, "Ncr"] <- max_compressive_axial_force_in_chords(as.character(t[row, "selected_member_size"]),
+                                                               as.character(t[row, "member.type"]),
+                                                               as.character(t[row, "steel.grade"]),
+                                                               as.numeric(t[row, "k"]),
+                                                               as.numeric(t[row, "L.m"]),
+                                                               as.numeric(t[row, "n"]),
+                                                               as.numeric(t[row, "Ad.mm2"]),
+                                                               as.numeric(t[row, "Lch.mm"]),
+                                                               as.numeric(t[row, "E.GPa"]),
+                                                               as.numeric(t[row, "h0.mm"]),
+                                                               as.numeric(t[row, "Ned"])
+    )$Ncr
+    print(as.character(t[row, "Ncr"]))
+  }
+
+  for (row in 1:nrow(t)) {
+    # calculate MEd
+    t[row, "MEd"] <- max_compressive_axial_force_in_chords(as.character(t[row, "selected_member_size"]),
+                                                               as.character(t[row, "member.type"]),
+                                                               as.character(t[row, "steel.grade"]),
+                                                               as.numeric(t[row, "k"]),
+                                                               as.numeric(t[row, "L.m"]),
+                                                               as.numeric(t[row, "n"]),
+                                                               as.numeric(t[row, "Ad.mm2"]),
+                                                               as.numeric(t[row, "Lch.mm"]),
+                                                               as.numeric(t[row, "E.GPa"]),
+                                                               as.numeric(t[row, "h0.mm"]),
+                                                               as.numeric(t[row, "Ned"])
+    )$MEd
+    print(as.character(t[row, "MEd"]))
   }
 
 
-  t$final_check <- ( (t$N_ch_Ed.kN / min(t$check1.kN, t$check2.kN, t$check3.kN)) < 1.0 )
+  for (row in 1:nrow(t)) {
+    # calculate final_check [T/F]
+    t[row, "final_check"] <- as.logical( (as.numeric(t[row, "N_ch_Ed"]) / min(as.numeric(t[row, "N_b_Rd_X"]), as.numeric(t[row, "N_b_Rd_Y"]), as.numeric(t[row, "N_b_Rd_ch"]))) < 1.0 )
+    print(as.character(t[row, "N_ch_Ed"]))
+  }
 
   return(t)
 }
@@ -1277,54 +1544,5 @@ compute_output_table <- function(file_name="tables/input/output_processed_table.
   print("================================================================")
   print("Processed table has been exported to output_processed_table.xlsx")
   print("================================================================")
-}
-
-
-#' Run the high-level main flow
-#'
-#' Run the high-level main flow.
-#'
-#' @export
-#'
-#' @return Final results
-#'
-main <- function() {
-  # user inputs
-  DL <- 1
-  LL <- 1
-  L <- 12.7
-  P <- 582
-  theta <- 90
-  spacing <- 7
-  Lcry <- 12.7
-  Lcrz <- 12.7
-  steel_grade <- 'S355'
-  member_type <- 'UB'
-  alpha_T <- 0.000012
-  delta_T <- 10
-  k_T <- 0.8
-  E <- 210
-  IL <- 50
-  gamma <- 1.35
-  k <- 1
-  isTopLevel <- T
-
-  # calculate Ned (kN)
-  # Ned <- axial_compression_force(isTopLevel, DL, LL, L, P, theta, spacing, Lcry, Lcrz, steel_grade, member_type, alpha_T, delta_T, k_T, E, IL, gamma)
-
-  # calculate max compressive axial force in chords
-  N_ch_Ed <- max_compressive_axial_force_in_chords(k, L, A=44.3, n=2, Ad=12.47, Lch=1, E, h0=8, Ned)
-
-  # determine member size
-  member_size <- trial_member_size(Lcry, Lcrz, Ned=4087, steel_grade, member_type)
-
-  # apply 1st check
-  # check1 <- check_overall_buckling_resistance_about_yy_axis(member_size, member_type, steel_grade, k, L, E)
-
-  # display results
-  print( paste0('Ned = ', Ned, ' kN') )
-  print( paste0('N_ch_Ed = ', N_ch_Ed, ' kN') )
-  print( paste0('Selected trial member size: ', member_size) )
-  # print( paste0('check #1 = ', check1) )
 }
 
