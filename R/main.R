@@ -4,9 +4,9 @@ usethis::use_package("readxl")
 usethis::use_package("writexl")
 usethis::use_package("dplyr")
 
-# usethis::use_vignette("civilR")
+# usethis::use_vignette('civilR')
 # roxygen2::roxygenise()
-# devtools::build_manual(path="./doc")
+# devtools::build_manual(path='./doc')
 # system("R CMD Rd2pdf .")
 
 #' Calculate the temperature load
