@@ -73,12 +73,12 @@ extract_member_dimensions <- function(h, b, m, member_type) {
                           n_max = nmax )
 
   # generate clean h / b / m columns
-  t$h <- unlist(strsplit(t$..1, " x "))[c(T, F)]
-  t$b <- unlist(strsplit(t$..1, " x "))[c(F, T)]
-  t$m <- unlist(strsplit(t$..2, "x "))[c(F, T)]
+  t$h <- unlist(strsplit(t$...1, " x "))[c(T, F)]
+  t$b <- unlist(strsplit(t$...1, " x "))[c(F, T)]
+  t$m <- unlist(strsplit(t$...2, "x "))[c(F, T)]
 
   # remove 2 first columns
-  drops <- c("..1", "..2")
+  drops <- c("...1", "...2")
   t <- t[ , !(names(t) %in% drops)]
 
   cnames <- c("Mass per meter kg/m",	"Depth of section h mm",	"Width of section b mm",	"Thickness web tw mm", "Thickness flange tf mm",		"Root radius r mm",	"Depth between fillets d mm",	"cw/tw ratio for local buckling", "cf/tf ratio for local buckling",
@@ -517,9 +517,9 @@ axial_compression_force <- function( isTopLevel=T, DL=1, LL=1, L=12.5, P=247, th
                                      Lcry=12.7, Lcrz=1.0, steel_grade='S355', member_type='UB',
                                      alpha_T=0.000012, delta_T=10, k_T=0.8, E=210, IL=50, gamma=1.35 )
   {
-  # DL=1; LL=1; L=12.5; P=247; theta=90; spacing=6
+  # isTopLevel=T; DL=1; LL=1; L=12.5; P=247; theta=90; spacing=6
   # Lcry=12.5; Lcrz=1.6; steel_grade='S355'; member_type='UB'
-  # alpha_T=0.000012; delta_T=10; k_T=0.8; E=210; IL=50
+  # alpha_T=0.000012; delta_T=10; k_T=0.8; E=210; IL=50; gamma=1.35
 
   # SF, axial force / strut force (kN)
   SF <- ( P * spacing * gamma ) / sin( theta * pi / 180 ) # Axial compressional force, Ned [kN]
@@ -533,7 +533,7 @@ axial_compression_force <- function( isTopLevel=T, DL=1, LL=1, L=12.5, P=247, th
 
   if ( isTopLevel ) { # top level only
     # find trial member size
-    mb_no_TL <- trial_member_size(Lcry, Lcrz, Ned_no_TL, steel_grade, member_type)
+    mb_no_TL <- civilR::trial_member_size(Lcry, Lcrz, Ned_no_TL, steel_grade, member_type)
 
     # extract member area from reference table
     l <- convert_member_dimensions_string_to_elements(mb_no_TL)
@@ -617,8 +617,8 @@ trial_member_size <- function(Lcry, Lcrz, Ned, steel_grade, member_type) {
     return( which.min(abs(critical_length_vector-Lcr)) + 1 )
   }
 
-  file_name <- select_file_name(steel_grade, member_type)
-  t <- readxl::read_excel( path = file_name,
+  # file_name <- select_file_name(steel_grade, member_type)
+  t <- readxl::read_excel( path = axial_compression_table_name,
                           n_max = nmax,
                           skip = 5 )
 
@@ -626,16 +626,16 @@ trial_member_size <- function(Lcry, Lcrz, Ned, steel_grade, member_type) {
   t <- subset(t, Axis != "Nb,T,Rd")
 
   # duplicate h x b x m labels
-  t$..1[is.na(t$..1)] <- t$..1[!is.na(t$..1)]
-  t$..2[is.na(t$..2)] <- t$..2[!is.na(t$..2)]
+  t$...1[is.na(t$...1)] <- t$...1[!is.na(t$...1)]
+  t$...2[is.na(t$...2)] <- t$...2[!is.na(t$...2)]
 
   # generate clean h / b / m columns
-  t$h <- unlist(strsplit(t$..1, " x "))[c(T, F)]
-  t$b <- unlist(strsplit(t$..1, " x "))[c(F, T)]
-  t$m <- unlist(strsplit(t$..2, "x "))[c(F, T)]
+  t$h <- unlist(strsplit(t$...1, " x "))[c(T, F)]
+  t$b <- unlist(strsplit(t$...1, " x "))[c(F, T)]
+  t$m <- unlist(strsplit(t$...2, "x "))[c(F, T)]
 
   # remove 3 first columns
-  drops <- c("..1", "..2", "..3")
+  drops <- c("...1", "...2", "...3")
   t <- t[ , !(names(t) %in% drops)]
 
   critical_length_Lcry_colname <- closest_critical_length_index(t, Lcry, member_type)
@@ -998,7 +998,7 @@ max_compressive_axial_force_in_chords <- function(trial_member_size, member_type
     list("N_ch_Ed" = round(N_ch_Ed),
          "Sv" = round(Sv),
          "Ncr" = round(Ncr),
-         "MEd" = round(lambda_bar)
+         "MEd" = round(MEd)
          )
     )
 }
@@ -1042,56 +1042,56 @@ read_input_table <- function(file_name="tables/input/trial1_kotik.xlsx") {
 #' @return Processed table, adding computed outputs:
 #'
 process_input_table <- function() {
-  t <- read_input_table()
+  t <- civilR::read_input_table()
 
   # t_INPUT <- t
   # View(t_INPUT)
 
-  t$TL <- NA
+  t$TL <- 0
   t$Ned_2 <- 0
   t$Ned <- 0
   t$selected_member_size <- "undetermined"
 
   # Check 1
-  t$fy_1 <- NA
-  t$N_pl_Rd_1 <- NA
-  t$Ncr_1 <- NA
-  t$lambda_bar_1 <- NA
-  t$alpha_yy_1 <- NA
-  t$X_1 <- NA
-  t$N_b_Rd_X <- NA
+  t$fy_1 <- 0
+  t$N_pl_Rd_1 <- 0
+  t$Ncr_1 <- 0
+  t$lambda_bar_1 <- 0
+  t$alpha_yy_1 <- 0
+  t$X_1 <- 0
+  t$N_b_Rd_X <- 0
 
   # Check 2
-  t$fy_2 <- NA
-  t$N_pl_Rd_2 <- NA
-  t$Ieff_2 <- NA
-  t$Ncr_2 <- NA
-  t$lambda_bar_2 <- NA
-  t$alpha_yy_2 <- NA
-  t$X_2 <- NA
-  t$N_b_Rd_Y <- NA
+  t$fy_2 <- 0
+  t$N_pl_Rd_2 <- 0
+  t$Ieff_2 <- 0
+  t$Ncr_2 <- 0
+  t$lambda_bar_2 <- 0
+  t$alpha_yy_2 <- 0
+  t$X_2 <- 0
+  t$N_b_Rd_Y <- 0
 
   # Check 3
-  t$fy_3 <- NA
-  t$N_pl_Rd_3 <- NA
-  t$Ncr_3 <- NA
-  t$lambda_bar_3 <- NA
-  t$alpha_yy_3 <- NA
-  t$X_3 <- NA
-  t$N_b_Rd_ch <- NA
+  t$fy_3 <- 0
+  t$N_pl_Rd_3 <- 0
+  t$Ncr_3 <- 0
+  t$lambda_bar_3 <- 0
+  t$alpha_yy_3 <- 0
+  t$X_3 <- 0
+  t$N_b_Rd_ch <- 0
 
   # Check 4
-  t$Sv <- NA
-  t$Ncr <- NA
-  t$MEd <- NA
-  t$N_ch_Ed <- NA
+  t$Sv <- 0
+  t$Ncr <- 0
+  t$MEd <- 0
+  t$N_ch_Ed <- 0
 
   t$final_check <- F
 
 
   for (row in 1:nrow(t)) {
     # calculate TL (kN)
-    t[row, "TL"] <- axial_compression_force(as.logical(t[row, "top.level.y.n"]),
+    t[row, "TL"] <- civilR::axial_compression_force(as.logical(t[row, "top.level.y.n"]),
                                              as.numeric(t[row, "DL.kN.m"]),
                                              as.numeric(t[row, "LL.kN.m"]),
                                              as.numeric(t[row, "L.m"]),
@@ -1108,13 +1108,13 @@ process_input_table <- function() {
                                              as.numeric(t[row, "E.GPa"]),
                                              as.numeric(t[row, "IL.kN.m"]),
                                              as.numeric(t[row, "gamma"])
-    )$TL
+                                             )$TL
     print(as.numeric(t[row, "TL"]))
   }
 
   for (row in 1:nrow(t)) {
     # calculate Ned (kN)
-    t[row, "Ned"] <- axial_compression_force(as.logical(t[row, "top.level.y.n"]),
+    t[row, "Ned"] <- civilR::axial_compression_force(as.logical(t[row, "top.level.y.n"]),
                                              as.numeric(t[row, "DL.kN.m"]),
                                              as.numeric(t[row, "LL.kN.m"]),
                                              as.numeric(t[row, "L.m"]),
@@ -1141,7 +1141,7 @@ process_input_table <- function() {
 
   for (row in 1:nrow(t)) {
     # calculate Ned (kN)
-    t[row, "selected_member_size"] <- trial_member_size(as.numeric(t[row, "Lcry.m"]),
+    t[row, "selected_member_size"] <- civilR::trial_member_size(as.numeric(t[row, "Lcry.m"]),
                                                         as.numeric(t[row, "Lcrz.m"]),
                                                         as.numeric(t[row, "Ned"]),
                                                         as.character(t[row, "steel.grade"]),
