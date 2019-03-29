@@ -712,8 +712,90 @@ trial_member_size <- function(Lcry, Lcrz, Ned, steel_grade, member_type) {
   } else {
     return("undetermined")
   }
-
 }
+
+
+#' Extract a vector of all member sizes
+#'
+#' Extract a vector of all member sizes for specified steel grade (S355/S275) and member type (UC/UB)
+#'
+#' @param steel_grade steel_grade [\eqn{N/{mm}^2}], categorical: 'S355' or 'S275'
+#' @param member_type member_type, categorical: 'UC' or 'UB'
+#'
+#' @export
+#'
+#' @return Vector of all member sizes [ height (mm) x width (mm) x mass (kg/m) ]
+#'
+all_member_sizes <- function(steel_grade, member_type) {
+  require(readxl)
+  require(dplyr) # for arrange
+
+  # steel_grade="S355"; member_type="UB"
+
+  # select file name
+  if ( steel_grade == "S355" ) {
+    if ( member_type == "UC" ) {
+      axial_compression_table_name <- "./tables/s355/UC/UC-compression-S355.xlsx"
+      nmax <- 138
+    } else if ( member_type == "UB" ) {
+      axial_compression_table_name <- "./tables/s355/UB/UB-Axial compression-S355.xlsx"
+      nmax <- 321
+    } else {
+      print("member type unknown. please enter valid one.")
+    }
+  } else if ( steel_grade == "S275" ) {
+    if ( member_type == "UC" ) {
+      axial_compression_table_name <- "./tables/s275/UC/UC-compression-S275.xlsx"
+      nmax <- 138
+    } else if ( member_type == "UB" ) {
+      axial_compression_table_name <- "./tables/s275/UB/UB_Axial compression-S275.xlsx"
+      nmax <- 321
+    } else {
+      print("member type unknown. please enter valid one.")
+    }
+  } else {
+    print("steel grade unknown. please enter valid one.")
+  }
+
+  # file_name <- select_file_name(steel_grade, member_type)
+  t <- readxl::read_excel( path = axial_compression_table_name,
+                           n_max = nmax,
+                           skip = 5 )
+
+  # delete all "Nb,T,Rd" rows
+  t <- subset(t, Axis != "Nb,T,Rd")
+
+  # duplicate h x b x m labels
+  t$...1[is.na(t$...1)] <- t$...1[!is.na(t$...1)]
+  t$...2[is.na(t$...2)] <- t$...2[!is.na(t$...2)]
+
+  # generate clean h / b / m columns
+  t$h <- unlist(strsplit(t$...1, " x "))[c(T, F)]
+  t$b <- unlist(strsplit(t$...1, " x "))[c(F, T)]
+  t$m <- unlist(strsplit(t$...2, "x "))[c(F, T)]
+
+  # remove 3 first columns
+  drops <- c("...1", "...2", "...3")
+  t <- t[ , !(names(t) %in% drops)]
+
+  # delete all "Nb,y,Rd" rows
+  t <- subset(t, Axis == "Nb,y,Rd")
+
+  # convert mass to numeric
+  t$m <- as.numeric(t$m)
+
+  # arrange the table by ascending mass
+  t <- dplyr::arrange(t, m)
+
+  # convert mass back to character
+  t$m <- as.character(t$m)
+
+  # concatenate h, b and m
+  member_sizes <- paste(t$h, t$b, t$m, sep=' x ')
+
+  return(member_sizes)
+}
+
 
 
 #' Perform check #1, calculating the overall buckling resistance of member about major \eqn{y-y} axis
