@@ -527,6 +527,7 @@ axial_compression_force <- function( isTopLevel=T, DL=1, LL=1, L=12.5, P=247, th
   e <- 30 / 1000 # [m] = 30mm, eccentricity (e = 10% of d > 30mm)
 
   Ned_no_TL <- SF * (1 + e) # correct for eccentricity
+  # Ned_no_TL <- SF
 
   Ned_no_TL <- round( Ned_no_TL / 2 ) # divide by 2 (force distributed between 2 struts)
 
@@ -1140,7 +1141,7 @@ process_input_table <- function() {
   }
 
   for (row in 1:nrow(t)) {
-    # calculate Ned (kN)
+    # calculate selected_member_size
     t[row, "selected_member_size"] <- civilR::trial_member_size(as.numeric(t[row, "Lcry.m"]),
                                                         as.numeric(t[row, "Lcrz.m"]),
                                                         as.numeric(t[row, "Ned"]),
