@@ -23,7 +23,17 @@ check_overall_buckling_resistance_about_yy_axis(trial_member_size,
 \item{list_reference_tables}{List of reference tables}
 }
 \value{
-\eqn{N_{b,Rd,X}} Overall buckling resistance of struts about major y-y axis [\eqn{kN}], \eqn{N_{b,R_d,X}}, \eqn{f_y}, \eqn{N_{pl,R_d}}, \eqn{N_{cr,X}}, \eqn{{\bar{\lambda_X}}}, \eqn{\alpha_{yy}}, \eqn{X}
+\itemize{
+  \item \eqn{N_{b,Rd,X}} Overall buckling resistance of struts about major y-y axis [\eqn{kN}]
+  \item \eqn{N_{b,R_d,X}}
+  \item \eqn{f_y}
+  \item \eqn{N_{pl,R_d}}
+  \item \eqn{N_{cr,X}}
+  \item \eqn{N_{cr,X}}
+  \item \eqn{{\bar{\lambda_X}}}
+  \item \eqn{\alpha_{yy}}
+  \item \eqn{X}
+}
 }
 \description{
 Calculate the overall buckling resistance of member about \eqn{y-y} axis, based on EC3 Approach. \deqn{L_e=kL} [\eqn{mm}]

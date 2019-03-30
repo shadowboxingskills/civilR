@@ -5,7 +5,8 @@
 \title{Maximum compressive axial force in the chords}
 \usage{
 max_compressive_axial_force_in_chords(trial_member_size, member_type,
-  steel_grade, k, L, n, Ad, Lch, E, h0, Ned, list_reference_tables)
+  steel_grade, k, L, n, Ad, Lch, E, h0, Ned, list_reference_tables,
+  isTopLevel, DL, LL, IL, TL, Lcry)
 }
 \arguments{
 \item{trial_member_size}{Trial member size}
@@ -31,9 +32,26 @@ max_compressive_axial_force_in_chords(trial_member_size, member_type,
 \item{Ned}{Axial compression Force [\eqn{kN}]}
 
 \item{list_reference_tables}{List of reference tables}
+
+\item{isTopLevel}{Is member located at top level? [boolean]}
+
+\item{DL}{Dead load / self-weight of member [\eqn{kN/m}]}
+
+\item{LL}{Live load / imposed load [\eqn{kN/m}]}
+
+\item{IL}{Accidental Impact Load [\eqn{kN/m}]}
+
+\item{TL}{Temperature load [\eqn{kN/m}]}
+
+\item{Lcry}{critical length about major axis [\eqn{m}]}
 }
 \value{
-\eqn{N_{ch,E_d}} Maximum compressive axial force in the chords [\eqn{kN}], \eqn{S_v}, \eqn{N_{cr,ch}}, \eqn{{M_{E_d}}}
+\itemize{
+  \item \eqn{N_{ch,E_d}} Maximum compressive axial force in the chords [\eqn{kN}]
+  \item \eqn{S_v}
+  \item \eqn{N_{cr,ch}}
+  \item \eqn{{M_{E_d}}}
+}
 }
 \description{
 Determine maximum compressive axial force in the chords at mid-length of the strut, \eqn{N_{ch,E_d}} [\eqn{kN}]

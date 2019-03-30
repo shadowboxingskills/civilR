@@ -7,8 +7,8 @@
 check_all_member_sizes(steel_grade = "S355", member_type = "UB",
   k = 0.8, L = 12.5, E = 210, h0 = 1000, Lch = 1000, Ad = 1140,
   n = 2, isTopLevel = T, alpha_T = 1.2e-05, delta_T = 10,
-  k_T = 0.8, Ned_no_TL = 6987,
-  file_name = "tables/input/all_member_sizes_checked.xlsx",
+  k_T = 0.8, Ned_no_TL = 6987, LL, IL, Lcry, strut_name = "strut #",
+  base_file_name = "tables/input/all_member_sizes_checked",
   export_xlsx = T)
 }
 \arguments{
@@ -40,12 +40,17 @@ check_all_member_sizes(steel_grade = "S355", member_type = "UB",
 
 \item{Ned_no_TL}{Axial Compressional Force without Temperature Load [\eqn{kN}]}
 
-\item{file_name}{Path and file name of the output table}
-
 \item{export_xlsx}{Boolean to export Excel spreadsheet or not [T/F]}
+
+\item{file_name}{Path and file name of the output table}
 }
 \value{
-Dataframe containing relevant input and all computed data
+\itemize{
+  \item \eqn{df} Dataframe containing relevant input and all computed data
+  \item \eqn{optimal_member_size} Optimal member size [ height (mm) x width (mm) x mass (kg/m) ]
+  \item \eqn{optimal_TL} Optimal Temperature Load [\eqn{kN}]
+  \item \eqn{optimal_Ned} Optimal @param Ned_no_TL Axial Compressional Force with Temperature Load [\eqn{kN}]
+}
 }
 \description{
 Generate a table with all member sizes and apply all checks on each of them

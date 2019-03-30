@@ -48,7 +48,10 @@ axial_compression_force(isTopLevel = T, DL = 1, LL = 1, L = 12.5,
 \item{list_reference_tables}{List of reference tables}
 }
 \value{
-\eqn{N_{ed}} Axial compression force [\eqn{kN}], \eqn{TL} Temperature Load [\eqn{kN}]
+\itemize{
+  \item \eqn{N_{ed}} Axial compression force [\eqn{kN}]
+  \item \eqn{TL} Temperature Load [\eqn{kN}]
+}
 }
 \description{
 Compute Axial Compression Force, \eqn{N_{ed}} [\eqn{kN}], for member without including Temperature effect.

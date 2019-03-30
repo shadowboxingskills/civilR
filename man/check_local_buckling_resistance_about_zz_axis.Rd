@@ -23,7 +23,15 @@ check_local_buckling_resistance_about_zz_axis(trial_member_size,
 \item{list_reference_tables}{List of reference tables}
 }
 \value{
-\eqn{N_{b,Rd,X}} Local buckling resistance of struts about \eqn{z-z} axis [\eqn{kN}], \eqn{f_y}, \eqn{N_{pl,R_d}}, \eqn{N_{cr}}, \eqn{{\bar{\lambda}}}, \eqn{\alpha_{yy}}, \eqn{X}
+\itemize{
+  \item \eqn{N_{b,Rd,X}} Local buckling resistance of struts about \eqn{z-z} axis [\eqn{kN}]
+  \item \eqn{f_y}
+  \item \eqn{N_{pl,R_d}}
+  \item \eqn{N_{cr}}
+  \item \eqn{{\bar{\lambda}}}
+  \item \eqn{\alpha_{yy}}
+  \item \eqn{X}
+}
 }
 \description{
 Calculate the local buckling resistance of member about minor \eqn{z-z} axis, based on EC3 Approach. \deqn{L_e=kL_{ch}} [\eqn{mm}]

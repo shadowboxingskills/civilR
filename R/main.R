@@ -425,17 +425,55 @@ shear_stiffness <- function(n=2, Ad, Lch, E, h0) {
 #' @param Ned axial_compression_force [\eqn{kN}]
 #' @param Sv Shear stiffness for K-shape lacing [\eqn{kN}]
 #' @param Ncr Euler buckling load from check #2 global zz [\eqn{kN}]
+#' @param isTopLevel Is member located at top level? [boolean]
+#' @param DL Dead load / self-weight of member [\eqn{kN/m}]
+#' @param LL Live load / imposed load [\eqn{kN/m}]
+#' @param IL Accidental Impact Load [\eqn{kN/m}]
+#' @param TL Temperature load [\eqn{kN/m}]
+#' @param Lcry critical length about major axis [\eqn{m}]
 #'
 #' @export
 #'
 #' @return \eqn{M_{E_d}} Second order moment [\eqn{kN.m}]
 #'
-second_order_bending_moment <- function(L, Ned, Sv, Ncr) {
+second_order_bending_moment <- function(L, Ned, Sv, Ncr, isTopLevel, DL, LL, IL, TL, Lcry) {
   e0 <- L / 500 # e0, initial bow imperfection [mm]
   e0 <- min(e0, 30) # cap e0 at 30mm
-  MEd_1 <- 0 # first order moment
+
+  MEd_1 <- civilR::first_order_bending_moment(
+    civilR::combined_vertical_load(isTopLevel, DL, LL, IL, TL),
+    Lcry
+    )
   MEd <- ( Ned * e0 + MEd_1 ) / ( 1 - (Ned / Ncr) - (Ned / Sv))
+
   return(MEd)
+}
+
+
+#' Shear force at support calculation
+#'
+#' Generate Shear force at support \eqn{V_{Ed}} [\eqn{kN}].
+#'
+#' @param isTopLevel Is member located at top level? [boolean]
+#' @param DL Dead load / self-weight of member [\eqn{kN/m}]
+#' @param LL Live load / imposed load [\eqn{kN/m}]
+#' @param TL  Temperature load [\eqn{kN/m}]
+#' @param Lcry critical length about major axis [\eqn{m}]
+#'
+#' @export
+#'
+#' @return \eqn{V_{Ed}} Shear force at support [\eqn{kN}]
+#'
+shear_force_at_support <- function(isTopLevel, DL, LL, TL, Lcry) {
+  # isTopLevel=T; DL=2.5; LL=1; TL=150; Lcry=12.5
+
+  if ( isTopLevel ) {
+    Ved <- round( 0.6 * ( 1.35 * DL + 1.5 * LL + 1.5 * TL ) * Lcry )
+  } else {
+    Ved <- round( 0.6 * ( 1.35 * DL + 1.5 * LL) * Lcry )
+  }
+
+  return (Ved)
 }
 
 
@@ -556,7 +594,7 @@ axial_compression_force <- function( isTopLevel=T, DL=1, LL=1, L=12.5, P=247, th
     TL_output <- round(TL)
   } else {
     Ned_output <- Ned_no_TL
-    TL_output <- NA
+    TL_output <- 0
   }
 
   return( list("Ned" = Ned_output, "TL" = TL_output) )
@@ -613,7 +651,7 @@ axial_compression_force_given_member <- function( isTopLevel=T, Ned_no_TL=6987, 
     TL_output <- round(TL)
   } else {
     Ned_output <- round(Ned_no_TL)
-    TL_output <- NA
+    TL_output <- 0
   }
 
   return( list("Ned" = Ned_output, "TL" = TL_output) )
@@ -1118,6 +1156,12 @@ check_local_buckling_resistance_about_zz_axis <- function(trial_member_size, mem
 #' @param h0 Distance between centroids of chords [\eqn{m}]
 #' @param Ned Axial compression Force [\eqn{kN}]
 #' @param list_reference_tables List of reference tables
+#' @param isTopLevel Is member located at top level? [boolean]
+#' @param DL Dead load / self-weight of member [\eqn{kN/m}]
+#' @param LL Live load / imposed load [\eqn{kN/m}]
+#' @param IL Accidental Impact Load [\eqn{kN/m}]
+#' @param TL Temperature load [\eqn{kN/m}]
+#' @param Lcry critical length about major axis [\eqn{m}]
 #'
 #' @export
 #'
@@ -1129,7 +1173,7 @@ check_local_buckling_resistance_about_zz_axis <- function(trial_member_size, mem
 #'   \item \eqn{{M_{E_d}}}
 #' }
 #'
-max_compressive_axial_force_in_chords <- function(trial_member_size, member_type, steel_grade, k, L, n, Ad, Lch, E, h0, Ned, list_reference_tables) {
+max_compressive_axial_force_in_chords <- function(trial_member_size, member_type, steel_grade, k, L, n, Ad, Lch, E, h0, Ned, list_reference_tables, isTopLevel, DL, LL, IL, TL, Lcry) {
 
   s <- civilR::convert_member_dimensions_string_to_elements(trial_member_size)
 
@@ -1151,7 +1195,7 @@ max_compressive_axial_force_in_chords <- function(trial_member_size, member_type
   Ncr <- civilR::Euler_buckling_load(Le * 1000, E * 1000, Ieff)
 
   # The second order bending moment
-  MEd <- civilR::second_order_bending_moment(L, Ned, Sv, Ncr)
+  MEd <- civilR::second_order_bending_moment(L, Ned, Sv, Ncr, isTopLevel, DL, LL, IL, TL, Lcry)
 
   # Output maximum compressive axial force in the chords
   N_ch_Ed <- round( (0.5 * Ned) + (MEd * h0 * l$A) / (2*Ieff) )
@@ -1164,6 +1208,71 @@ max_compressive_axial_force_in_chords <- function(trial_member_size, member_type
          )
     )
 }
+
+
+#' USL vs ALS verical load combinations
+#'
+#' USL vs ALS verical load combinations
+#'
+#' Calculation steps are as follows:
+#' \enumerate{
+#'   \item \eqn{ULS: F=(1.35\,DL +1.5\,LL+1.5\,TL)}
+#'   \item \eqn{ALS: F=(1.0\,DL +0.7\,LL+1.0\,IL)}
+#'   \item \eqn{ALS: F=(1.0\,DL +0.6\,LL+1.0\,IL+0.5\,TL)}
+#' }
+#'
+#' @param isTopLevel Is member located at top level? [boolean]
+#' @param DL Dead load / self-weight of member [\eqn{kN/m}]
+#' @param LL Live load / imposed load [\eqn{kN/m}]
+#' @param IL Accidental Impact Load [\eqn{kN/m}]
+#' @param TL Temperature Load [\eqn{kN}]
+#'
+#' @export
+#'
+#' @return combined_vertical_load [\eqn{kN/m}]
+#'
+combined_vertical_load <- function(isTopLevel, DL, LL, IL, TL) {
+  # isTopLevel=T; DL=2.5; LL=1; IL=50; TL=150
+
+  if (isTopLevel) {
+    ULS <- 1.35 * DL + 1.5 * LL + 1.5 * TL
+    ALS <- 1.0 * DL + 0.6 * LL + 1.0 * IL + 0.5 * TL
+  } else {
+    ULS <- 1.35 * DL + 1.5 * LL
+    ALS <- 1.0 * DL + 0.7 * LL + 1.0 * IL
+  }
+
+  combined_vertical_load <- round( max(ULS, ALS) )
+
+  return(combined_vertical_load)
+}
+
+
+#' Calculate first order bending moment about major axis \eqn{y-y} [\eqn{kN.m}]
+#'
+#' Calculate first order bending moment about major axis \eqn{y-y} [\eqn{kN.m}]
+#'
+#' Calculated as \deqn{M^I_{Ed} = 0.08\,F\,L_{cr,y}^2}
+#'
+#' @param combined_vertical_load combined_vertical_load [\eqn{kN/m}]
+#' @param Lcry critical length major axis [\eqn{m}]
+#'
+#' @export
+#'
+#' @return \eqn{M^I_{Ed}} First order bending moment [\eqn{kN.m}]
+#'
+first_order_bending_moment <- function(combined_vertical_load, Lcry) {
+  e <- 30 / 1000 # [m] = 30mm, eccentricity (e = 10% of d > 30mm)
+
+  Me <- combined_vertical_load * e
+
+  first_order_bending_moment <- round( 0.08 * combined_vertical_load * Lcry^2 )
+
+  corrected_first_order_bending_moment <- first_order_bending_moment + Me # correct for eccentricity
+
+  return( round(corrected_first_order_bending_moment) )
+}
+
 
 #' Read input table from given Excel file
 #'
@@ -1183,7 +1292,7 @@ read_input_table <- function(file_name="tables/input/trial1_kotik.xlsx") {
 
   names(t) <- c( "Strut.name", "L.m", "k", "s.m", "Lcry.m", "Lcrz.m", "theta.deg", "Lch.mm",
                  "h0.mm", "n", "Ad.mm2", "E.GPa", "top.level.y.n", "DL.kN.m", "LL.kN.m",
-                 "P.kN.m", "IL.kN.m", "steel.grade", "member.type", "alpha_T", "k_T" )
+                 "Ned_no_TL.kN", "IL.kN.m", "steel.grade", "member.type", "alpha_T", "k_T" )
   t$steel.grade <- paste0( 'S', t$steel.grade )
   t$top.level.y.n <- (t$top.level.y.n == "y")
 
@@ -1285,7 +1394,6 @@ compute_output_table <- function(
   t <- civilR::read_input_table()
 
   t$TL <- 0
-  t$Ned_2 <- 0
   t$Ned <- 0
   t$selected_member_size <- "undetermined"
 
@@ -1318,75 +1426,103 @@ compute_output_table <- function(
   t$N_b_Rd_ch <- 0
 
   # Check 4
+  t$DL <- 0
   t$Sv <- 0
   t$Ncr <- 0
-  t$MEd <- 0
+  t$load <- 0
+  t$Ved <- 0
+  t$MEd_1st <- 0
+  t$MEd_2nd <- 0
   t$N_ch_Ed <- 0
 
   t$final_check <- F
 
+  base_file_name_all_member_sizes <- "tables/input/all_member_sizes_checked"
 
   for (row in 1:nrow(t)) {
     # calculate TL (kN)
-    t[row, "TL"] <- civilR::axial_compression_force(as.logical(t[row, "top.level.y.n"]),
-                                                    as.numeric(t[row, "DL.kN.m"]),
-                                                    as.numeric(t[row, "LL.kN.m"]),
-                                                    as.numeric(t[row, "L.m"]),
-                                                    as.numeric(t[row, "P.kN.m"]),
-                                                    as.numeric(t[row, "theta.deg"]),
-                                                    as.numeric(t[row, "s.m"]),
-                                                    as.numeric(t[row, "Lcry.m"]),
-                                                    as.numeric(t[row, "Lcrz.m"]),
-                                                    as.character(t[row, "steel.grade"]),
-                                                    as.character(t[row, "member.type"]),
-                                                    as.numeric(t[row, "alpha_T"]),
-                                                    as.numeric(t[row, "delta_T"]),
-                                                    as.numeric(t[row, "k_T"]),
-                                                    as.numeric(t[row, "E.GPa"]),
-                                                    as.numeric(t[row, "IL.kN.m"]),
-                                                    as.numeric(t[row, "gamma"]),
-                                                    list_reference_tables)$TL
+    t[row, "TL"] <- civilR::check_all_member_sizes(
+      as.character(t[row, "steel.grade"]),
+      as.character(t[row, "member.type"]),
+      as.numeric(t[row, "k"]),
+      as.numeric(t[row, "L.m"]),
+      as.numeric(t[row, "E.GPa"]),
+      as.numeric(t[row, "h0.mm"]),
+      as.numeric(t[row, "Lch.mm"]),
+      as.numeric(t[row, "Ad.mm2"]),
+      as.numeric(t[row, "n"]),
+      as.logical(t[row, "top.level.y.n"]),
+      as.numeric(t[row, "alpha_T"]),
+      as.numeric(t[row, "delta_T"]),
+      as.numeric(t[row, "k_T"]),
+      as.numeric(t[row, "Ned_no_TL.kN"]),
+      as.numeric(t[row, "LL.kN.m"]),
+      as.numeric(t[row, "IL.kN.m"]),
+      as.numeric(t[row, "Lcry.m"]),
+      as.character(t[row, "Strut.name"]),
+      base_file_name_all_member_sizes,
+      T)$optimal_TL
+
     print(as.numeric(t[row, "TL"]))
   }
 
   for (row in 1:nrow(t)) {
     # calculate Ned (kN)
-    t[row, "Ned"] <- civilR::axial_compression_force(as.logical(t[row, "top.level.y.n"]),
-                                                     as.numeric(t[row, "DL.kN.m"]),
-                                                     as.numeric(t[row, "LL.kN.m"]),
-                                                     as.numeric(t[row, "L.m"]),
-                                                     as.numeric(t[row, "P.kN.m"]),
-                                                     as.numeric(t[row, "theta.deg"]),
-                                                     as.numeric(t[row, "s.m"]),
-                                                     as.numeric(t[row, "Lcry.m"]),
-                                                     as.numeric(t[row, "Lcrz.m"]),
-                                                     as.character(t[row, "steel.grade"]),
-                                                     as.character(t[row, "member.type"]),
-                                                     as.numeric(t[row, "alpha_T"]),
-                                                     as.numeric(t[row, "delta_T"]),
-                                                     as.numeric(t[row, "k_T"]),
-                                                     as.numeric(t[row, "E.GPa"]),
-                                                     as.numeric(t[row, "IL.kN.m"]),
-                                                     as.numeric(t[row, "gamma"]),
-                                                     list_reference_tables)$Ned
+    t[row, "Ned"] <- civilR::check_all_member_sizes(
+      as.character(t[row, "steel.grade"]),
+      as.character(t[row, "member.type"]),
+      as.numeric(t[row, "k"]),
+      as.numeric(t[row, "L.m"]),
+      as.numeric(t[row, "E.GPa"]),
+      as.numeric(t[row, "h0.mm"]),
+      as.numeric(t[row, "Lch.mm"]),
+      as.numeric(t[row, "Ad.mm2"]),
+      as.numeric(t[row, "n"]),
+      as.logical(t[row, "top.level.y.n"]),
+      as.numeric(t[row, "alpha_T"]),
+      as.numeric(t[row, "delta_T"]),
+      as.numeric(t[row, "k_T"]),
+      as.numeric(t[row, "Ned_no_TL.kN"]),
+      as.numeric(t[row, "LL.kN.m"]),
+      as.numeric(t[row, "IL.kN.m"]),
+      as.numeric(t[row, "Lcry.m"]),
+      as.character(t[row, "Strut.name"]),
+      base_file_name_all_member_sizes,
+      T)$optimal_Ned
+
     print(as.numeric(t[row, "Ned"]))
   }
 
-  for (row in 1:nrow(t)) {
-    t[row, "Ned_2"] <- round( as.numeric(t[row, "Ned"]) * 2 )
-  }
+  # for (row in 1:nrow(t)) {
+  #   t[row, "Ned_2"] <- round( as.numeric(t[row, "Ned"]) * 2 )
+  # }
 
   for (row in 1:nrow(t)) {
-    # calculate selected_member_size
-    t[row, "selected_member_size"] <- civilR::trial_member_size(as.numeric(t[row, "Lcry.m"]),
-                                                                as.numeric(t[row, "Lcrz.m"]),
-                                                                as.numeric(t[row, "Ned"]),
-                                                                as.character(t[row, "steel.grade"]),
-                                                                as.character(t[row, "member.type"]),
-                                                                list_reference_tables )
+    # compute selected_member_size
+    t[row, "selected_member_size"] <- civilR::check_all_member_sizes(
+      as.character(t[row, "steel.grade"]),
+      as.character(t[row, "member.type"]),
+      as.numeric(t[row, "k"]),
+      as.numeric(t[row, "L.m"]),
+      as.numeric(t[row, "E.GPa"]),
+      as.numeric(t[row, "h0.mm"]),
+      as.numeric(t[row, "Lch.mm"]),
+      as.numeric(t[row, "Ad.mm2"]),
+      as.numeric(t[row, "n"]),
+      as.logical(t[row, "top.level.y.n"]),
+      as.numeric(t[row, "alpha_T"]),
+      as.numeric(t[row, "delta_T"]),
+      as.numeric(t[row, "k_T"]),
+      as.numeric(t[row, "Ned_no_TL.kN"]),
+      as.numeric(t[row, "LL.kN.m"]),
+      as.numeric(t[row, "IL.kN.m"]),
+      as.numeric(t[row, "Lcry.m"]),
+      as.character(t[row, "Strut.name"]),
+      base_file_name_all_member_sizes,
+      T)$optimal_member_size
+
     print(as.character(t[row, "selected_member_size"]))
   }
-
 
   #-----------------------------------#
   #            Check 1                #
@@ -1680,6 +1816,45 @@ compute_output_table <- function(
   #-----------------------------------#
 
   for (row in 1:nrow(t)) {
+    # calculate combined vertical load [kN/m]
+    t[row, "load"] <- civilR::combined_vertical_load(
+      as.logical(t[row, "top.level.y.n"]),
+      as.numeric(t[row, "DL"]),
+      as.numeric(t[row, "LL.kN.m"]),
+      as.numeric(t[row, "IL.kN.m"]),
+      as.numeric(t[row, "TL"])
+    )
+    print(as.character(t[row, "load"]))
+  }
+
+  for (row in 1:nrow(t)) {
+    # calculate MEd_1st [kN.m]
+    t[row, "MEd_1st"] <- civilR::first_order_bending_moment(
+      as.numeric(t[row, "load"]),
+      as.numeric(t[row, "Lcry.m"])
+      )
+    print(as.character(t[row, "MEd_1st"]))
+  }
+
+  for (row in 1:nrow(t)) {
+    # calculate shear force Ved [kN]
+    t[row, "Ved"] <- civilR::shear_force_at_support(
+      as.logical(t[row, "top.level.y.n"]),
+      as.numeric(t[row, "DL"]),
+      as.numeric(t[row, "LL.kN.m"]),
+      as.numeric(t[row, "TL"]),
+      as.numeric(t[row, "Lcry.m"])
+    )
+    print(as.character(t[row, "Ved"]))
+  }
+
+  for (row in 1:nrow(t)) {
+    # calculate DL [kN/m]
+    t[row, "DL"] <- round( 0.0098 * civilR::convert_member_dimensions_string_to_elements(as.character(t[row, "selected_member_size"]))$m, 2 )
+    print(as.character(t[row, "DL"]))
+  }
+
+  for (row in 1:nrow(t)) {
     # calculate N_ch_Ed [kN]
     t[row, "N_ch_Ed"] <- civilR::max_compressive_axial_force_in_chords(as.character(t[row, "selected_member_size"]),
                                                                        as.character(t[row, "member.type"]),
@@ -1692,7 +1867,13 @@ compute_output_table <- function(
                                                                        as.numeric(t[row, "E.GPa"]),
                                                                        as.numeric(t[row, "h0.mm"]),
                                                                        as.numeric(t[row, "Ned"]),
-                                                                       list_reference_tables)$N_ch_Ed
+                                                                       list_reference_tables,
+                                                                       as.logical(t[row, "top.level.y.n"]),
+                                                                       as.numeric(t[row, "DL"]),
+                                                                       as.numeric(t[row, "LL.kN.m"]),
+                                                                       as.numeric(t[row, "IL.kN.m"]),
+                                                                       as.numeric(t[row, "TL"]),
+                                                                       as.numeric(t[row, "Lcry.m"]))$N_ch_Ed
     print(as.character(t[row, "N_ch_Ed"]))
   }
 
@@ -1709,7 +1890,13 @@ compute_output_table <- function(
                                                                   as.numeric(t[row, "E.GPa"]),
                                                                   as.numeric(t[row, "h0.mm"]),
                                                                   as.numeric(t[row, "Ned"]),
-                                                                  list_reference_tables)$Sv
+                                                                  list_reference_tables,
+                                                                  as.logical(t[row, "top.level.y.n"]),
+                                                                  as.numeric(t[row, "DL"]),
+                                                                  as.numeric(t[row, "LL.kN.m"]),
+                                                                  as.numeric(t[row, "IL.kN.m"]),
+                                                                  as.numeric(t[row, "TL"]),
+                                                                  as.numeric(t[row, "Lcry.m"]))$Sv
     print(as.character(t[row, "Sv"]))
   }
 
@@ -1726,13 +1913,19 @@ compute_output_table <- function(
                                                                    as.numeric(t[row, "E.GPa"]),
                                                                    as.numeric(t[row, "h0.mm"]),
                                                                    as.numeric(t[row, "Ned"]),
-                                                                   list_reference_tables)$Ncr
+                                                                   list_reference_tables,
+                                                                   as.logical(t[row, "top.level.y.n"]),
+                                                                   as.numeric(t[row, "DL"]),
+                                                                   as.numeric(t[row, "LL.kN.m"]),
+                                                                   as.numeric(t[row, "IL.kN.m"]),
+                                                                   as.numeric(t[row, "TL"]),
+                                                                   as.numeric(t[row, "Lcry.m"]))$Ncr
     print(as.character(t[row, "Ncr"]))
   }
 
   for (row in 1:nrow(t)) {
-    # calculate MEd
-    t[row, "MEd"] <- civilR::max_compressive_axial_force_in_chords(as.character(t[row, "selected_member_size"]),
+    # calculate MEd_2nd
+    t[row, "MEd_2nd"] <- civilR::max_compressive_axial_force_in_chords(as.character(t[row, "selected_member_size"]),
                                                                    as.character(t[row, "member.type"]),
                                                                    as.character(t[row, "steel.grade"]),
                                                                    as.numeric(t[row, "k"]),
@@ -1743,15 +1936,23 @@ compute_output_table <- function(
                                                                    as.numeric(t[row, "E.GPa"]),
                                                                    as.numeric(t[row, "h0.mm"]),
                                                                    as.numeric(t[row, "Ned"]),
-                                                                   list_reference_tables)$MEd
-    print(as.character(t[row, "MEd"]))
+                                                                   list_reference_tables,
+                                                                   as.logical(t[row, "top.level.y.n"]),
+                                                                   as.numeric(t[row, "DL"]),
+                                                                   as.numeric(t[row, "LL.kN.m"]),
+                                                                   as.numeric(t[row, "IL.kN.m"]),
+                                                                   as.numeric(t[row, "TL"]),
+                                                                   as.numeric(t[row, "Lcry.m"]))$MEd
+    print(as.character(t[row, "MEd_2nd"]))
   }
 
 
   for (row in 1:nrow(t)) {
     # calculate final_check [T/F]
-    t[row, "final_check"] <- as.logical( (as.numeric(t[row, "N_ch_Ed"]) / min(as.numeric(t[row, "N_b_Rd_X"]), as.numeric(t[row, "N_b_Rd_Y"]), as.numeric(t[row, "N_b_Rd_ch"]))) < 1.0 )
-    print(as.character(t[row, "N_ch_Ed"]))
+    t[row, "final_check"] <- as.logical(
+      (as.numeric(t[row, "N_ch_Ed"]) / min(as.numeric(t[row, "N_b_Rd_X"]), as.numeric(t[row, "N_b_Rd_Y"]), as.numeric(t[row, "N_b_Rd_ch"]))) < 1.0
+      )
+    print(as.character(t[row, "final_check"]))
   }
 
   if ( export_xlsx ) {
@@ -1759,16 +1960,19 @@ compute_output_table <- function(
 
     # export table as XLSX format
     writexl::write_xlsx(t, path = file_name)
-  }
-  View(t)
 
-  print("")
-  print("")
-  print("Completed OK")
-  print("")
-  print("================================================================")
-  print("Processed table has been exported to output_processed_table.xlsx")
-  print("================================================================")
+    # print("")
+    # print("")
+    # print("Completed OK")
+    # print("")
+    # print("================================================================")
+    # print("Processed table has been exported to output_processed_table.xlsx")
+    # print("================================================================")
+
+    View(t)
+  }
+
+  return()
 }
 
 
@@ -1818,7 +2022,11 @@ check_all_member_sizes <- function(
   delta_T=10,
   k_T=0.8,
   Ned_no_TL=6987,
-  file_name="tables/input/all_member_sizes_checked.xlsx",
+  LL,
+  IL,
+  Lcry,
+  strut_name="strut #",
+  base_file_name="tables/input/all_member_sizes_checked",
   export_xlsx=T)
   {
   list_reference_tables <- civilR::import_reference_BlueBook_tables()
@@ -1845,6 +2053,9 @@ check_all_member_sizes <- function(
     alpha_T = alpha_T,
     delta_T = delta_T,
     k_T = k_T,
+    LL = LL,
+    IL = IL,
+    Lcry = Lcry,
 
     # Check 1
     fy_1 = 0,
@@ -1878,6 +2089,7 @@ check_all_member_sizes <- function(
     Ned_no_TL = Ned_no_TL,
     TL = 0,
     Ned = 0,
+    DL = 0,
     Sv = 0,
     Ncr = 0,
     MEd = 0,
@@ -2157,6 +2369,10 @@ check_all_member_sizes <- function(
   #            Check 4                #
   #-----------------------------------#
 
+  for (i in 1:nrow(df)) {
+    # calculate DL [kN/m]
+    df$DL[i] <- round( 0.0098 * civilR::convert_member_dimensions_string_to_elements(as.character(df$member.size[i]))$m, 2 )
+  }
 
   for (i in 1:nrow(df)) {
     # calculate TL (kN)
@@ -2196,7 +2412,13 @@ check_all_member_sizes <- function(
                                                                E,
                                                                h0,
                                                                df$Ned[i],
-                                                               list_reference_tables)$N_ch_Ed
+                                                               list_reference_tables,
+                                                               as.logical(df$isTopLevel[i]),
+                                                               as.numeric(df$DL[i]),
+                                                               as.numeric(df$LL[i]),
+                                                               as.numeric(df$IL[i]),
+                                                               as.numeric(df$TL[i]),
+                                                               as.numeric(df$Lcry[i]))$N_ch_Ed
   }
 
   for (i in 1:nrow(df)) {
@@ -2212,7 +2434,13 @@ check_all_member_sizes <- function(
                                                           E,
                                                           h0,
                                                           df$Ned[i],
-                                                          list_reference_tables)$Sv
+                                                          list_reference_tables,
+                                                          as.logical(df$isTopLevel[i]),
+                                                          as.numeric(df$DL[i]),
+                                                          as.numeric(df$LL[i]),
+                                                          as.numeric(df$IL[i]),
+                                                          as.numeric(df$TL[i]),
+                                                          as.numeric(df$Lcry[i]))$Sv
   }
 
   for (i in 1:nrow(df)) {
@@ -2228,7 +2456,13 @@ check_all_member_sizes <- function(
                                                            E,
                                                            h0,
                                                            df$Ned[i],
-                                                           list_reference_tables)$Ncr
+                                                           list_reference_tables,
+                                                           as.logical(df$isTopLevel[i]),
+                                                           as.numeric(df$DL[i]),
+                                                           as.numeric(df$LL[i]),
+                                                           as.numeric(df$IL[i]),
+                                                           as.numeric(df$TL[i]),
+                                                           as.numeric(df$Lcry[i]))$Ncr
   }
 
   for (i in 1:nrow(df)) {
@@ -2244,7 +2478,13 @@ check_all_member_sizes <- function(
                                                            E,
                                                            h0,
                                                            df$Ned[i],
-                                                           list_reference_tables)$MEd
+                                                           list_reference_tables,
+                                                           as.logical(df$isTopLevel[i]),
+                                                           as.numeric(df$DL[i]),
+                                                           as.numeric(df$LL[i]),
+                                                           as.numeric(df$IL[i]),
+                                                           as.numeric(df$TL[i]),
+                                                           as.numeric(df$Lcry[i]))$MEd
   }
 
 
@@ -2257,24 +2497,26 @@ check_all_member_sizes <- function(
 
   # export table as XLSX format
   if ( export_xlsx ) {
-    require(readxl)
+    require(writexl)
 
-    writexl::write_xlsx(df, path = file_name)
+    base_file_name <- paste0( base_file_name, '_', strut_name,'_Ned_no_TL_', Ned_no_TL, '_kN','.xlsx' )
+    writexl::write_xlsx(df, path = base_file_name)
+
+    # print("")
+    # print("Completed OK")
+    # print("")
+    # print("==================================================================")
+    # print("Processed table has been exported to all_member_sizes_checked.xlsx")
+    # print("==================================================================")
+
+    # View(df)
   }
-  View(df)
 
   # extract optimal member size
   df_optimal <- subset(df, final_check==T)
   optimal_member_size <- as.character( df_optimal$member.size[1] )
   optimal_TL <- as.character( df_optimal$TL[1] )
   optimal_Ned <- as.character( df_optimal$Ned[1] )
-
-  print("")
-  print("Completed OK")
-  print("")
-  print("==================================================================")
-  print("Processed table has been exported to all_member_sizes_checked.xlsx")
-  print("==================================================================")
 
   return( list(
     "df"=df,

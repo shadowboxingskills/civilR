@@ -4,7 +4,8 @@
 \alias{second_order_bending_moment}
 \title{Calculate the second order bending moment}
 \usage{
-second_order_bending_moment(L, Ned, Sv, Ncr)
+second_order_bending_moment(L, Ned, Sv, Ncr, isTopLevel, DL, LL, IL, TL,
+  Lcry)
 }
 \arguments{
 \item{L}{Length of strut between restraints [\eqn{mm}]}
@@ -14,6 +15,18 @@ second_order_bending_moment(L, Ned, Sv, Ncr)
 \item{Sv}{Shear stiffness for K-shape lacing [\eqn{kN}]}
 
 \item{Ncr}{Euler buckling load from check #2 global zz [\eqn{kN}]}
+
+\item{isTopLevel}{Is member located at top level? [boolean]}
+
+\item{DL}{Dead load / self-weight of member [\eqn{kN/m}]}
+
+\item{LL}{Live load / imposed load [\eqn{kN/m}]}
+
+\item{IL}{Accidental Impact Load [\eqn{kN/m}]}
+
+\item{TL}{Temperature load [\eqn{kN/m}]}
+
+\item{Lcry}{critical length about major axis [\eqn{m}]}
 }
 \value{
 \eqn{M_{E_d}} Second order moment [\eqn{kN.m}]
