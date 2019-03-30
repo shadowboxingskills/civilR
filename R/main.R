@@ -506,7 +506,11 @@ maximum_shear_force_in_the_lacing <- function(MEd, L) {
 #'
 #' @export
 #'
-#' @return \eqn{N_{ed}} Axial compression force [\eqn{kN}], \eqn{TL} Temperature Load [\eqn{kN}]
+#' @return
+#' \itemize{
+#'   \item \eqn{N_{ed}} Axial compression force [\eqn{kN}]
+#'   \item \eqn{TL} Temperature Load [\eqn{kN}]
+#' }
 #'
 axial_compression_force <- function( isTopLevel=T, DL=1, LL=1, L=12.5, P=247, theta=90, spacing=6,
                                      Lcry=12.7, Lcrz=1.0, steel_grade='S355', member_type='UB',
@@ -578,7 +582,11 @@ axial_compression_force <- function( isTopLevel=T, DL=1, LL=1, L=12.5, P=247, th
 #'
 #' @export
 #'
-#' @return \eqn{N_{ed}} Axial compression force [\eqn{kN}], \eqn{TL} Temperature Load [\eqn{kN}]
+#' @return
+#' \itemize{
+#'   \item \eqn{N_{ed}} Axial compression force [\eqn{kN}]
+#'   \item \eqn{TL} Temperature Load [\eqn{kN}]
+#' }
 #'
 axial_compression_force_given_member <- function( isTopLevel=T, Ned_no_TL=6987, member_size,
                                                   alpha_T=0.000012, delta_T=10, k_T=0.8, E=210,
@@ -662,10 +670,6 @@ trial_member_size <- function(Lcry, Lcrz, Ned, steel_grade, member_type, list_re
 
     return( which.min(abs(critical_length_vector-Lcr)) + 1 )
   }
-
-  # t <- readxl::read_excel( path = axial_compression_table_name,
-  #                         n_max = nmax,
-  #                         skip = 5 )
 
   # delete all "Nb,T,Rd" rows
   t <- subset(t, Axis != "Nb,T,Rd")
@@ -797,11 +801,6 @@ all_member_sizes <- function(steel_grade, member_type, list_reference_tables) {
     print("steel grade unknown. please enter valid one.")
   }
 
-  # file_name <- select_file_name(steel_grade, member_type)
-  # t <- readxl::read_excel( path = axial_compression_table_name,
-  #                          n_max = nmax,
-  #                          skip = 5 )
-
   # delete all "Nb,T,Rd" rows
   t <- subset(t, Axis != "Nb,T,Rd")
 
@@ -863,7 +862,18 @@ all_member_sizes <- function(steel_grade, member_type, list_reference_tables) {
 #'
 #' @export
 #'
-#' @return \eqn{N_{b,Rd,X}} Overall buckling resistance of struts about major y-y axis [\eqn{kN}], \eqn{N_{b,R_d,X}}, \eqn{f_y}, \eqn{N_{pl,R_d}}, \eqn{N_{cr,X}}, \eqn{{\bar{\lambda_X}}}, \eqn{\alpha_{yy}}, \eqn{X}
+#' @return
+#' \itemize{
+#'   \item \eqn{N_{b,Rd,X}} Overall buckling resistance of struts about major y-y axis [\eqn{kN}]
+#'   \item \eqn{N_{b,R_d,X}}
+#'   \item \eqn{f_y}
+#'   \item \eqn{N_{pl,R_d}}
+#'   \item \eqn{N_{cr,X}}
+#'   \item \eqn{N_{cr,X}}
+#'   \item \eqn{{\bar{\lambda_X}}}
+#'   \item \eqn{\alpha_{yy}}
+#'   \item \eqn{X}
+#' }
 #'
 check_overall_buckling_resistance_about_yy_axis <- function(trial_member_size, member_type, steel_grade, k, L, E, list_reference_tables) {
 
@@ -937,7 +947,17 @@ check_overall_buckling_resistance_about_yy_axis <- function(trial_member_size, m
 #'
 #' @export
 #'
-#' @return \eqn{N_{b,Rd,Y}} Overall buckling resistance of struts about z-z axis [\eqn{kN}], \eqn{N_{b,R_d,Y}}, \eqn{f_y}, \eqn{N_{pl,R_d}}, \eqn{I_{eff}}, \eqn{N_{cr,Y}}, \eqn{{\bar{\lambda_Y}}}, \eqn{\alpha_{yy}}, \eqn{X}
+#' @return
+#' \itemize{
+#'   \item \eqn{N_{b,R_d,Y}} Overall buckling resistance of struts about z-z axis [\eqn{kN}]
+#'   \item \eqn{f_y}
+#'   \item \eqn{N_{pl,R_d}}
+#'   \item \eqn{I_{eff}}
+#'   \item \eqn{N_{cr,Y}}
+#'   \item \eqn{{\bar{\lambda_Y}}}
+#'   \item \eqn{\alpha_{yy}}
+#'   \item \eqn{X}
+#' }
 #'
 check_overall_buckling_resistance_about_zz_axis <- function(trial_member_size, member_type, steel_grade, k, L, E, h0, list_reference_tables) {
 
@@ -1014,7 +1034,16 @@ check_overall_buckling_resistance_about_zz_axis <- function(trial_member_size, m
 #'
 #' @export
 #'
-#' @return \eqn{N_{b,Rd,X}} Local buckling resistance of struts about \eqn{z-z} axis [\eqn{kN}], \eqn{f_y}, \eqn{N_{pl,R_d}}, \eqn{N_{cr}}, \eqn{{\bar{\lambda}}}, \eqn{\alpha_{yy}}, \eqn{X}
+#' @return
+#' \itemize{
+#'   \item \eqn{N_{b,Rd,X}} Local buckling resistance of struts about \eqn{z-z} axis [\eqn{kN}]
+#'   \item \eqn{f_y}
+#'   \item \eqn{N_{pl,R_d}}
+#'   \item \eqn{N_{cr}}
+#'   \item \eqn{{\bar{\lambda}}}
+#'   \item \eqn{\alpha_{yy}}
+#'   \item \eqn{X}
+#' }
 #'
 check_local_buckling_resistance_about_zz_axis <- function(trial_member_size, member_type, steel_grade, k, Lch, E, list_reference_tables) {
 
@@ -1092,7 +1121,13 @@ check_local_buckling_resistance_about_zz_axis <- function(trial_member_size, mem
 #'
 #' @export
 #'
-#' @return \eqn{N_{ch,E_d}} Maximum compressive axial force in the chords [\eqn{kN}], \eqn{S_v}, \eqn{N_{cr,ch}}, \eqn{{M_{E_d}}}
+#' @return
+#' \itemize{
+#'   \item \eqn{N_{ch,E_d}} Maximum compressive axial force in the chords [\eqn{kN}]
+#'   \item \eqn{S_v}
+#'   \item \eqn{N_{cr,ch}}
+#'   \item \eqn{{M_{E_d}}}
+#' }
 #'
 max_compressive_axial_force_in_chords <- function(trial_member_size, member_type, steel_grade, k, L, n, Ad, Lch, E, h0, Ned, list_reference_tables) {
 
@@ -1234,14 +1269,17 @@ import_reference_BlueBook_tables <- function() {
 #' Export output table to Excel file.
 #'
 #' @param file_name Path and file name of the output table
+#' @param export_xlsx Boolean to export Excel spreadsheet or not [T/F]
 #'
 #' @export
 #'
 #' @return None
 #'
-compute_output_table <- function(file_name="tables/input/output_processed_table.xlsx") {
-  require(writexl)
-
+compute_output_table <- function(
+  file_name="tables/input/output_processed_table.xlsx",
+  export_xlsx=T
+  )
+  {
   list_reference_tables <- civilR::import_reference_BlueBook_tables()
 
   t <- civilR::read_input_table()
@@ -1716,8 +1754,12 @@ compute_output_table <- function(file_name="tables/input/output_processed_table.
     print(as.character(t[row, "N_ch_Ed"]))
   }
 
-  # export table as XLSX format
-  writexl::write_xlsx(t, path = file_name)
+  if ( export_xlsx ) {
+    require(writexl)
+
+    # export table as XLSX format
+    writexl::write_xlsx(t, path = file_name)
+  }
   View(t)
 
   print("")
@@ -1753,7 +1795,13 @@ compute_output_table <- function(file_name="tables/input/output_processed_table.
 #'
 #' @export
 #'
-#' @return Dataframe containing relevant input and all computed data
+#' @return
+#' \itemize{
+#'   \item \eqn{df} Dataframe containing relevant input and all computed data
+#'   \item \eqn{optimal_member_size} Optimal member size [ height (mm) x width (mm) x mass (kg/m) ]
+#'   \item \eqn{optimal_TL} Optimal Temperature Load [\eqn{kN}]
+#'   \item \eqn{optimal_Ned} Optimal @param Ned_no_TL Axial Compressional Force with Temperature Load [\eqn{kN}]
+#' }
 #'
 check_all_member_sizes <- function(
   steel_grade="S355",
@@ -1773,8 +1821,6 @@ check_all_member_sizes <- function(
   file_name="tables/input/all_member_sizes_checked.xlsx",
   export_xlsx=T)
   {
-  require(writexl)
-
   list_reference_tables <- civilR::import_reference_BlueBook_tables()
 
   # steel_grade="S355"; member_type="UB"
@@ -2211,13 +2257,17 @@ check_all_member_sizes <- function(
 
   # export table as XLSX format
   if ( export_xlsx ) {
+    require(readxl)
+
     writexl::write_xlsx(df, path = file_name)
-    View(df)
   }
+  View(df)
 
   # extract optimal member size
   df_optimal <- subset(df, final_check==T)
   optimal_member_size <- as.character( df_optimal$member.size[1] )
+  optimal_TL <- as.character( df_optimal$TL[1] )
+  optimal_Ned <- as.character( df_optimal$Ned[1] )
 
   print("")
   print("Completed OK")
@@ -2226,6 +2276,12 @@ check_all_member_sizes <- function(
   print("Processed table has been exported to all_member_sizes_checked.xlsx")
   print("==================================================================")
 
-  return( list("df"=df, "optimal_member_size"=optimal_member_size) )
+  return( list(
+    "df"=df,
+    "optimal_member_size"=optimal_member_size,
+    "optimal_TL" = optimal_TL,
+    "optimal_Ned" = optimal_Ned
+    )
+    )
 }
 
