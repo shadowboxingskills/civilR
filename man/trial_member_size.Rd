@@ -4,7 +4,8 @@
 \alias{trial_member_size}
 \title{Determine member size}
 \usage{
-trial_member_size(Lcry, Lcrz, Ned, steel_grade, member_type)
+trial_member_size(Lcry, Lcrz, Ned, steel_grade, member_type,
+  list_reference_tables)
 }
 \arguments{
 \item{Lcry}{critical length major axis [\eqn{m}]}
@@ -16,6 +17,8 @@ trial_member_size(Lcry, Lcrz, Ned, steel_grade, member_type)
 \item{steel_grade}{steel_grade [\eqn{N/{mm}^2}], categorical: 'S355' or 'S275'}
 
 \item{member_type}{member_type, categorical: 'UC' or 'UB'}
+
+\item{list_reference_tables}{List of reference tables}
 }
 \value{
 Member size [ height (mm) x width (mm) x mass (kg/m) ]

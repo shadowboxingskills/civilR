@@ -40,6 +40,7 @@ temperature_load <- function(alpha_T=0.000012, delta_T=10, k_T=0.8, E=210, A=94.
 #' @param b Member width [\eqn{mm}]
 #' @param m Member mass [\eqn{kg/m}]
 #' @param member_type Member type, 'UB' or 'UC'
+#' @param list_reference_tables List of reference tables
 #'
 #' @export
 #'
@@ -54,23 +55,16 @@ temperature_load <- function(alpha_T=0.000012, delta_T=10, k_T=0.8, E=210, A=94.
 #'   \item \eqn{Izz} Second moment of area axis \eqn{z-z} [\eqn{{cm}^4}]
 #' }
 #'
-extract_member_dimensions <- function(h, b, m, member_type) {
+extract_member_dimensions <- function(h, b, m, member_type, list_reference_tables) {
   require(readxl)
 
   # h=533; b=165; m=66; member_type='UB'
 
   if ( member_type == "UB" ) {
-    dimensions_table_name <- "./tables/UB-Dimensions_properties.xlsx"
-    nmax <- 107
+    t <- list_reference_tables$t_dimensions_table_UB
   } else {
-    dimensions_table_name <- "./tables/UC-Dimensions_properties.xlsx"
-    nmax <- 46
+    t <- list_reference_tables$t_dimensions_table_UC
   }
-
-  t <- readxl::read_excel( dimensions_table_name,
-                          col_types = c("text", "text", "skip", rep("numeric", 27)),
-                          skip = 9,
-                          n_max = nmax )
 
   # generate clean h / b / m columns
   t$h <- unlist(strsplit(t$...1, " x "))[c(T, F)]
@@ -508,6 +502,7 @@ maximum_shear_force_in_the_lacing <- function(MEd, L) {
 #' @param E Young's Modulus of Elasticity [\eqn{GPa}]
 #' @param IL Accidental Impact Load [\eqn{kN/m}]
 #' @param gamma Partial factor for action [dimensionless], as per EN 1990:2002 standard
+#' @param list_reference_tables List of reference tables
 #'
 #' @export
 #'
@@ -515,7 +510,8 @@ maximum_shear_force_in_the_lacing <- function(MEd, L) {
 #'
 axial_compression_force <- function( isTopLevel=T, DL=1, LL=1, L=12.5, P=247, theta=90, spacing=6,
                                      Lcry=12.7, Lcrz=1.0, steel_grade='S355', member_type='UB',
-                                     alpha_T=0.000012, delta_T=10, k_T=0.8, E=210, IL=50, gamma=1.35 )
+                                     alpha_T=0.000012, delta_T=10, k_T=0.8, E=210, IL=50, gamma=1.35,
+                                     list_reference_tables )
   {
   # isTopLevel=T; DL=1; LL=1; L=12.5; P=247; theta=90; spacing=6
   # Lcry=12.5; Lcrz=1.6; steel_grade='S355'; member_type='UB'
@@ -534,14 +530,14 @@ axial_compression_force <- function( isTopLevel=T, DL=1, LL=1, L=12.5, P=247, th
 
   if ( isTopLevel ) { # top level only
     # find trial member size
-    mb_no_TL <- civilR::trial_member_size(Lcry, Lcrz, Ned_no_TL, steel_grade, member_type)
+    mb_no_TL <- civilR::trial_member_size(Lcry, Lcrz, Ned_no_TL, steel_grade, member_type, list_reference_tables)
 
     # extract member area from reference table
-    l <- convert_member_dimensions_string_to_elements(mb_no_TL)
-    A_no_TL <- extract_member_dimensions(l$h, l$b , l$m, member_type)$A # Area in cm2
+    l <- civilR::convert_member_dimensions_string_to_elements(mb_no_TL)
+    A_no_TL <- civilR::extract_member_dimensions(l$h, l$b , l$m, member_type, list_reference_tables)$A # Area in cm2
 
     # calculate temperature load
-    TL <- round( temperature_load(alpha_T, delta_T, k_T, E, A_no_TL) )
+    TL <- round( civilR::temperature_load(alpha_T, delta_T, k_T, E, A_no_TL) )
 
     # leading temperature partial factor correction
     TL <- TL * 1.5
@@ -563,6 +559,59 @@ axial_compression_force <- function( isTopLevel=T, DL=1, LL=1, L=12.5, P=247, th
 }
 
 
+#' Calculate the axial compression force for a given member size
+#'
+#' Compute Axial Compression Force, \eqn{N_{ed}} [\eqn{kN}], for member without including Temperature effect.
+#' Used as trial for the top level strut where temperature changes could not be neglected.
+#' As well can be used to calculate final \eqn{N_{ed}} for struts from low levels of excavation, where temperature effect could be neglected.
+#'
+#' First of all function check which combination govern in ULS (Ultimate Limit State) without including Temperature load, TL [\eqn{kN}].
+#' Then include TL calculations for Load Combinations applying partial factors based on the Table A1.2(B), EN1990-2002, p53
+#' Compare maximum from ULS and ALS to define which mistake could govern.
+#'
+#' @param isTopLevel Is member located at top level? [boolean]
+#' @param alpha_T Thermal coef. of expansion [\eqn{degC}]
+#' @param delta_T Change in temperature from the Installation temperature [\eqn{degC}]
+#' @param k_T Coefficient Of Temperature Effect [dimensionless]
+#' @param E Young's Modulus of Elasticity [\eqn{GPa}]
+#' @param list_reference_tables List of reference tables
+#'
+#' @export
+#'
+#' @return \eqn{N_{ed}} Axial compression force [\eqn{kN}], \eqn{TL} Temperature Load [\eqn{kN}]
+#'
+axial_compression_force_given_member <- function( isTopLevel=T, Ned_no_TL=6987, member_size,
+                                                  alpha_T=0.000012, delta_T=10, k_T=0.8, E=210,
+                                                  list_reference_tables )
+{
+  if ( isTopLevel ) { # top level only
+    # extract member area from reference table
+    l <- convert_member_dimensions_string_to_elements(member_size)
+    A_no_TL <- extract_member_dimensions(l$h, l$b , l$m, member_type, list_reference_tables)$A # Area in cm2
+
+    # calculate temperature load
+    TL <- round( temperature_load(alpha_T, delta_T, k_T, E, A_no_TL) )
+
+    # leading temperature partial factor correction
+    TL <- TL * 1.5
+
+    Ned_TL <- Ned_no_TL + TL
+
+    # Ned_TL <- round( Ned_TL / 2 ) # divide by 2 (force distributed between 2 struts)
+  }
+
+  if ( isTopLevel ) {
+    Ned_output <- round(Ned_TL)
+    TL_output <- round(TL)
+  } else {
+    Ned_output <- round(Ned_no_TL)
+    TL_output <- NA
+  }
+
+  return( list("Ned" = Ned_output, "TL" = TL_output) )
+}
+
+
 #' Determine member size
 #'
 #' Find optimized designation [ height (mm) x width (mm) x mass (kg/m) ] (also called member size) for given Axial Compression Force and critical length for major and minor axis.
@@ -573,35 +622,31 @@ axial_compression_force <- function( isTopLevel=T, DL=1, LL=1, L=12.5, P=247, th
 #' @param Ned Axial compression force [\eqn{kN}]
 #' @param steel_grade steel_grade [\eqn{N/{mm}^2}], categorical: 'S355' or 'S275'
 #' @param member_type member_type, categorical: 'UC' or 'UB'
+#' @param list_reference_tables List of reference tables
 #'
 #' @export
 #'
 #' @return Member size [ height (mm) x width (mm) x mass (kg/m) ]
 #'
-trial_member_size <- function(Lcry, Lcrz, Ned, steel_grade, member_type) {
+trial_member_size <- function(Lcry, Lcrz, Ned, steel_grade, member_type, list_reference_tables) {
   require(readxl)
   require(dplyr)
 
   # Lcry=12.7; Lcrz=1; Ned=3638; steel_grade="S355"; member_type="UB"
 
-  # select file name
   if ( steel_grade == "S355" ) {
     if ( member_type == "UC" ) {
-      axial_compression_table_name <- "./tables/s355/UC/UC-compression-S355.xlsx"
-      nmax <- 138
+      t <- list_reference_tables$t_axial_compression_table_S355_UC
     } else if ( member_type == "UB" ) {
-      axial_compression_table_name <- "./tables/s355/UB/UB-Axial compression-S355.xlsx"
-      nmax <- 321
+      t <- list_reference_tables$t_axial_compression_table_S355_UB
     } else {
       print("member type unknown. please enter valid one.")
     }
   } else if ( steel_grade == "S275" ) {
     if ( member_type == "UC" ) {
-      axial_compression_table_name <- "./tables/s275/UC/UC-compression-S275.xlsx"
-      nmax <- 138
+      t <- list_reference_tables$t_axial_compression_table_S275_UC
     } else if ( member_type == "UB" ) {
-      axial_compression_table_name <- "./tables/s275/UB/UB_Axial compression-S275.xlsx"
-      nmax <- 321
+      t <- list_reference_tables$t_axial_compression_table_S275_UB
     } else {
       print("member type unknown. please enter valid one.")
     }
@@ -618,10 +663,9 @@ trial_member_size <- function(Lcry, Lcrz, Ned, steel_grade, member_type) {
     return( which.min(abs(critical_length_vector-Lcr)) + 1 )
   }
 
-  # file_name <- select_file_name(steel_grade, member_type)
-  t <- readxl::read_excel( path = axial_compression_table_name,
-                          n_max = nmax,
-                          skip = 5 )
+  # t <- readxl::read_excel( path = axial_compression_table_name,
+  #                         n_max = nmax,
+  #                         skip = 5 )
 
   # delete all "Nb,T,Rd" rows
   t <- subset(t, Axis != "Nb,T,Rd")
@@ -721,35 +765,31 @@ trial_member_size <- function(Lcry, Lcrz, Ned, steel_grade, member_type) {
 #'
 #' @param steel_grade steel_grade [\eqn{N/{mm}^2}], categorical: 'S355' or 'S275'
 #' @param member_type member_type, categorical: 'UC' or 'UB'
+#' @param list_reference_tables List of reference tables
 #'
 #' @export
 #'
 #' @return Vector of all member sizes [ height (mm) x width (mm) x mass (kg/m) ]
 #'
-all_member_sizes <- function(steel_grade, member_type) {
+all_member_sizes <- function(steel_grade, member_type, list_reference_tables) {
   require(readxl)
   require(dplyr) # for arrange
 
   # steel_grade="S355"; member_type="UB"
 
-  # select file name
   if ( steel_grade == "S355" ) {
     if ( member_type == "UC" ) {
-      axial_compression_table_name <- "./tables/s355/UC/UC-compression-S355.xlsx"
-      nmax <- 138
+      t <- list_reference_tables$t_axial_compression_table_S355_UC
     } else if ( member_type == "UB" ) {
-      axial_compression_table_name <- "./tables/s355/UB/UB-Axial compression-S355.xlsx"
-      nmax <- 321
+      t <- list_reference_tables$t_axial_compression_table_S355_UB
     } else {
       print("member type unknown. please enter valid one.")
     }
   } else if ( steel_grade == "S275" ) {
     if ( member_type == "UC" ) {
-      axial_compression_table_name <- "./tables/s275/UC/UC-compression-S275.xlsx"
-      nmax <- 138
+      t <- list_reference_tables$t_axial_compression_table_S275_UC
     } else if ( member_type == "UB" ) {
-      axial_compression_table_name <- "./tables/s275/UB/UB_Axial compression-S275.xlsx"
-      nmax <- 321
+      t <- list_reference_tables$t_axial_compression_table_S275_UB
     } else {
       print("member type unknown. please enter valid one.")
     }
@@ -758,9 +798,9 @@ all_member_sizes <- function(steel_grade, member_type) {
   }
 
   # file_name <- select_file_name(steel_grade, member_type)
-  t <- readxl::read_excel( path = axial_compression_table_name,
-                           n_max = nmax,
-                           skip = 5 )
+  # t <- readxl::read_excel( path = axial_compression_table_name,
+  #                          n_max = nmax,
+  #                          skip = 5 )
 
   # delete all "Nb,T,Rd" rows
   t <- subset(t, Axis != "Nb,T,Rd")
@@ -819,19 +859,20 @@ all_member_sizes <- function(steel_grade, member_type) {
 #' @param k Coefficient [dimensionless]
 #' @param L Total length of member [\eqn{m}]
 #' @param E Young's Modulus of Elasticity [\eqn{GPa}]
+#' @param list_reference_tables List of reference tables
 #'
 #' @export
 #'
 #' @return \eqn{N_{b,Rd,X}} Overall buckling resistance of struts about major y-y axis [\eqn{kN}], \eqn{N_{b,R_d,X}}, \eqn{f_y}, \eqn{N_{pl,R_d}}, \eqn{N_{cr,X}}, \eqn{{\bar{\lambda_X}}}, \eqn{\alpha_{yy}}, \eqn{X}
 #'
-check_overall_buckling_resistance_about_yy_axis <- function(trial_member_size, member_type, steel_grade, k, L, E) {
+check_overall_buckling_resistance_about_yy_axis <- function(trial_member_size, member_type, steel_grade, k, L, E, list_reference_tables) {
 
   # trial_member_size="533 x 165 x 66"; member_type="UB"; steel_grade="S355"; k=1; L=12.5; E=210
 
   s <- convert_member_dimensions_string_to_elements(trial_member_size)
 
   # extract member area from reference table
-  l <- extract_member_dimensions(s$h, s$b , s$m, member_type)
+  l <- extract_member_dimensions(s$h, s$b , s$m, member_type, list_reference_tables)
 
   # fy, yield strength [N/mm2]
   fy <- yield_strength(l$tw, l$tf, steel_grade)
@@ -892,19 +933,20 @@ check_overall_buckling_resistance_about_yy_axis <- function(trial_member_size, m
 #' @param L Total length of member [\eqn{m}]
 #' @param E Young's Modulus of Elasticity [\eqn{GPa}]
 #' @param h0 Distance between centroids of chords [\eqn{mm}]
+#' @param list_reference_tables List of reference tables
 #'
 #' @export
 #'
 #' @return \eqn{N_{b,Rd,Y}} Overall buckling resistance of struts about z-z axis [\eqn{kN}], \eqn{N_{b,R_d,Y}}, \eqn{f_y}, \eqn{N_{pl,R_d}}, \eqn{I_{eff}}, \eqn{N_{cr,Y}}, \eqn{{\bar{\lambda_Y}}}, \eqn{\alpha_{yy}}, \eqn{X}
 #'
-check_overall_buckling_resistance_about_zz_axis <- function(trial_member_size, member_type, steel_grade, k, L, E, h0) {
+check_overall_buckling_resistance_about_zz_axis <- function(trial_member_size, member_type, steel_grade, k, L, E, h0, list_reference_tables) {
 
   # trial_member_size="533 x 165 x 66"; member_type="UB"; steel_grade="S355"; k=1; L=12.5; E=210; h0=1000
 
   s <- convert_member_dimensions_string_to_elements(trial_member_size)
 
   # extract member area from reference table
-  l <- extract_member_dimensions(s$h, s$b , s$m, member_type)
+  l <- extract_member_dimensions(s$h, s$b , s$m, member_type, list_reference_tables)
 
   # fy, yield strength [N/mm2]
   fy <- yield_strength(l$tw, l$tf, steel_grade)
@@ -968,12 +1010,13 @@ check_overall_buckling_resistance_about_zz_axis <- function(trial_member_size, m
 #' @param k Coefficient [dimensionless]
 #' @param Lch Length of chord [\eqn{mm}]
 #' @param E Young's Modulus of Elasticity [\eqn{GPa}]
+#' @param list_reference_tables List of reference tables
 #'
 #' @export
 #'
 #' @return \eqn{N_{b,Rd,X}} Local buckling resistance of struts about \eqn{z-z} axis [\eqn{kN}], \eqn{f_y}, \eqn{N_{pl,R_d}}, \eqn{N_{cr}}, \eqn{{\bar{\lambda}}}, \eqn{\alpha_{yy}}, \eqn{X}
 #'
-check_local_buckling_resistance_about_zz_axis <- function(trial_member_size, member_type, steel_grade, k, Lch, E) {
+check_local_buckling_resistance_about_zz_axis <- function(trial_member_size, member_type, steel_grade, k, Lch, E, list_reference_tables) {
 
   # trial_member_size="533 x 165 x 66"; member_type="UB"; steel_grade="S355"; k=1; Lch=1; E=210
   # trial_member_size="686 x 254 x 125"; member_type="UB"; steel_grade="S355"; k=1; Lch=1; E=210
@@ -981,7 +1024,7 @@ check_local_buckling_resistance_about_zz_axis <- function(trial_member_size, mem
   s <- convert_member_dimensions_string_to_elements(trial_member_size)
 
   # extract member area from reference table
-  l <- civilR::extract_member_dimensions(s$h, s$b, s$m, member_type)
+  l <- civilR::extract_member_dimensions(s$h, s$b, s$m, member_type, list_reference_tables)
 
   # fy, yield strength [N/mm2]
   fy <- yield_strength(l$tw, l$tf, steel_grade)
@@ -1045,34 +1088,35 @@ check_local_buckling_resistance_about_zz_axis <- function(trial_member_size, mem
 #' @param E Young modulus [\eqn{GPa} or \eqn{GN/m^2}]
 #' @param h0 Distance between centroids of chords [\eqn{m}]
 #' @param Ned Axial compression Force [\eqn{kN}]
+#' @param list_reference_tables List of reference tables
 #'
 #' @export
 #'
 #' @return \eqn{N_{ch,E_d}} Maximum compressive axial force in the chords [\eqn{kN}], \eqn{S_v}, \eqn{N_{cr,ch}}, \eqn{{M_{E_d}}}
 #'
-max_compressive_axial_force_in_chords <- function(trial_member_size, member_type, steel_grade, k, L, n, Ad, Lch, E, h0, Ned) {
+max_compressive_axial_force_in_chords <- function(trial_member_size, member_type, steel_grade, k, L, n, Ad, Lch, E, h0, Ned, list_reference_tables) {
 
-  s <- convert_member_dimensions_string_to_elements(trial_member_size)
+  s <- civilR::convert_member_dimensions_string_to_elements(trial_member_size)
 
   # extract member area from reference table
-  l <- extract_member_dimensions(s$h, s$b , s$m, member_type)
+  l <- civilR::extract_member_dimensions(s$h, s$b , s$m, member_type, list_reference_tables)
 
   # Le, effective length of strut [m]
-  Le <- effective_length_of_member(k, L)
+  Le <- civilR::effective_length_of_member(k, L)
 
   # Ieff, effective second moment of area [mm4 --> cm4]
-  Ieff <- effective_second_moment_of_area(h0, l$A) / 1e4
+  Ieff <- civilR::effective_second_moment_of_area(h0, l$A) / 1e4
 
   # n=2; Ad=1552; Lch=1; E=210000; h0=1000
 
   # Shear stiffness for K-shape lacing
-  Sv <- shear_stiffness(n, Ad, Lch, E * 1000, h0)
+  Sv <- civilR::shear_stiffness(n, Ad, Lch, E * 1000, h0)
 
   # Ncr, Euler buckling load [kN]
-  Ncr <- Euler_buckling_load(Le * 1000, E * 1000, Ieff)
+  Ncr <- civilR::Euler_buckling_load(Le * 1000, E * 1000, Ieff)
 
   # The second order bending moment
-  MEd <- second_order_bending_moment(L, Ned, Sv, Ncr)
+  MEd <- civilR::second_order_bending_moment(L, Ned, Sv, Ncr)
 
   # Output maximum compressive axial force in the chords
   N_ch_Ed <- round( (0.5 * Ned) + (MEd * h0 * l$A) / (2*Ieff) )
@@ -1085,7 +1129,6 @@ max_compressive_axial_force_in_chords <- function(trial_member_size, member_type
          )
     )
 }
-
 
 #' Read input table from given Excel file
 #'
@@ -1116,19 +1159,92 @@ read_input_table <- function(file_name="tables/input/trial1_kotik.xlsx") {
 }
 
 
-#' Process input table
+#' Import Reference BlueBook Tables from Excel files
 #'
-#' Process input table.
+#' Import Reference BlueBook Tables from Excel files.
+#'
+#' @param None
 #'
 #' @export
 #'
-#' @return Processed table, adding computed outputs:
+#' @return List of 4 BlueBook reference tables
 #'
-process_input_table <- function() {
-  t <- civilR::read_input_table()
+import_reference_BlueBook_tables <- function() {
+  require(readxl)
 
-  # t_INPUT <- t
-  # View(t_INPUT)
+  axial_compression_table_name_S355_UC <- "./tables/s355/UC/UC-compression-S355.xlsx"
+  nmax_S355_UC <- 138
+
+  axial_compression_table_name_S355_UB <- "./tables/s355/UB/UB-Axial compression-S355.xlsx"
+  nmax_S355_UB <- 321
+
+  axial_compression_table_name_S275_UC <- "./tables/s275/UC/UC-compression-S275.xlsx"
+  nmax_S275_UC <- 138
+
+  axial_compression_table_name_S275_UB <- "./tables/s275/UB/UB_Axial compression-S275.xlsx"
+  nmax_S275_UB <- 321
+
+  dimensions_table_name_UB <- "./tables/UB-Dimensions_properties.xlsx"
+  nmax_dim_UB <- 107
+
+  dimensions_table_name_UC <- "./tables/UC-Dimensions_properties.xlsx"
+  nmax_dim_UC <- 46
+
+
+  t_axial_compression_table_S355_UC <- readxl::read_excel( path = axial_compression_table_name_S355_UC,
+                                                           n_max = nmax_S355_UC,
+                                                           skip = 5 )
+
+  t_axial_compression_table_S355_UB <- readxl::read_excel( path = axial_compression_table_name_S355_UB,
+                                                           n_max = nmax_S355_UB,
+                                                           skip = 5 )
+
+  t_axial_compression_table_S275_UC <- readxl::read_excel( path = axial_compression_table_name_S275_UC,
+                                                           n_max = nmax_S275_UC,
+                                                           skip = 5 )
+
+  t_axial_compression_table_S275_UB <- readxl::read_excel( path = axial_compression_table_name_S275_UB,
+                                                           n_max = nmax_S275_UB,
+                                                           skip = 5 )
+
+  t_dimensions_table_UB <- readxl::read_excel( dimensions_table_name_UB,
+                                               col_types = c("text", "text", "skip", rep("numeric", 27)),
+                                               skip = 9,
+                                               n_max = nmax_dim_UB )
+
+  t_dimensions_table_UC <- readxl::read_excel( dimensions_table_name_UC,
+                                               col_types = c("text", "text", "skip", rep("numeric", 27)),
+                                               skip = 9,
+                                               n_max = nmax_dim_UC )
+
+  return( list(
+    "t_axial_compression_table_S355_UC" = t_axial_compression_table_S355_UC,
+    "t_axial_compression_table_S355_UB" = t_axial_compression_table_S355_UB,
+    "t_axial_compression_table_S275_UC" = t_axial_compression_table_S275_UC,
+    "t_axial_compression_table_S275_UB" = t_axial_compression_table_S275_UB,
+    "t_dimensions_table_UB" = t_dimensions_table_UB,
+    "t_dimensions_table_UC" = t_dimensions_table_UC
+    )
+    )
+}
+
+
+#' Export output table to Excel file
+#'
+#' Export output table to Excel file.
+#'
+#' @param file_name Path and file name of the output table
+#'
+#' @export
+#'
+#' @return None
+#'
+compute_output_table <- function(file_name="tables/input/output_processed_table.xlsx") {
+  require(writexl)
+
+  list_reference_tables <- civilR::import_reference_BlueBook_tables()
+
+  t <- civilR::read_input_table()
 
   t$TL <- 0
   t$Ned_2 <- 0
@@ -1175,46 +1291,46 @@ process_input_table <- function() {
   for (row in 1:nrow(t)) {
     # calculate TL (kN)
     t[row, "TL"] <- civilR::axial_compression_force(as.logical(t[row, "top.level.y.n"]),
-                                             as.numeric(t[row, "DL.kN.m"]),
-                                             as.numeric(t[row, "LL.kN.m"]),
-                                             as.numeric(t[row, "L.m"]),
-                                             as.numeric(t[row, "P.kN.m"]),
-                                             as.numeric(t[row, "theta.deg"]),
-                                             as.numeric(t[row, "s.m"]),
-                                             as.numeric(t[row, "Lcry.m"]),
-                                             as.numeric(t[row, "Lcrz.m"]),
-                                             as.character(t[row, "steel.grade"]),
-                                             as.character(t[row, "member.type"]),
-                                             as.numeric(t[row, "alpha_T"]),
-                                             as.numeric(t[row, "delta_T"]),
-                                             as.numeric(t[row, "k_T"]),
-                                             as.numeric(t[row, "E.GPa"]),
-                                             as.numeric(t[row, "IL.kN.m"]),
-                                             as.numeric(t[row, "gamma"])
-                                             )$TL
+                                                    as.numeric(t[row, "DL.kN.m"]),
+                                                    as.numeric(t[row, "LL.kN.m"]),
+                                                    as.numeric(t[row, "L.m"]),
+                                                    as.numeric(t[row, "P.kN.m"]),
+                                                    as.numeric(t[row, "theta.deg"]),
+                                                    as.numeric(t[row, "s.m"]),
+                                                    as.numeric(t[row, "Lcry.m"]),
+                                                    as.numeric(t[row, "Lcrz.m"]),
+                                                    as.character(t[row, "steel.grade"]),
+                                                    as.character(t[row, "member.type"]),
+                                                    as.numeric(t[row, "alpha_T"]),
+                                                    as.numeric(t[row, "delta_T"]),
+                                                    as.numeric(t[row, "k_T"]),
+                                                    as.numeric(t[row, "E.GPa"]),
+                                                    as.numeric(t[row, "IL.kN.m"]),
+                                                    as.numeric(t[row, "gamma"]),
+                                                    list_reference_tables)$TL
     print(as.numeric(t[row, "TL"]))
   }
 
   for (row in 1:nrow(t)) {
     # calculate Ned (kN)
     t[row, "Ned"] <- civilR::axial_compression_force(as.logical(t[row, "top.level.y.n"]),
-                                             as.numeric(t[row, "DL.kN.m"]),
-                                             as.numeric(t[row, "LL.kN.m"]),
-                                             as.numeric(t[row, "L.m"]),
-                                             as.numeric(t[row, "P.kN.m"]),
-                                             as.numeric(t[row, "theta.deg"]),
-                                             as.numeric(t[row, "s.m"]),
-                                             as.numeric(t[row, "Lcry.m"]),
-                                             as.numeric(t[row, "Lcrz.m"]),
-                                             as.character(t[row, "steel.grade"]),
-                                             as.character(t[row, "member.type"]),
-                                             as.numeric(t[row, "alpha_T"]),
-                                             as.numeric(t[row, "delta_T"]),
-                                             as.numeric(t[row, "k_T"]),
-                                             as.numeric(t[row, "E.GPa"]),
-                                             as.numeric(t[row, "IL.kN.m"]),
-                                             as.numeric(t[row, "gamma"])
-                                             )$Ned
+                                                     as.numeric(t[row, "DL.kN.m"]),
+                                                     as.numeric(t[row, "LL.kN.m"]),
+                                                     as.numeric(t[row, "L.m"]),
+                                                     as.numeric(t[row, "P.kN.m"]),
+                                                     as.numeric(t[row, "theta.deg"]),
+                                                     as.numeric(t[row, "s.m"]),
+                                                     as.numeric(t[row, "Lcry.m"]),
+                                                     as.numeric(t[row, "Lcrz.m"]),
+                                                     as.character(t[row, "steel.grade"]),
+                                                     as.character(t[row, "member.type"]),
+                                                     as.numeric(t[row, "alpha_T"]),
+                                                     as.numeric(t[row, "delta_T"]),
+                                                     as.numeric(t[row, "k_T"]),
+                                                     as.numeric(t[row, "E.GPa"]),
+                                                     as.numeric(t[row, "IL.kN.m"]),
+                                                     as.numeric(t[row, "gamma"]),
+                                                     list_reference_tables)$Ned
     print(as.numeric(t[row, "Ned"]))
   }
 
@@ -1225,13 +1341,14 @@ process_input_table <- function() {
   for (row in 1:nrow(t)) {
     # calculate selected_member_size
     t[row, "selected_member_size"] <- civilR::trial_member_size(as.numeric(t[row, "Lcry.m"]),
-                                                        as.numeric(t[row, "Lcrz.m"]),
-                                                        as.numeric(t[row, "Ned"]),
-                                                        as.character(t[row, "steel.grade"]),
-                                                        as.character(t[row, "member.type"])
-    )
+                                                                as.numeric(t[row, "Lcrz.m"]),
+                                                                as.numeric(t[row, "Ned"]),
+                                                                as.character(t[row, "steel.grade"]),
+                                                                as.character(t[row, "member.type"]),
+                                                                list_reference_tables )
     print(as.character(t[row, "selected_member_size"]))
   }
+
 
   #-----------------------------------#
   #            Check 1                #
@@ -1239,85 +1356,85 @@ process_input_table <- function() {
 
   for (row in 1:nrow(t)) {
     # calculate N_b_Rd_X for check 1 [kN]
-    t[row, "N_b_Rd_X"] <- check_overall_buckling_resistance_about_yy_axis(as.character(t[row, "selected_member_size"]),
-                                                                           as.character(t[row, "member.type"]),
-                                                                           as.character(t[row, "steel.grade"]),
-                                                                           as.numeric(t[row, "k"]),
-                                                                           as.numeric(t[row, "L.m"]),
-                                                                           as.numeric(t[row, "E.GPa"])
-    )$N_b_Rd_X
+    t[row, "N_b_Rd_X"] <- civilR::check_overall_buckling_resistance_about_yy_axis(as.character(t[row, "selected_member_size"]),
+                                                                                  as.character(t[row, "member.type"]),
+                                                                                  as.character(t[row, "steel.grade"]),
+                                                                                  as.numeric(t[row, "k"]),
+                                                                                  as.numeric(t[row, "L.m"]),
+                                                                                  as.numeric(t[row, "E.GPa"]),
+                                                                                  list_reference_tables)$N_b_Rd_X
     print(as.character(t[row, "N_b_Rd_X"]))
   }
 
   for (row in 1:nrow(t)) {
     # calculate fy for check 1
-    t[row, "fy_1"] <- check_overall_buckling_resistance_about_yy_axis(as.character(t[row, "selected_member_size"]),
-                                                                           as.character(t[row, "member.type"]),
-                                                                           as.character(t[row, "steel.grade"]),
-                                                                           as.numeric(t[row, "k"]),
-                                                                           as.numeric(t[row, "L.m"]),
-                                                                           as.numeric(t[row, "E.GPa"])
-    )$fy
+    t[row, "fy_1"] <- civilR::check_overall_buckling_resistance_about_yy_axis(as.character(t[row, "selected_member_size"]),
+                                                                              as.character(t[row, "member.type"]),
+                                                                              as.character(t[row, "steel.grade"]),
+                                                                              as.numeric(t[row, "k"]),
+                                                                              as.numeric(t[row, "L.m"]),
+                                                                              as.numeric(t[row, "E.GPa"]),
+                                                                              list_reference_tables)$fy
     print(as.character(t[row, "fy_1"]))
   }
 
   for (row in 1:nrow(t)) {
     # calculate N_pl_Rd for check 1
-    t[row, "N_pl_Rd_1"] <- check_overall_buckling_resistance_about_yy_axis(as.character(t[row, "selected_member_size"]),
-                                                                           as.character(t[row, "member.type"]),
-                                                                           as.character(t[row, "steel.grade"]),
-                                                                           as.numeric(t[row, "k"]),
-                                                                           as.numeric(t[row, "L.m"]),
-                                                                           as.numeric(t[row, "E.GPa"])
-    )$N_pl_Rd
+    t[row, "N_pl_Rd_1"] <- civilR::check_overall_buckling_resistance_about_yy_axis(as.character(t[row, "selected_member_size"]),
+                                                                                   as.character(t[row, "member.type"]),
+                                                                                   as.character(t[row, "steel.grade"]),
+                                                                                   as.numeric(t[row, "k"]),
+                                                                                   as.numeric(t[row, "L.m"]),
+                                                                                   as.numeric(t[row, "E.GPa"]),
+                                                                                   list_reference_tables)$N_pl_Rd
     print(as.character(t[row, "N_pl_Rd_1"]))
   }
 
   for (row in 1:nrow(t)) {
     # calculate Ncr for check 1
-    t[row, "Ncr_1"] <- check_overall_buckling_resistance_about_yy_axis(as.character(t[row, "selected_member_size"]),
-                                                                           as.character(t[row, "member.type"]),
-                                                                           as.character(t[row, "steel.grade"]),
-                                                                           as.numeric(t[row, "k"]),
-                                                                           as.numeric(t[row, "L.m"]),
-                                                                           as.numeric(t[row, "E.GPa"])
-    )$Ncr
+    t[row, "Ncr_1"] <- civilR::check_overall_buckling_resistance_about_yy_axis(as.character(t[row, "selected_member_size"]),
+                                                                               as.character(t[row, "member.type"]),
+                                                                               as.character(t[row, "steel.grade"]),
+                                                                               as.numeric(t[row, "k"]),
+                                                                               as.numeric(t[row, "L.m"]),
+                                                                               as.numeric(t[row, "E.GPa"]),
+                                                                               list_reference_tables)$Ncr
     print(as.character(t[row, "Ncr_1"]))
   }
 
   for (row in 1:nrow(t)) {
     # calculate lambda_bar for check 1
-    t[row, "lambda_bar_1"] <- check_overall_buckling_resistance_about_yy_axis(as.character(t[row, "selected_member_size"]),
-                                                                           as.character(t[row, "member.type"]),
-                                                                           as.character(t[row, "steel.grade"]),
-                                                                           as.numeric(t[row, "k"]),
-                                                                           as.numeric(t[row, "L.m"]),
-                                                                           as.numeric(t[row, "E.GPa"])
-    )$lambda_bar
+    t[row, "lambda_bar_1"] <- civilR::check_overall_buckling_resistance_about_yy_axis(as.character(t[row, "selected_member_size"]),
+                                                                                      as.character(t[row, "member.type"]),
+                                                                                      as.character(t[row, "steel.grade"]),
+                                                                                      as.numeric(t[row, "k"]),
+                                                                                      as.numeric(t[row, "L.m"]),
+                                                                                      as.numeric(t[row, "E.GPa"]),
+                                                                                      list_reference_tables)$lambda_bar
     print(as.character(t[row, "lambda_bar_1"]))
   }
 
   for (row in 1:nrow(t)) {
     # calculate alpha_yy for check 1
-    t[row, "alpha_yy_1"] <- check_overall_buckling_resistance_about_yy_axis(as.character(t[row, "selected_member_size"]),
-                                                                           as.character(t[row, "member.type"]),
-                                                                           as.character(t[row, "steel.grade"]),
-                                                                           as.numeric(t[row, "k"]),
-                                                                           as.numeric(t[row, "L.m"]),
-                                                                           as.numeric(t[row, "E.GPa"])
-    )$alpha_yy
+    t[row, "alpha_yy_1"] <- civilR::check_overall_buckling_resistance_about_yy_axis(as.character(t[row, "selected_member_size"]),
+                                                                                    as.character(t[row, "member.type"]),
+                                                                                    as.character(t[row, "steel.grade"]),
+                                                                                    as.numeric(t[row, "k"]),
+                                                                                    as.numeric(t[row, "L.m"]),
+                                                                                    as.numeric(t[row, "E.GPa"]),
+                                                                                    list_reference_tables)$alpha_yy
     print(as.character(t[row, "alpha_yy_1"]))
   }
 
   for (row in 1:nrow(t)) {
     # calculate X for check 1
-    t[row, "X_1"] <- check_overall_buckling_resistance_about_yy_axis(as.character(t[row, "selected_member_size"]),
-                                                                           as.character(t[row, "member.type"]),
-                                                                           as.character(t[row, "steel.grade"]),
-                                                                           as.numeric(t[row, "k"]),
-                                                                           as.numeric(t[row, "L.m"]),
-                                                                           as.numeric(t[row, "E.GPa"])
-                                                                           )$X
+    t[row, "X_1"] <- civilR::check_overall_buckling_resistance_about_yy_axis(as.character(t[row, "selected_member_size"]),
+                                                                             as.character(t[row, "member.type"]),
+                                                                             as.character(t[row, "steel.grade"]),
+                                                                             as.numeric(t[row, "k"]),
+                                                                             as.numeric(t[row, "L.m"]),
+                                                                             as.numeric(t[row, "E.GPa"]),
+                                                                             list_reference_tables)$X
     print(as.character(t[row, "X_1"]))
   }
 
@@ -1328,105 +1445,105 @@ process_input_table <- function() {
 
   for (row in 1:nrow(t)) {
     # calculate N_b_Rd_Y for check 2 [kN]
-    t[row, "N_b_Rd_Y"] <- check_overall_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
-                                                                           as.character(t[row, "member.type"]),
-                                                                           as.character(t[row, "steel.grade"]),
-                                                                           as.numeric(t[row, "k"]),
-                                                                           as.numeric(t[row, "L.m"]),
-                                                                           as.numeric(t[row, "E.GPa"]),
-                                                                           as.numeric(t[row, "h0.mm"])
-                                                                          )$N_b_Rd_Y
+    t[row, "N_b_Rd_Y"] <- civilR::check_overall_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                                  as.character(t[row, "member.type"]),
+                                                                                  as.character(t[row, "steel.grade"]),
+                                                                                  as.numeric(t[row, "k"]),
+                                                                                  as.numeric(t[row, "L.m"]),
+                                                                                  as.numeric(t[row, "E.GPa"]),
+                                                                                  as.numeric(t[row, "h0.mm"]),
+                                                                                  list_reference_tables)$N_b_Rd_Y
     print(as.character(t[row, "N_b_Rd_Y"]))
   }
 
   for (row in 1:nrow(t)) {
     # calculate fy for check 2
-    t[row, "fy_2"] <- check_overall_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
-                                                                          as.character(t[row, "member.type"]),
-                                                                          as.character(t[row, "steel.grade"]),
-                                                                          as.numeric(t[row, "k"]),
-                                                                          as.numeric(t[row, "L.m"]),
-                                                                          as.numeric(t[row, "E.GPa"]),
-                                                                          as.numeric(t[row, "h0.mm"])
-    )$fy
+    t[row, "fy_2"] <- civilR::check_overall_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                              as.character(t[row, "member.type"]),
+                                                                              as.character(t[row, "steel.grade"]),
+                                                                              as.numeric(t[row, "k"]),
+                                                                              as.numeric(t[row, "L.m"]),
+                                                                              as.numeric(t[row, "E.GPa"]),
+                                                                              as.numeric(t[row, "h0.mm"]),
+                                                                              list_reference_tables)$fy
     print(as.character(t[row, "fy_2"]))
   }
 
   for (row in 1:nrow(t)) {
     # calculate N_pl_Rd for check 2
-    t[row, "N_pl_Rd_2"] <- check_overall_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
-                                                                          as.character(t[row, "member.type"]),
-                                                                          as.character(t[row, "steel.grade"]),
-                                                                          as.numeric(t[row, "k"]),
-                                                                          as.numeric(t[row, "L.m"]),
-                                                                          as.numeric(t[row, "E.GPa"]),
-                                                                          as.numeric(t[row, "h0.mm"])
-    )$N_pl_Rd
+    t[row, "N_pl_Rd_2"] <- civilR::check_overall_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                                   as.character(t[row, "member.type"]),
+                                                                                   as.character(t[row, "steel.grade"]),
+                                                                                   as.numeric(t[row, "k"]),
+                                                                                   as.numeric(t[row, "L.m"]),
+                                                                                   as.numeric(t[row, "E.GPa"]),
+                                                                                   as.numeric(t[row, "h0.mm"]),
+                                                                                   list_reference_tables)$N_pl_Rd
     print(as.character(t[row, "N_pl_Rd_2"]))
   }
 
   for (row in 1:nrow(t)) {
     # calculate Ieff for check 2
-    t[row, "Ieff_2"] <- check_overall_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
-                                                                          as.character(t[row, "member.type"]),
-                                                                          as.character(t[row, "steel.grade"]),
-                                                                          as.numeric(t[row, "k"]),
-                                                                          as.numeric(t[row, "L.m"]),
-                                                                          as.numeric(t[row, "E.GPa"]),
-                                                                          as.numeric(t[row, "h0.mm"])
-    )$Ieff
+    t[row, "Ieff_2"] <- civilR::check_overall_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                                as.character(t[row, "member.type"]),
+                                                                                as.character(t[row, "steel.grade"]),
+                                                                                as.numeric(t[row, "k"]),
+                                                                                as.numeric(t[row, "L.m"]),
+                                                                                as.numeric(t[row, "E.GPa"]),
+                                                                                as.numeric(t[row, "h0.mm"]),
+                                                                                list_reference_tables)$Ieff
     print(as.character(t[row, "Ieff_2"]))
   }
 
   for (row in 1:nrow(t)) {
     # calculate Ncr for check 2
-    t[row, "Ncr_2"] <- check_overall_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
-                                                                          as.character(t[row, "member.type"]),
-                                                                          as.character(t[row, "steel.grade"]),
-                                                                          as.numeric(t[row, "k"]),
-                                                                          as.numeric(t[row, "L.m"]),
-                                                                          as.numeric(t[row, "E.GPa"]),
-                                                                          as.numeric(t[row, "h0.mm"])
-    )$Ncr
+    t[row, "Ncr_2"] <- civilR::check_overall_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                               as.character(t[row, "member.type"]),
+                                                                               as.character(t[row, "steel.grade"]),
+                                                                               as.numeric(t[row, "k"]),
+                                                                               as.numeric(t[row, "L.m"]),
+                                                                               as.numeric(t[row, "E.GPa"]),
+                                                                               as.numeric(t[row, "h0.mm"]),
+                                                                               list_reference_tables)$Ncr
     print(as.character(t[row, "Ncr_2"]))
   }
 
   for (row in 1:nrow(t)) {
     # calculate lambda_bar for check 2
-    t[row, "lambda_bar_2"] <- check_overall_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
-                                                                          as.character(t[row, "member.type"]),
-                                                                          as.character(t[row, "steel.grade"]),
-                                                                          as.numeric(t[row, "k"]),
-                                                                          as.numeric(t[row, "L.m"]),
-                                                                          as.numeric(t[row, "E.GPa"]),
-                                                                          as.numeric(t[row, "h0.mm"])
-    )$lambda_bar
+    t[row, "lambda_bar_2"] <- civilR::check_overall_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                                      as.character(t[row, "member.type"]),
+                                                                                      as.character(t[row, "steel.grade"]),
+                                                                                      as.numeric(t[row, "k"]),
+                                                                                      as.numeric(t[row, "L.m"]),
+                                                                                      as.numeric(t[row, "E.GPa"]),
+                                                                                      as.numeric(t[row, "h0.mm"]),
+                                                                                      list_reference_tables)$lambda_bar
     print(as.character(t[row, "lambda_bar_2"]))
   }
 
   for (row in 1:nrow(t)) {
     # calculate alpha_yy for check 2
-    t[row, "alpha_yy_2"] <- check_overall_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
-                                                                          as.character(t[row, "member.type"]),
-                                                                          as.character(t[row, "steel.grade"]),
-                                                                          as.numeric(t[row, "k"]),
-                                                                          as.numeric(t[row, "L.m"]),
-                                                                          as.numeric(t[row, "E.GPa"]),
-                                                                          as.numeric(t[row, "h0.mm"])
-    )$alpha_yy
+    t[row, "alpha_yy_2"] <- civilR::check_overall_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                                    as.character(t[row, "member.type"]),
+                                                                                    as.character(t[row, "steel.grade"]),
+                                                                                    as.numeric(t[row, "k"]),
+                                                                                    as.numeric(t[row, "L.m"]),
+                                                                                    as.numeric(t[row, "E.GPa"]),
+                                                                                    as.numeric(t[row, "h0.mm"]),
+                                                                                    list_reference_tables)$alpha_yy
     print(as.character(t[row, "alpha_yy_2"]))
   }
 
   for (row in 1:nrow(t)) {
     # calculate X for check 2
-    t[row, "X_2"] <- check_overall_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
-                                                                          as.character(t[row, "member.type"]),
-                                                                          as.character(t[row, "steel.grade"]),
-                                                                          as.numeric(t[row, "k"]),
-                                                                          as.numeric(t[row, "L.m"]),
-                                                                          as.numeric(t[row, "E.GPa"]),
-                                                                          as.numeric(t[row, "h0.mm"])
-    )$X
+    t[row, "X_2"] <- civilR::check_overall_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                             as.character(t[row, "member.type"]),
+                                                                             as.character(t[row, "steel.grade"]),
+                                                                             as.numeric(t[row, "k"]),
+                                                                             as.numeric(t[row, "L.m"]),
+                                                                             as.numeric(t[row, "E.GPa"]),
+                                                                             as.numeric(t[row, "h0.mm"]),
+                                                                             list_reference_tables)$X
     print(as.character(t[row, "X_2"]))
   }
 
@@ -1437,85 +1554,85 @@ process_input_table <- function() {
 
   for (row in 1:nrow(t)) {
     # calculate N_b_Rd_ch for check 3 [kN]
-    t[row, "N_b_Rd_ch"] <- check_local_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
-                                                                           as.character(t[row, "member.type"]),
-                                                                           as.character(t[row, "steel.grade"]),
-                                                                           as.numeric(t[row, "k"]),
-                                                                           as.numeric(t[row, "Lch.mm"]),
-                                                                           as.numeric(t[row, "E.GPa"])
-                                                                         )$N_b_Rd_ch
+    t[row, "N_b_Rd_ch"] <- civilR::check_local_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                                 as.character(t[row, "member.type"]),
+                                                                                 as.character(t[row, "steel.grade"]),
+                                                                                 as.numeric(t[row, "k"]),
+                                                                                 as.numeric(t[row, "Lch.mm"]),
+                                                                                 as.numeric(t[row, "E.GPa"]),
+                                                                                 list_reference_tables)$N_b_Rd_ch
     print(as.character(t[row, "N_b_Rd_ch"]))
   }
 
   for (row in 1:nrow(t)) {
     # calculate fy for check 3
-    t[row, "fy_3"] <- check_local_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
-                                                                         as.character(t[row, "member.type"]),
-                                                                         as.character(t[row, "steel.grade"]),
-                                                                         as.numeric(t[row, "k"]),
-                                                                         as.numeric(t[row, "Lch.mm"]),
-                                                                         as.numeric(t[row, "E.GPa"])
-    )$fy
+    t[row, "fy_3"] <- civilR::check_local_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                            as.character(t[row, "member.type"]),
+                                                                            as.character(t[row, "steel.grade"]),
+                                                                            as.numeric(t[row, "k"]),
+                                                                            as.numeric(t[row, "Lch.mm"]),
+                                                                            as.numeric(t[row, "E.GPa"]),
+                                                                            list_reference_tables)$fy
     print(as.character(t[row, "fy_3"]))
   }
 
   for (row in 1:nrow(t)) {
     # calculate N_pl_Rd for check 3
-    t[row, "N_pl_Rd_3"] <- check_local_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
-                                                                         as.character(t[row, "member.type"]),
-                                                                         as.character(t[row, "steel.grade"]),
-                                                                         as.numeric(t[row, "k"]),
-                                                                         as.numeric(t[row, "Lch.mm"]),
-                                                                         as.numeric(t[row, "E.GPa"])
-    )$N_pl_Rd
+    t[row, "N_pl_Rd_3"] <- civilR::check_local_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                                 as.character(t[row, "member.type"]),
+                                                                                 as.character(t[row, "steel.grade"]),
+                                                                                 as.numeric(t[row, "k"]),
+                                                                                 as.numeric(t[row, "Lch.mm"]),
+                                                                                 as.numeric(t[row, "E.GPa"]),
+                                                                                 list_reference_tables)$N_pl_Rd
     print(as.character(t[row, "N_pl_Rd_3"]))
   }
 
   for (row in 1:nrow(t)) {
     # calculate Ncr for check 3
-    t[row, "Ncr_3"] <- check_local_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
-                                                                         as.character(t[row, "member.type"]),
-                                                                         as.character(t[row, "steel.grade"]),
-                                                                         as.numeric(t[row, "k"]),
-                                                                         as.numeric(t[row, "Lch.mm"]),
-                                                                         as.numeric(t[row, "E.GPa"])
-    )$Ncr
+    t[row, "Ncr_3"] <- civilR::check_local_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                             as.character(t[row, "member.type"]),
+                                                                             as.character(t[row, "steel.grade"]),
+                                                                             as.numeric(t[row, "k"]),
+                                                                             as.numeric(t[row, "Lch.mm"]),
+                                                                             as.numeric(t[row, "E.GPa"]),
+                                                                             list_reference_tables)$Ncr
     print(as.character(t[row, "Ncr_3"]))
   }
 
   for (row in 1:nrow(t)) {
     # calculate lambda_bar for check 3
-    t[row, "lambda_bar_3"] <- check_local_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
-                                                                         as.character(t[row, "member.type"]),
-                                                                         as.character(t[row, "steel.grade"]),
-                                                                         as.numeric(t[row, "k"]),
-                                                                         as.numeric(t[row, "Lch.mm"]),
-                                                                         as.numeric(t[row, "E.GPa"])
-    )$lambda_bar
+    t[row, "lambda_bar_3"] <- civilR::check_local_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                                    as.character(t[row, "member.type"]),
+                                                                                    as.character(t[row, "steel.grade"]),
+                                                                                    as.numeric(t[row, "k"]),
+                                                                                    as.numeric(t[row, "Lch.mm"]),
+                                                                                    as.numeric(t[row, "E.GPa"]),
+                                                                                    list_reference_tables)$lambda_bar
     print(as.character(t[row, "lambda_bar_3"]))
   }
 
   for (row in 1:nrow(t)) {
     # calculate alpha_yy for check 3
-    t[row, "alpha_yy_3"] <- check_local_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
-                                                                         as.character(t[row, "member.type"]),
-                                                                         as.character(t[row, "steel.grade"]),
-                                                                         as.numeric(t[row, "k"]),
-                                                                         as.numeric(t[row, "Lch.mm"]),
-                                                                         as.numeric(t[row, "E.GPa"])
-    )$alpha_yy
+    t[row, "alpha_yy_3"] <- civilR::check_local_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                                  as.character(t[row, "member.type"]),
+                                                                                  as.character(t[row, "steel.grade"]),
+                                                                                  as.numeric(t[row, "k"]),
+                                                                                  as.numeric(t[row, "Lch.mm"]),
+                                                                                  as.numeric(t[row, "E.GPa"]),
+                                                                                  list_reference_tables)$alpha_yy
     print(as.character(t[row, "alpha_yy_3"]))
   }
 
   for (row in 1:nrow(t)) {
     # calculate X for check 3
-    t[row, "X_3"] <- check_local_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
-                                                                         as.character(t[row, "member.type"]),
-                                                                         as.character(t[row, "steel.grade"]),
-                                                                         as.numeric(t[row, "k"]),
-                                                                         as.numeric(t[row, "Lch.mm"]),
-                                                                         as.numeric(t[row, "E.GPa"])
-    )$X
+    t[row, "X_3"] <- civilR::check_local_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                           as.character(t[row, "member.type"]),
+                                                                           as.character(t[row, "steel.grade"]),
+                                                                           as.numeric(t[row, "k"]),
+                                                                           as.numeric(t[row, "Lch.mm"]),
+                                                                           as.numeric(t[row, "E.GPa"]),
+                                                                           list_reference_tables)$X
     print(as.character(t[row, "X_3"]))
   }
 
@@ -1526,7 +1643,41 @@ process_input_table <- function() {
 
   for (row in 1:nrow(t)) {
     # calculate N_ch_Ed [kN]
-    t[row, "N_ch_Ed"] <- max_compressive_axial_force_in_chords(as.character(t[row, "selected_member_size"]),
+    t[row, "N_ch_Ed"] <- civilR::max_compressive_axial_force_in_chords(as.character(t[row, "selected_member_size"]),
+                                                                       as.character(t[row, "member.type"]),
+                                                                       as.character(t[row, "steel.grade"]),
+                                                                       as.numeric(t[row, "k"]),
+                                                                       as.numeric(t[row, "L.m"]),
+                                                                       as.numeric(t[row, "n"]),
+                                                                       as.numeric(t[row, "Ad.mm2"]),
+                                                                       as.numeric(t[row, "Lch.mm"]),
+                                                                       as.numeric(t[row, "E.GPa"]),
+                                                                       as.numeric(t[row, "h0.mm"]),
+                                                                       as.numeric(t[row, "Ned"]),
+                                                                       list_reference_tables)$N_ch_Ed
+    print(as.character(t[row, "N_ch_Ed"]))
+  }
+
+  for (row in 1:nrow(t)) {
+    # calculate Sv
+    t[row, "Sv"] <- civilR::max_compressive_axial_force_in_chords(as.character(t[row, "selected_member_size"]),
+                                                                  as.character(t[row, "member.type"]),
+                                                                  as.character(t[row, "steel.grade"]),
+                                                                  as.numeric(t[row, "k"]),
+                                                                  as.numeric(t[row, "L.m"]),
+                                                                  as.numeric(t[row, "n"]),
+                                                                  as.numeric(t[row, "Ad.mm2"]),
+                                                                  as.numeric(t[row, "Lch.mm"]),
+                                                                  as.numeric(t[row, "E.GPa"]),
+                                                                  as.numeric(t[row, "h0.mm"]),
+                                                                  as.numeric(t[row, "Ned"]),
+                                                                  list_reference_tables)$Sv
+    print(as.character(t[row, "Sv"]))
+  }
+
+  for (row in 1:nrow(t)) {
+    # calculate Ncr
+    t[row, "Ncr"] <- civilR::max_compressive_axial_force_in_chords(as.character(t[row, "selected_member_size"]),
                                                                    as.character(t[row, "member.type"]),
                                                                    as.character(t[row, "steel.grade"]),
                                                                    as.numeric(t[row, "k"]),
@@ -1536,59 +1687,25 @@ process_input_table <- function() {
                                                                    as.numeric(t[row, "Lch.mm"]),
                                                                    as.numeric(t[row, "E.GPa"]),
                                                                    as.numeric(t[row, "h0.mm"]),
-                                                                   as.numeric(t[row, "Ned"])
-                                                                   )$N_ch_Ed
-    print(as.character(t[row, "N_ch_Ed"]))
-  }
-
-  for (row in 1:nrow(t)) {
-    # calculate Sv
-    t[row, "Sv"] <- max_compressive_axial_force_in_chords(as.character(t[row, "selected_member_size"]),
-                                                               as.character(t[row, "member.type"]),
-                                                               as.character(t[row, "steel.grade"]),
-                                                               as.numeric(t[row, "k"]),
-                                                               as.numeric(t[row, "L.m"]),
-                                                               as.numeric(t[row, "n"]),
-                                                               as.numeric(t[row, "Ad.mm2"]),
-                                                               as.numeric(t[row, "Lch.mm"]),
-                                                               as.numeric(t[row, "E.GPa"]),
-                                                               as.numeric(t[row, "h0.mm"]),
-                                                               as.numeric(t[row, "Ned"])
-    )$Sv
-    print(as.character(t[row, "Sv"]))
-  }
-
-  for (row in 1:nrow(t)) {
-    # calculate Ncr
-    t[row, "Ncr"] <- max_compressive_axial_force_in_chords(as.character(t[row, "selected_member_size"]),
-                                                               as.character(t[row, "member.type"]),
-                                                               as.character(t[row, "steel.grade"]),
-                                                               as.numeric(t[row, "k"]),
-                                                               as.numeric(t[row, "L.m"]),
-                                                               as.numeric(t[row, "n"]),
-                                                               as.numeric(t[row, "Ad.mm2"]),
-                                                               as.numeric(t[row, "Lch.mm"]),
-                                                               as.numeric(t[row, "E.GPa"]),
-                                                               as.numeric(t[row, "h0.mm"]),
-                                                               as.numeric(t[row, "Ned"])
-    )$Ncr
+                                                                   as.numeric(t[row, "Ned"]),
+                                                                   list_reference_tables)$Ncr
     print(as.character(t[row, "Ncr"]))
   }
 
   for (row in 1:nrow(t)) {
     # calculate MEd
-    t[row, "MEd"] <- max_compressive_axial_force_in_chords(as.character(t[row, "selected_member_size"]),
-                                                               as.character(t[row, "member.type"]),
-                                                               as.character(t[row, "steel.grade"]),
-                                                               as.numeric(t[row, "k"]),
-                                                               as.numeric(t[row, "L.m"]),
-                                                               as.numeric(t[row, "n"]),
-                                                               as.numeric(t[row, "Ad.mm2"]),
-                                                               as.numeric(t[row, "Lch.mm"]),
-                                                               as.numeric(t[row, "E.GPa"]),
-                                                               as.numeric(t[row, "h0.mm"]),
-                                                               as.numeric(t[row, "Ned"])
-    )$MEd
+    t[row, "MEd"] <- civilR::max_compressive_axial_force_in_chords(as.character(t[row, "selected_member_size"]),
+                                                                   as.character(t[row, "member.type"]),
+                                                                   as.character(t[row, "steel.grade"]),
+                                                                   as.numeric(t[row, "k"]),
+                                                                   as.numeric(t[row, "L.m"]),
+                                                                   as.numeric(t[row, "n"]),
+                                                                   as.numeric(t[row, "Ad.mm2"]),
+                                                                   as.numeric(t[row, "Lch.mm"]),
+                                                                   as.numeric(t[row, "E.GPa"]),
+                                                                   as.numeric(t[row, "h0.mm"]),
+                                                                   as.numeric(t[row, "Ned"]),
+                                                                   list_reference_tables)$MEd
     print(as.character(t[row, "MEd"]))
   }
 
@@ -1599,26 +1716,9 @@ process_input_table <- function() {
     print(as.character(t[row, "N_ch_Ed"]))
   }
 
-  return(t)
-}
-
-
-#' Export output table to Excel file
-#'
-#' Export output table to Excel file.
-#'
-#' @param file_name Path and file name of the output table
-#'
-#' @export
-#'
-#' @return None
-#'
-compute_output_table <- function(file_name="tables/input/output_processed_table.xlsx") {
-  require(writexl)
-
-  t_OUTPUT <- process_input_table()
-  writexl::write_xlsx(t_OUTPUT, path = file_name)
-  View(t_OUTPUT)
+  # export table as XLSX format
+  writexl::write_xlsx(t, path = file_name)
+  View(t)
 
   print("")
   print("")
@@ -1627,5 +1727,505 @@ compute_output_table <- function(file_name="tables/input/output_processed_table.
   print("================================================================")
   print("Processed table has been exported to output_processed_table.xlsx")
   print("================================================================")
+}
+
+
+#' Generate a table with all member sizes and apply all checks on each of them
+#'
+#' Generate a table with all member sizes and apply all checks on each of them
+#'
+#' @param steel_grade steel_grade [\eqn{N/{mm}^2}], categorical: 'S355' or 'S275'
+#' @param member_type member_type, categorical: 'UC' or 'UB'
+#' @param k Coefficient [dimensionless]
+#' @param L Total length of member [\eqn{m}]
+#' @param E Young's Modulus of Elasticity [\eqn{GPa}]
+#' @param h0 Distance between centroids of chords [\eqn{mm}]
+#' @param Lch Length of chord [\eqn{mm}]
+#' @param Ad Section area of diagonal (lacing), [\eqn{cm^2}]
+#' @param n Number of planes of lacing, default [\eqn{n=2}]
+#' @param isTopLevel Is member located at top level? [boolean]
+#' @param alpha_T Thermal coef. of expansion [\eqn{degC}]
+#' @param delta_T Change in temperature from the Installation temperature [\eqn{degC}]
+#' @param k_T Coefficient Of Temperature Effect [dimensionless]
+#' @param Ned_no_TL Axial Compressional Force without Temperature Load [\eqn{kN}]
+#' @param file_name Path and file name of the output table
+#' @param export_xlsx Boolean to export Excel spreadsheet or not [T/F]
+#'
+#' @export
+#'
+#' @return Dataframe containing relevant input and all computed data
+#'
+check_all_member_sizes <- function(
+  steel_grade="S355",
+  member_type="UB",
+  k=0.8,
+  L=12.5,
+  E=210,
+  h0=1000,
+  Lch=1000,
+  Ad=1140,
+  n=2,
+  isTopLevel=T,
+  alpha_T=0.000012,
+  delta_T=10,
+  k_T=0.8,
+  Ned_no_TL=6987,
+  file_name="tables/input/all_member_sizes_checked.xlsx",
+  export_xlsx=T)
+  {
+  require(writexl)
+
+  list_reference_tables <- civilR::import_reference_BlueBook_tables()
+
+  # steel_grade="S355"; member_type="UB"
+  # k=0.8; L=12.5; E=210; h0=1000; Lch=1000; Ad=1140; n=2;
+  # isTopLevel=T; alpha_T=0.000012; delta_T=10; k_T=0.8; Ned_no_TL=6987
+
+  member_sizes <- civilR::all_member_sizes(steel_grade, member_type, list_reference_tables)
+
+  df <- data.frame(
+    # member sizes
+    member.size = member_sizes,
+
+    # input parameters
+    k = k,
+    L = L,
+    E = E,
+    h0 = h0,
+    Lch = Lch,
+    Ad = Ad,
+    n = n,
+    isTopLevel = isTopLevel,
+    alpha_T = alpha_T,
+    delta_T = delta_T,
+    k_T = k_T,
+
+    # Check 1
+    fy_1 = 0,
+    N_pl_Rd_1 = 0,
+    Ncr_1 = 0,
+    lambda_bar_1 = 0,
+    alpha_yy_1 = 0,
+    X_1 = 0,
+    N_b_Rd_X = 0,
+
+    # Check 2
+    fy_2 = 0,
+    N_pl_Rd_2 = 0,
+    Ieff_2 = 0,
+    Ncr_2 = 0,
+    lambda_bar_2 = 0,
+    alpha_yy_2 = 0,
+    X_2 = 0,
+    N_b_Rd_Y = 0,
+
+    # Check 3
+    fy_3 = 0,
+    N_pl_Rd_3 = 0,
+    Ncr_3 = 0,
+    lambda_bar_3 = 0,
+    alpha_yy_3 = 0,
+    X_3 = 0,
+    N_b_Rd_ch = 0,
+
+    # Check 4
+    Ned_no_TL = Ned_no_TL,
+    TL = 0,
+    Ned = 0,
+    Sv = 0,
+    Ncr = 0,
+    MEd = 0,
+    N_ch_Ed = 0,
+
+    # Combined final check
+    final_check = F
+  )
+
+
+  #-----------------------------------#
+  #            Check 1                #
+  #-----------------------------------#
+
+  for (i in 1:nrow(df)) {
+    # calculate N_b_Rd_X for check 1 [kN]
+    df$N_b_Rd_X[i] <- civilR::check_overall_buckling_resistance_about_yy_axis(as.character(df$member.size[i]),
+                                                                              member_type,
+                                                                              steel_grade,
+                                                                              k,
+                                                                              L,
+                                                                              E,
+                                                                              list_reference_tables)$N_b_Rd_X
+    }
+
+  for (i in 1:nrow(df)) {
+    # calculate fy for check 1
+    df$fy_1[i] <- civilR::check_overall_buckling_resistance_about_yy_axis(as.character(df$member.size[i]),
+                                                                      member_type,
+                                                                      steel_grade,
+                                                                      k,
+                                                                      L,
+                                                                      E,
+                                                                      list_reference_tables)$fy
+    }
+
+  for (i in 1:nrow(df)) {
+    # calculate N_pl_Rd for check 1
+    df$N_pl_Rd_1[i] <- civilR::check_overall_buckling_resistance_about_yy_axis(as.character(df$member.size[i]),
+                                                                           member_type,
+                                                                           steel_grade,
+                                                                           k,
+                                                                           L,
+                                                                           E,
+                                                                           list_reference_tables)$N_pl_Rd
+    }
+
+  for (i in 1:nrow(df)) {
+    # calculate Ncr for check 1
+    df$Ncr_1[i] <- civilR::check_overall_buckling_resistance_about_yy_axis(as.character(df$member.size[i]),
+                                                                       member_type,
+                                                                       steel_grade,
+                                                                       k,
+                                                                       L,
+                                                                       E,
+                                                                       list_reference_tables)$Ncr
+    }
+
+  for (i in 1:nrow(df)) {
+    # calculate lambda_bar for check 1
+    df$lambda_bar_1[i] <- civilR::check_overall_buckling_resistance_about_yy_axis(as.character(df$member.size[i]),
+                                                                              member_type,
+                                                                              steel_grade,
+                                                                              k,
+                                                                              L,
+                                                                              E,
+                                                                              list_reference_tables)$lambda_bar
+    }
+
+  for (i in 1:nrow(df)) {
+    # calculate alpha_yy for check 1
+    df$alpha_yy_1[i] <- civilR::check_overall_buckling_resistance_about_yy_axis(as.character(df$member.size[i]),
+                                                                            member_type,
+                                                                            steel_grade,
+                                                                            k,
+                                                                            L,
+                                                                            E,
+                                                                            list_reference_tables)$alpha_yy
+    }
+
+  for (i in 1:nrow(df)) {
+    # calculate X for check 1
+    df$X_1[i] <- civilR::check_overall_buckling_resistance_about_yy_axis(as.character(df$member.size[i]),
+                                                                     member_type,
+                                                                     steel_grade,
+                                                                     k,
+                                                                     L,
+                                                                     E,
+                                                                     list_reference_tables)$X
+    }
+
+
+  #-----------------------------------#
+  #            Check 2                #
+  #-----------------------------------#
+
+  for (i in 1:nrow(df)) {
+    # calculate N_b_Rd_Y for check 2 [kN]
+    df$N_b_Rd_Y[i] <- civilR::check_overall_buckling_resistance_about_zz_axis(as.character(df$member.size[i]),
+                                                                          member_type,
+                                                                          steel_grade,
+                                                                          k,
+                                                                          L,
+                                                                          E,
+                                                                          h0,
+                                                                          list_reference_tables)$N_b_Rd_Y
+  }
+
+  for (i in 1:nrow(df)) {
+    # calculate fy for check 2
+    df$fy_2[i] <- civilR::check_overall_buckling_resistance_about_zz_axis(as.character(df$member.size[i]),
+                                                                      member_type,
+                                                                      steel_grade,
+                                                                      k,
+                                                                      L,
+                                                                      E,
+                                                                      h0,
+                                                                      list_reference_tables)$fy
+  }
+
+  for (i in 1:nrow(df)) {
+    # calculate N_pl_Rd for check 2
+    df$N_pl_Rd_2[i] <- civilR::check_overall_buckling_resistance_about_zz_axis(as.character(df$member.size[i]),
+                                                                           member_type,
+                                                                           steel_grade,
+                                                                           k,
+                                                                           L,
+                                                                           E,
+                                                                           h0,
+                                                                           list_reference_tables)$N_pl_Rd
+  }
+
+  for (i in 1:nrow(df)) {
+    # calculate Ieff for check 2
+    df$Ieff_2[i] <- civilR::check_overall_buckling_resistance_about_zz_axis(as.character(df$member.size[i]),
+                                                                        member_type,
+                                                                        steel_grade,
+                                                                        k,
+                                                                        L,
+                                                                        E,
+                                                                        h0,
+                                                                        list_reference_tables)$Ieff
+  }
+
+  for (i in 1:nrow(df)) {
+    # calculate Ncr for check 2
+    df$Ncr_2[i] <- civilR::check_overall_buckling_resistance_about_zz_axis(as.character(df$member.size[i]),
+                                                                       member_type,
+                                                                       steel_grade,
+                                                                       k,
+                                                                       L,
+                                                                       E,
+                                                                       h0,
+                                                                       list_reference_tables)$Ncr
+  }
+
+  for (i in 1:nrow(df)) {
+    # calculate lambda_bar for check 2
+    df$lambda_bar_2[i] <- civilR::check_overall_buckling_resistance_about_zz_axis(as.character(df$member.size[i]),
+                                                                              member_type,
+                                                                              steel_grade,
+                                                                              k,
+                                                                              L,
+                                                                              E,
+                                                                              h0,
+                                                                              list_reference_tables)$lambda_bar
+  }
+
+  for (i in 1:nrow(df)) {
+    # calculate alpha_yy for check 2
+    df$alpha_yy_2[i] <- civilR::check_overall_buckling_resistance_about_zz_axis(as.character(df$member.size[i]),
+                                                                            member_type,
+                                                                            steel_grade,
+                                                                            k,
+                                                                            L,
+                                                                            E,
+                                                                            h0,
+                                                                            list_reference_tables)$alpha_yy
+  }
+
+  for (i in 1:nrow(df)) {
+    # calculate X for check 2
+    df$X_2[i] <- civilR::check_overall_buckling_resistance_about_zz_axis(as.character(df$member.size[i]),
+                                                                     member_type,
+                                                                     steel_grade,
+                                                                     k,
+                                                                     L,
+                                                                     E,
+                                                                     h0,
+                                                                     list_reference_tables)$X
+  }
+
+
+  #-----------------------------------#
+  #            Check 3                #
+  #-----------------------------------#
+
+  for (i in 1:nrow(df)) {
+    # calculate N_b_Rd_ch for check 3 [kN]
+    df$N_b_Rd_ch[i] <- civilR::check_local_buckling_resistance_about_zz_axis(as.character(df$member.size[i]),
+                                                                         member_type,
+                                                                         steel_grade,
+                                                                         k,
+                                                                         Lch,
+                                                                         E,
+                                                                         list_reference_tables)$N_b_Rd_ch
+  }
+
+  for (i in 1:nrow(df)) {
+    # calculate fy for check 3
+    df$fy_3[i] <- civilR::check_local_buckling_resistance_about_zz_axis(as.character(df$member.size[i]),
+                                                                    member_type,
+                                                                    steel_grade,
+                                                                    k,
+                                                                    Lch,
+                                                                    E,
+                                                                    list_reference_tables)$fy
+  }
+
+  for (i in 1:nrow(df)) {
+    # calculate N_pl_Rd for check 3
+    df$N_pl_Rd_3[i] <- civilR::check_local_buckling_resistance_about_zz_axis(as.character(df$member.size[i]),
+                                                                         member_type,
+                                                                         steel_grade,
+                                                                         k,
+                                                                         Lch,
+                                                                         E,
+                                                                         list_reference_tables)$N_pl_Rd
+  }
+
+  for (i in 1:nrow(df)) {
+    # calculate Ncr for check 3
+    df$Ncr_3[i] <- civilR::check_local_buckling_resistance_about_zz_axis(as.character(df$member.size[i]),
+                                                                     member_type,
+                                                                     steel_grade,
+                                                                     k,
+                                                                     Lch,
+                                                                     E,
+                                                                     list_reference_tables)$Ncr
+  }
+
+  for (i in 1:nrow(df)) {
+    # calculate lambda_bar for check 3
+    df$lambda_bar_3[i] <- civilR::check_local_buckling_resistance_about_zz_axis(as.character(df$member.size[i]),
+                                                                            member_type,
+                                                                            steel_grade,
+                                                                            k,
+                                                                            Lch,
+                                                                            E,
+                                                                            list_reference_tables)$lambda_bar
+  }
+
+  for (i in 1:nrow(df)) {
+    # calculate alpha_yy for check 3
+    df$alpha_yy_3[i] <- civilR::check_local_buckling_resistance_about_zz_axis(as.character(df$member.size[i]),
+                                                                          member_type,
+                                                                          steel_grade,
+                                                                          k,
+                                                                          Lch,
+                                                                          E,
+                                                                          list_reference_tables)$alpha_yy
+  }
+
+  for (i in 1:nrow(df)) {
+    # calculate X for check 3
+    df$X_3[i] <- civilR::check_local_buckling_resistance_about_zz_axis(as.character(df$member.size[i]),
+                                                                   member_type,
+                                                                   steel_grade,
+                                                                   k,
+                                                                   Lch,
+                                                                   E,
+                                                                   list_reference_tables)$X
+  }
+
+
+  #-----------------------------------#
+  #            Check 4                #
+  #-----------------------------------#
+
+
+  for (i in 1:nrow(df)) {
+    # calculate TL (kN)
+    df$TL[i] <- civilR::axial_compression_force_given_member(isTopLevel,
+                                                             Ned_no_TL,
+                                                             as.character(df$member.size[i]),
+                                                             alpha_T,
+                                                             delta_T,
+                                                             k_T,
+                                                             E,
+                                                             list_reference_tables)$TL
+    }
+
+  for (i in 1:nrow(df)) {
+    # calculate Ned (kN)
+    df$Ned[i] <- civilR::axial_compression_force_given_member(isTopLevel,
+                                                              Ned_no_TL,
+                                                              as.character(df$member.size[i]),
+                                                              alpha_T,
+                                                              delta_T,
+                                                              k_T,
+                                                              E,
+                                                              list_reference_tables)$Ned
+    }
+
+
+  for (i in 1:nrow(df)) {
+    # calculate N_ch_Ed [kN]
+    df$N_ch_Ed[i] <- civilR::max_compressive_axial_force_in_chords(as.character(df$member.size[i]),
+                                                               member_type,
+                                                               steel_grade,
+                                                               k,
+                                                               L,
+                                                               n,
+                                                               Ad,
+                                                               Lch,
+                                                               E,
+                                                               h0,
+                                                               df$Ned[i],
+                                                               list_reference_tables)$N_ch_Ed
+  }
+
+  for (i in 1:nrow(df)) {
+    # calculate Sv
+    df$Sv[i] <- civilR::max_compressive_axial_force_in_chords(as.character(df$member.size[i]),
+                                                          member_type,
+                                                          steel_grade,
+                                                          k,
+                                                          L,
+                                                          n,
+                                                          Ad,
+                                                          Lch,
+                                                          E,
+                                                          h0,
+                                                          df$Ned[i],
+                                                          list_reference_tables)$Sv
+  }
+
+  for (i in 1:nrow(df)) {
+    # calculate Ncr
+    df$Ncr[i] <- civilR::max_compressive_axial_force_in_chords(as.character(df$member.size[i]),
+                                                           member_type,
+                                                           steel_grade,
+                                                           k,
+                                                           L,
+                                                           n,
+                                                           Ad,
+                                                           Lch,
+                                                           E,
+                                                           h0,
+                                                           df$Ned[i],
+                                                           list_reference_tables)$Ncr
+  }
+
+  for (i in 1:nrow(df)) {
+    # calculate MEd
+    df$MEd[i] <- civilR::max_compressive_axial_force_in_chords(as.character(df$member.size[i]),
+                                                           member_type,
+                                                           steel_grade,
+                                                           k,
+                                                           L,
+                                                           n,
+                                                           Ad,
+                                                           Lch,
+                                                           E,
+                                                           h0,
+                                                           df$Ned[i],
+                                                           list_reference_tables)$MEd
+  }
+
+
+  for (i in 1:nrow(df)) {
+    # calculate final_check [T/F]
+    df$final_check[i] <- as.logical(
+      (as.numeric(df$N_ch_Ed[i]) / min(as.numeric(df$N_b_Rd_X[i]), as.numeric(df$N_b_Rd_Y[i]), as.numeric(df$N_b_Rd_ch[i]))) < 1.0
+    )
+    }
+
+  # export table as XLSX format
+  if ( export_xlsx ) {
+    writexl::write_xlsx(df, path = file_name)
+    View(df)
+  }
+
+  # extract optimal member size
+  df_optimal <- subset(df, final_check==T)
+  optimal_member_size <- as.character( df_optimal$member.size[1] )
+
+  print("")
+  print("Completed OK")
+  print("")
+  print("==================================================================")
+  print("Processed table has been exported to all_member_sizes_checked.xlsx")
+  print("==================================================================")
+
+  return( list("df"=df, "optimal_member_size"=optimal_member_size) )
 }
 

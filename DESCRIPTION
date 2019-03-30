@@ -14,7 +14,8 @@ Imports:
     readxl,
     devtools,
     dplyr,
-    writexl
+    writexl,
+    civilR
 Suggests: 
     knitr,
     rmarkdown

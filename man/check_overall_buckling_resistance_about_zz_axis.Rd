@@ -5,7 +5,7 @@
 \title{Perform check #2, calculating the overall buckling resistance of struts about major \eqn{z-z} axis}
 \usage{
 check_overall_buckling_resistance_about_zz_axis(trial_member_size,
-  member_type, steel_grade, k, L, E, h0)
+  member_type, steel_grade, k, L, E, h0, list_reference_tables)
 }
 \arguments{
 \item{trial_member_size}{Trial member size}
@@ -21,6 +21,8 @@ check_overall_buckling_resistance_about_zz_axis(trial_member_size,
 \item{E}{Young's Modulus of Elasticity [\eqn{GPa}]}
 
 \item{h0}{Distance between centroids of chords [\eqn{mm}]}
+
+\item{list_reference_tables}{List of reference tables}
 }
 \value{
 \eqn{N_{b,Rd,Y}} Overall buckling resistance of struts about z-z axis [\eqn{kN}], \eqn{N_{b,R_d,Y}}, \eqn{f_y}, \eqn{N_{pl,R_d}}, \eqn{I_{eff}}, \eqn{N_{cr,Y}}, \eqn{{\bar{\lambda_Y}}}, \eqn{\alpha_{yy}}, \eqn{X}

@@ -4,12 +4,14 @@
 \alias{all_member_sizes}
 \title{Extract a vector of all member sizes}
 \usage{
-all_member_sizes(steel_grade, member_type)
+all_member_sizes(steel_grade, member_type, list_reference_tables)
 }
 \arguments{
 \item{steel_grade}{steel_grade [\eqn{N/{mm}^2}], categorical: 'S355' or 'S275'}
 
 \item{member_type}{member_type, categorical: 'UC' or 'UB'}
+
+\item{list_reference_tables}{List of reference tables}
 }
 \value{
 Vector of all member sizes [ height (mm) x width (mm) x mass (kg/m) ]

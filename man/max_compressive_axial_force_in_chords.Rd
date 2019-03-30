@@ -5,7 +5,7 @@
 \title{Maximum compressive axial force in the chords}
 \usage{
 max_compressive_axial_force_in_chords(trial_member_size, member_type,
-  steel_grade, k, L, n, Ad, Lch, E, h0, Ned)
+  steel_grade, k, L, n, Ad, Lch, E, h0, Ned, list_reference_tables)
 }
 \arguments{
 \item{trial_member_size}{Trial member size}
@@ -29,6 +29,8 @@ max_compressive_axial_force_in_chords(trial_member_size, member_type,
 \item{h0}{Distance between centroids of chords [\eqn{m}]}
 
 \item{Ned}{Axial compression Force [\eqn{kN}]}
+
+\item{list_reference_tables}{List of reference tables}
 }
 \value{
 \eqn{N_{ch,E_d}} Maximum compressive axial force in the chords [\eqn{kN}], \eqn{S_v}, \eqn{N_{cr,ch}}, \eqn{{M_{E_d}}}

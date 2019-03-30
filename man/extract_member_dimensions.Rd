@@ -4,7 +4,7 @@
 \alias{extract_member_dimensions}
 \title{Extract dimensions from reference table}
 \usage{
-extract_member_dimensions(h, b, m, member_type)
+extract_member_dimensions(h, b, m, member_type, list_reference_tables)
 }
 \arguments{
 \item{h}{Member height [\eqn{mm}]}
@@ -14,6 +14,8 @@ extract_member_dimensions(h, b, m, member_type)
 \item{m}{Member mass [\eqn{kg/m}]}
 
 \item{member_type}{Member type, 'UB' or 'UC'}
+
+\item{list_reference_tables}{List of reference tables}
 }
 \value{
 \itemize{

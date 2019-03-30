@@ -5,7 +5,7 @@
 \title{Perform check #1, calculating the overall buckling resistance of member about major \eqn{y-y} axis}
 \usage{
 check_overall_buckling_resistance_about_yy_axis(trial_member_size,
-  member_type, steel_grade, k, L, E)
+  member_type, steel_grade, k, L, E, list_reference_tables)
 }
 \arguments{
 \item{trial_member_size}{Trial member size}
@@ -19,6 +19,8 @@ check_overall_buckling_resistance_about_yy_axis(trial_member_size,
 \item{L}{Total length of member [\eqn{m}]}
 
 \item{E}{Young's Modulus of Elasticity [\eqn{GPa}]}
+
+\item{list_reference_tables}{List of reference tables}
 }
 \value{
 \eqn{N_{b,Rd,X}} Overall buckling resistance of struts about major y-y axis [\eqn{kN}], \eqn{N_{b,R_d,X}}, \eqn{f_y}, \eqn{N_{pl,R_d}}, \eqn{N_{cr,X}}, \eqn{{\bar{\lambda_X}}}, \eqn{\alpha_{yy}}, \eqn{X}

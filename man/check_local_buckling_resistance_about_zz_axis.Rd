@@ -5,7 +5,7 @@
 \title{Perform check #3, calculating the local buckling resistance of struts about minor \eqn{z-z} axis}
 \usage{
 check_local_buckling_resistance_about_zz_axis(trial_member_size,
-  member_type, steel_grade, k, Lch, E)
+  member_type, steel_grade, k, Lch, E, list_reference_tables)
 }
 \arguments{
 \item{trial_member_size}{Trial member size}
@@ -19,6 +19,8 @@ check_local_buckling_resistance_about_zz_axis(trial_member_size,
 \item{Lch}{Length of chord [\eqn{mm}]}
 
 \item{E}{Young's Modulus of Elasticity [\eqn{GPa}]}
+
+\item{list_reference_tables}{List of reference tables}
 }
 \value{
 \eqn{N_{b,Rd,X}} Local buckling resistance of struts about \eqn{z-z} axis [\eqn{kN}], \eqn{f_y}, \eqn{N_{pl,R_d}}, \eqn{N_{cr}}, \eqn{{\bar{\lambda}}}, \eqn{\alpha_{yy}}, \eqn{X}
