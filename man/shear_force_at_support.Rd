@@ -4,18 +4,16 @@
 \alias{shear_force_at_support}
 \title{Shear force at support calculation}
 \usage{
-shear_force_at_support(isTopLevel, DL, LL, TL, Lcry)
+shear_force_at_support(DL, LL, L, AL)
 }
 \arguments{
-\item{isTopLevel}{Is member located at top level? [boolean]}
-
 \item{DL}{Dead load / self-weight of member [\eqn{kN/m}]}
 
 \item{LL}{Live load / imposed load [\eqn{kN/m}]}
 
-\item{TL}{Temperature load [\eqn{kN/m}]}
+\item{L}{Length of strut between restraints [\eqn{m}]}
 
-\item{Lcry}{critical length about major axis [\eqn{m}]}
+\item{AL}{Accidental Impact Load [\eqn{kN/m}]}
 }
 \value{
 \eqn{V_{Ed}} Shear force at support [\eqn{kN}]

@@ -6,7 +6,7 @@
 \usage{
 max_compressive_axial_force_in_chords(trial_member_size, member_type,
   steel_grade, k, L, n, Ad, Lch, E, h0, Ned, list_reference_tables,
-  isTopLevel, DL, LL, IL, TL, Lcry)
+  isTopLevel, DL, LL, AL, TL, Lcry)
 }
 \arguments{
 \item{trial_member_size}{Trial member size}
@@ -39,7 +39,7 @@ max_compressive_axial_force_in_chords(trial_member_size, member_type,
 
 \item{LL}{Live load / imposed load [\eqn{kN/m}]}
 
-\item{IL}{Accidental Impact Load [\eqn{kN/m}]}
+\item{AL}{Accidental Impact Load [\eqn{kN/m}]}
 
 \item{TL}{Temperature load [\eqn{kN/m}]}
 

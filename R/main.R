@@ -421,32 +421,31 @@ shear_stiffness <- function(n=2, Ad, Lch, E, h0) {
 #' The maximum bending moment, including the bow imperfection and the second order effects, calculated as:
 #' \deqn{ M_{E_d} = \frac{ N_{E_d} \, e_0 \, + \, {M_{E_d}}^I }{ 1 - \frac{N_{E_d}}{N_{cr,Y}} - \frac{N_{E_d}}{S_v} } }
 #'
-#' @param L Length of strut between restraints [\eqn{mm}]
+#' @param L Length of strut between restraints [\eqn{m}]
 #' @param Ned axial_compression_force [\eqn{kN}]
 #' @param Sv Shear stiffness for K-shape lacing [\eqn{kN}]
 #' @param Ncr Euler buckling load from check #2 global zz [\eqn{kN}]
-#' @param isTopLevel Is member located at top level? [boolean]
 #' @param DL Dead load / self-weight of member [\eqn{kN/m}]
 #' @param LL Live load / imposed load [\eqn{kN/m}]
-#' @param IL Accidental Impact Load [\eqn{kN/m}]
-#' @param TL Temperature load [\eqn{kN/m}]
-#' @param Lcry critical length about major axis [\eqn{m}]
+#' @param AL Accidental Impact Load [\eqn{kN/m}]
 #'
 #' @export
 #'
 #' @return \eqn{M_{E_d}} Second order moment [\eqn{kN.m}]
 #'
-second_order_bending_moment <- function(L, Ned, Sv, Ncr, isTopLevel, DL, LL, IL, TL, Lcry) {
+second_order_bending_moment <- function(L, Ned, Sv, Ncr, DL, LL, AL) {
+  # L=14; Ned=8667; Sv=337077.8; Ncr=160204.83; DL=2.7; LL=1; AL=50
+
   e0 <- L / 500 # e0, initial bow imperfection [mm]
   e0 <- min(e0, 30) # cap e0 at 30mm
 
-  MEd_1 <- civilR::first_order_bending_moment(
-    civilR::combined_vertical_load(isTopLevel, DL, LL, IL, TL),
-    Lcry
-    )
-  MEd <- ( Ned * e0 + MEd_1 ) / ( 1 - (Ned / Ncr) - (Ned / Sv))
+  c.load <- civilR::combined_vertical_load(DL, LL, AL)
 
-  return(MEd)
+  MEd_1 <- civilR::first_order_bending_moment( c.load, L )
+
+  MEd <- ( Ned * e0 + MEd_1 ) / ( 1 - (Ned / Ncr) - (Ned / Sv) )
+
+  return( round(MEd) )
 }
 
 
@@ -457,15 +456,16 @@ second_order_bending_moment <- function(L, Ned, Sv, Ncr, isTopLevel, DL, LL, IL,
 #' @param DL Dead load / self-weight of member [\eqn{kN/m}]
 #' @param LL Live load / imposed load [\eqn{kN/m}]
 #' @param L Length of strut between restraints [\eqn{m}]
+#' @param AL Accidental Impact Load [\eqn{kN/m}]
 #'
 #' @export
 #'
 #' @return \eqn{V_{Ed}} Shear force at support [\eqn{kN}]
 #'
-shear_force_at_support <- function(DL, LL, L) {
-  # DL=2.5; LL=1; L=13.5
+shear_force_at_support <- function(DL, LL, L, AL) {
+  # DL=2.5; LL=1; L=13.5; AL=50
 
-  Ved <- round( 0.6 * ( 1.35 * DL + 1.5 * LL ) * L )
+  Ved <- round( 0.6 * ( civilR::combined_vertical_load(DL, LL, AL) ) * L )
 
   return (Ved)
 }
@@ -532,7 +532,7 @@ maximum_shear_force_in_the_lacing <- function(MEd, L) {
 #' @param delta_T Change in temperature from the Installation temperature [\eqn{degC}]
 #' @param k_T Coefficient Of Temperature Effect [dimensionless]
 #' @param E Young's Modulus of Elasticity [\eqn{GPa}]
-#' @param IL Accidental Impact Load [\eqn{kN/m}]
+#' @param AL Accidental Impact Load [\eqn{kN/m}]
 #' @param gamma Partial factor for action [dimensionless], as per EN 1990:2002 standard
 #' @param list_reference_tables List of reference tables
 #'
@@ -546,12 +546,12 @@ maximum_shear_force_in_the_lacing <- function(MEd, L) {
 #'
 axial_compression_force <- function( isTopLevel=T, DL=1, LL=1, L=12.5, P=247, theta=90, spacing=6,
                                      Lcry=12.7, Lcrz=1.0, steel_grade='S355', member_type='UB',
-                                     alpha_T=0.000012, delta_T=10, k_T=0.8, E=210, IL=50, gamma=1.35,
+                                     alpha_T=0.000012, delta_T=10, k_T=0.8, E=210, AL=50, gamma=1.35,
                                      list_reference_tables )
   {
   # isTopLevel=T; DL=1; LL=1; L=12.5; P=247; theta=90; spacing=6
   # Lcry=12.5; Lcrz=1.6; steel_grade='S355'; member_type='UB'
-  # alpha_T=0.000012; delta_T=10; k_T=0.8; E=210; IL=50; gamma=1.35
+  # alpha_T=0.000012; delta_T=10; k_T=0.8; E=210; AL=50; gamma=1.35
 
   # SF, axial force / strut force (kN)
   SF <- ( P * spacing * gamma ) / sin( theta * pi / 180 ) # Axial compressional force, Ned [kN]
@@ -1153,7 +1153,7 @@ check_local_buckling_resistance_about_zz_axis <- function(trial_member_size, mem
 #' @param isTopLevel Is member located at top level? [boolean]
 #' @param DL Dead load / self-weight of member [\eqn{kN/m}]
 #' @param LL Live load / imposed load [\eqn{kN/m}]
-#' @param IL Accidental Impact Load [\eqn{kN/m}]
+#' @param AL Accidental Impact Load [\eqn{kN/m}]
 #' @param TL Temperature load [\eqn{kN/m}]
 #' @param Lcry critical length about major axis [\eqn{m}]
 #'
@@ -1167,7 +1167,7 @@ check_local_buckling_resistance_about_zz_axis <- function(trial_member_size, mem
 #'   \item \eqn{{M_{E_d}}}
 #' }
 #'
-max_compressive_axial_force_in_chords <- function(trial_member_size, member_type, steel_grade, k, L, n, Ad, Lch, E, h0, Ned, list_reference_tables, isTopLevel, DL, LL, IL, TL, Lcry) {
+max_compressive_axial_force_in_chords <- function(trial_member_size, member_type, steel_grade, k, L, n, Ad, Lch, E, h0, Ned, list_reference_tables, isTopLevel, DL, LL, AL, TL, Lcry) {
 
   s <- civilR::convert_member_dimensions_string_to_elements(trial_member_size)
 
@@ -1189,10 +1189,10 @@ max_compressive_axial_force_in_chords <- function(trial_member_size, member_type
   Ncr <- civilR::Euler_buckling_load(Le * 1000, E * 1000, Ieff)
 
   # The second order bending moment
-  MEd <- civilR::second_order_bending_moment(L, Ned, Sv, Ncr, isTopLevel, DL, LL, IL, TL, Lcry)
+  MEd <- civilR::second_order_bending_moment(L, Ned, Sv, Ncr, DL, LL, AL)
 
   # Output maximum compressive axial force in the chords
-  N_ch_Ed <- round( (2/3 * Ned) + (MEd * h0 * l$A) / (2*Ieff) )
+  N_ch_Ed <- round( (0.5 * Ned) + (MEd * h0 * l$A) / (2*Ieff) )
 
   return(
     list("N_ch_Ed" = round(N_ch_Ed),
@@ -1211,25 +1211,23 @@ max_compressive_axial_force_in_chords <- function(trial_member_size, member_type
 #' Calculation steps are as follows:
 #' \enumerate{
 #'   \item \eqn{ULS: F=(1.35\,DL +1.5\,LL+1.5\,TL)}
-#'   \item \eqn{ALS: F=(1.0\,DL +0.7\,LL+1.0\,IL)}
-#'   \item \eqn{ALS: F=(1.0\,DL +0.6\,LL+1.0\,IL+0.5\,TL)}
+#'   \item \eqn{ALS: F=(1.0\,DL +0.7\,LL+1.0\,AL)}
+#'   \item \eqn{ALS: F=(1.0\,DL +0.6\,LL+1.0\,AL+0.5\,TL)}
 #' }
 #'
-#' @param isTopLevel Is member located at top level? [boolean]
 #' @param DL Dead load / self-weight of member [\eqn{kN/m}]
 #' @param LL Live load / imposed load [\eqn{kN/m}]
-#' @param IL Accidental Impact Load [\eqn{kN/m}]
-#' @param TL Temperature Load [\eqn{kN}]
+#' @param AL Accidental Impact Load [\eqn{kN/m}]
 #'
 #' @export
 #'
 #' @return combined_vertical_load [\eqn{kN/m}]
 #'
-combined_vertical_load <- function(isTopLevel, DL, LL, IL, TL) {
-  # isTopLevel=T; DL=2.5; LL=1; IL=50
+combined_vertical_load <- function(DL, LL, AL) {
+  # DL=2.5; LL=1; AL=50
 
   ULS <- 1.35 * DL + 1.5 * LL
-  ALS <- 1.0 * DL + 0.7 * LL + 1.0 * IL
+  ALS <- 1.0 * DL + 0.7 * LL + 1.0 * AL
 
   combined_vertical_load <- round( max(ULS, ALS) )
 
@@ -1244,18 +1242,18 @@ combined_vertical_load <- function(isTopLevel, DL, LL, IL, TL) {
 #' Calculated as \deqn{M^I_{Ed} = 0.08\,F\,L_{cr,y}^2}
 #'
 #' @param combined_vertical_load combined_vertical_load [\eqn{kN/m}]
-#' @param Lcry critical length major axis [\eqn{m}]
+#' @param L Length of strut between restraints [\eqn{m}]
 #'
 #' @export
 #'
 #' @return \eqn{M^I_{Ed}} First order bending moment [\eqn{kN.m}]
 #'
-first_order_bending_moment <- function(combined_vertical_load, Lcry) {
+first_order_bending_moment <- function(combined_vertical_load, L) {
   e <- 30 / 1000 # [m] = 30mm, eccentricity (e = 10% of d > 30mm)
 
   Me <- combined_vertical_load * e
 
-  first_order_bending_moment <- round( 0.08 * combined_vertical_load * Lcry^2 )
+  first_order_bending_moment <- round( 0.08 * combined_vertical_load * L^2 )
 
   corrected_first_order_bending_moment <- first_order_bending_moment + Me # correct for eccentricity
 
@@ -1277,13 +1275,14 @@ read_input_table <- function(file_name="tables/input/trial1_kotik.xlsx") {
   require(readxl)
 
   t <- readxl::read_excel(path = file_name,
-                          col_types = c("text", rep("numeric", 11), "text", rep("numeric", 4), "text", "text", "numeric", "numeric") )
+                          col_types = c("text", rep("numeric", 11), "text", rep("numeric", 5), "text", "text", "numeric", "numeric") )
 
   names(t) <- c( "Strut.name", "L.m", "k", "s.m", "Lcry.m", "Lcrz.m", "theta.deg", "Lch.mm",
-                 "h0.mm", "n", "Ad.mm2", "E.GPa", "top.level.y.n", "DL.kN.m", "LL.kN.m",
-                 "Ned_no_TL.kN", "IL.kN.m", "steel.grade", "member.type", "alpha_T", "k_T" )
+                 "h0.mm", "n", "Ad.mm2", "E.GPa", "top.level.y.n", "DL.kN.m", "LL.kN.m", "ml",
+                 "Ned_no_TL.kN", "AL.kN.m", "steel.grade", "member.type", "alpha_T", "k_T" )
   t$steel.grade <- paste0( 'S', t$steel.grade )
   t$top.level.y.n <- (t$top.level.y.n == "y")
+  t$Ned_no_TL.kN <- round( t$Ned_no_TL.kN * 2/3 )
 
   t$delta_T <- 10
   t$gamma <- 1.35
@@ -1444,10 +1443,11 @@ compute_output_table <- function(
       as.numeric(t[row, "alpha_T"]),
       as.numeric(t[row, "delta_T"]),
       as.numeric(t[row, "k_T"]),
-      as.numeric(t[row, "Ned_no_TL.kN"]),
+      round(as.numeric(t[row, "Ned_no_TL.kN"]) * 1.0),
       as.numeric(t[row, "LL.kN.m"]),
-      as.numeric(t[row, "IL.kN.m"]),
+      as.numeric(t[row, "AL.kN.m"]),
       as.numeric(t[row, "Lcry.m"]),
+      as.numeric(t[row, "ml"]),
       as.character(t[row, "Strut.name"]),
       base_file_name_all_member_sizes,
       T)$optimal_TL
@@ -1471,10 +1471,11 @@ compute_output_table <- function(
       as.numeric(t[row, "alpha_T"]),
       as.numeric(t[row, "delta_T"]),
       as.numeric(t[row, "k_T"]),
-      as.numeric(t[row, "Ned_no_TL.kN"]),
+      round(as.numeric(t[row, "Ned_no_TL.kN"]) * 1.0),
       as.numeric(t[row, "LL.kN.m"]),
-      as.numeric(t[row, "IL.kN.m"]),
+      as.numeric(t[row, "AL.kN.m"]),
       as.numeric(t[row, "Lcry.m"]),
+      as.numeric(t[row, "ml"]),
       as.character(t[row, "Strut.name"]),
       base_file_name_all_member_sizes,
       T)$optimal_Ned
@@ -1482,9 +1483,6 @@ compute_output_table <- function(
     print(as.numeric(t[row, "Ned"]))
   }
 
-  # for (row in 1:nrow(t)) {
-  #   t[row, "Ned_2"] <- round( as.numeric(t[row, "Ned"]) * 2 )
-  # }
 
   for (row in 1:nrow(t)) {
     # compute selected_member_size
@@ -1502,10 +1500,11 @@ compute_output_table <- function(
       as.numeric(t[row, "alpha_T"]),
       as.numeric(t[row, "delta_T"]),
       as.numeric(t[row, "k_T"]),
-      as.numeric(t[row, "Ned_no_TL.kN"]),
+      round(as.numeric(t[row, "Ned_no_TL.kN"]) * 1.0),
       as.numeric(t[row, "LL.kN.m"]),
-      as.numeric(t[row, "IL.kN.m"]),
+      as.numeric(t[row, "AL.kN.m"]),
       as.numeric(t[row, "Lcry.m"]),
+      as.numeric(t[row, "ml"]),
       as.character(t[row, "Strut.name"]),
       base_file_name_all_member_sizes,
       T)$optimal_member_size
@@ -1807,11 +1806,9 @@ compute_output_table <- function(
   for (row in 1:nrow(t)) {
     # calculate combined vertical load [kN/m]
     t[row, "load"] <- civilR::combined_vertical_load(
-      as.logical(t[row, "top.level.y.n"]),
       as.numeric(t[row, "DL"]),
       as.numeric(t[row, "LL.kN.m"]),
-      as.numeric(t[row, "IL.kN.m"]),
-      as.numeric(t[row, "TL"])
+      as.numeric(t[row, "AL.kN.m"])
     )
     print(as.character(t[row, "load"]))
   }
@@ -1820,7 +1817,7 @@ compute_output_table <- function(
     # calculate MEd_1st [kN.m]
     t[row, "MEd_1st"] <- civilR::first_order_bending_moment(
       as.numeric(t[row, "load"]),
-      as.numeric(t[row, "Lcry.m"])
+      as.numeric(t[row, "L.m"])
       )
     print(as.character(t[row, "MEd_1st"]))
   }
@@ -1830,16 +1827,25 @@ compute_output_table <- function(
     t[row, "Ved"] <- civilR::shear_force_at_support(
       as.numeric(t[row, "DL"]),
       as.numeric(t[row, "LL.kN.m"]),
-      as.numeric(t[row, "L.m"])
+      as.numeric(t[row, "L.m"]),
+      as.numeric(t[row, "AL.kN.m"])
     )
     print(as.character(t[row, "Ved"]))
   }
 
   for (row in 1:nrow(t)) {
     # calculate DL [kN/m]
-    t[row, "DL"] <- round( 0.0098 * civilR::convert_member_dimensions_string_to_elements(as.character(t[row, "selected_member_size"]))$m, 2 )
+    # t[row, "DL"] <- round( 0.0098 * (2 * (sqrt( (as.numeric(t[row, "h0.mm"]))^2 + (as.numeric(t[row, "Lch.mm"]))^2 ) + as.numeric(t[row, "h0.mm"])) * as.numeric(t[row, "ml"]) + civilR::convert_member_dimensions_string_to_elements(as.character(t[row, "selected_member_size"]))$m * as.numeric(t[row, "Lch.mm"])), 2 )
+    t[row, "DL"] <- round( 0.0098 * (civilR::convert_member_dimensions_string_to_elements(as.character(t[row, "selected_member_size"]))$m + 0), 2 )
     print(as.character(t[row, "DL"]))
   }
+
+  # d <- sqrt( h0^2 + Lch^2 )  # length of the diagonal
+  # sw_lacing <- 2 * (d + h0) * ml_input # [kg]
+  # DL <- 0.0098 * (sw_lacing + m * Lch)
+
+  # DL <- 0.0098 * (2 * (sqrt( (as.numeric(t[row, "h0.mm"]))^2 + (as.numeric(t[row, "Lch.mm"]))^2 ) + as.numeric(t[row, "h0.mm"])) * as.numeric(t[row, "ml"]) + civilR::convert_member_dimensions_string_to_elements(as.character(t[row, "selected_member_size"]))$m * as.numeric(t[row, "Lch.mm"]))
+
 
   for (row in 1:nrow(t)) {
     # calculate N_ch_Ed [kN]
@@ -1858,7 +1864,7 @@ compute_output_table <- function(
                                                                        as.logical(t[row, "top.level.y.n"]),
                                                                        as.numeric(t[row, "DL"]),
                                                                        as.numeric(t[row, "LL.kN.m"]),
-                                                                       as.numeric(t[row, "IL.kN.m"]),
+                                                                       as.numeric(t[row, "AL.kN.m"]),
                                                                        as.numeric(t[row, "TL"]),
                                                                        as.numeric(t[row, "Lcry.m"]))$N_ch_Ed
     print(as.character(t[row, "N_ch_Ed"]))
@@ -1881,7 +1887,7 @@ compute_output_table <- function(
                                                                   as.logical(t[row, "top.level.y.n"]),
                                                                   as.numeric(t[row, "DL"]),
                                                                   as.numeric(t[row, "LL.kN.m"]),
-                                                                  as.numeric(t[row, "IL.kN.m"]),
+                                                                  as.numeric(t[row, "AL.kN.m"]),
                                                                   as.numeric(t[row, "TL"]),
                                                                   as.numeric(t[row, "Lcry.m"]))$Sv
     print(as.character(t[row, "Sv"]))
@@ -1904,7 +1910,7 @@ compute_output_table <- function(
                                                                    as.logical(t[row, "top.level.y.n"]),
                                                                    as.numeric(t[row, "DL"]),
                                                                    as.numeric(t[row, "LL.kN.m"]),
-                                                                   as.numeric(t[row, "IL.kN.m"]),
+                                                                   as.numeric(t[row, "AL.kN.m"]),
                                                                    as.numeric(t[row, "TL"]),
                                                                    as.numeric(t[row, "Lcry.m"]))$Ncr
     print(as.character(t[row, "Ncr"]))
@@ -1927,7 +1933,7 @@ compute_output_table <- function(
                                                                    as.logical(t[row, "top.level.y.n"]),
                                                                    as.numeric(t[row, "DL"]),
                                                                    as.numeric(t[row, "LL.kN.m"]),
-                                                                   as.numeric(t[row, "IL.kN.m"]),
+                                                                   as.numeric(t[row, "AL.kN.m"]),
                                                                    as.numeric(t[row, "TL"]),
                                                                    as.numeric(t[row, "Lcry.m"]))$MEd
     print(as.character(t[row, "MEd_2nd"]))
@@ -1981,6 +1987,11 @@ compute_output_table <- function(
 #' @param delta_T Change in temperature from the Installation temperature [\eqn{degC}]
 #' @param k_T Coefficient Of Temperature Effect [dimensionless]
 #' @param Ned_no_TL Axial Compressional Force without Temperature Load [\eqn{kN}]
+#' @param LL Live load / imposed load [\eqn{kN/m}]
+#' @param AL Accidental Impact Load [\eqn{kN/m}]
+#' @param Lcry critical length about major axis [\eqn{m}]
+#' @param ml Lacing weight [\eqn{kN/m}]
+#' @param strut_name Strut name
 #' @param file_name Path and file name of the output table
 #' @param export_xlsx Boolean to export Excel spreadsheet or not [T/F]
 #'
@@ -2010,8 +2021,9 @@ check_all_member_sizes <- function(
   k_T=0.8,
   Ned_no_TL=6987,
   LL,
-  IL,
+  AL,
   Lcry,
+  ml,
   strut_name="strut #",
   base_file_name="tables/input/all_member_sizes_checked",
   export_xlsx=T)
@@ -2041,8 +2053,9 @@ check_all_member_sizes <- function(
     delta_T = delta_T,
     k_T = k_T,
     LL = LL,
-    IL = IL,
+    AL = AL,
     Lcry = Lcry,
+    ml = ml,
 
     # Check 1
     fy_1 = 0,
@@ -2358,7 +2371,8 @@ check_all_member_sizes <- function(
 
   for (i in 1:nrow(df)) {
     # calculate DL [kN/m]
-    df$DL[i] <- round( 0.0098 * civilR::convert_member_dimensions_string_to_elements(as.character(df$member.size[i]))$m, 2 )
+    # df$DL[i] <- round( 0.0098 * (2 * (sqrt( h0^2 + Lch^2 ) + h0) * ml + civilR::convert_member_dimensions_string_to_elements(as.character(df$member.size[i]))$m * Lch), 2 )
+    df$DL[i] <- round( 0.0098 * (civilR::convert_member_dimensions_string_to_elements(as.character(df$member.size[i]))$m + 0), 2 )
   }
 
   for (i in 1:nrow(df)) {
@@ -2403,7 +2417,7 @@ check_all_member_sizes <- function(
                                                                as.logical(df$isTopLevel[i]),
                                                                as.numeric(df$DL[i]),
                                                                as.numeric(df$LL[i]),
-                                                               as.numeric(df$IL[i]),
+                                                               as.numeric(df$AL[i]),
                                                                as.numeric(df$TL[i]),
                                                                as.numeric(df$Lcry[i]))$N_ch_Ed
   }
@@ -2425,7 +2439,7 @@ check_all_member_sizes <- function(
                                                           as.logical(df$isTopLevel[i]),
                                                           as.numeric(df$DL[i]),
                                                           as.numeric(df$LL[i]),
-                                                          as.numeric(df$IL[i]),
+                                                          as.numeric(df$AL[i]),
                                                           as.numeric(df$TL[i]),
                                                           as.numeric(df$Lcry[i]))$Sv
   }
@@ -2447,7 +2461,7 @@ check_all_member_sizes <- function(
                                                            as.logical(df$isTopLevel[i]),
                                                            as.numeric(df$DL[i]),
                                                            as.numeric(df$LL[i]),
-                                                           as.numeric(df$IL[i]),
+                                                           as.numeric(df$AL[i]),
                                                            as.numeric(df$TL[i]),
                                                            as.numeric(df$Lcry[i]))$Ncr
   }
@@ -2469,7 +2483,7 @@ check_all_member_sizes <- function(
                                                            as.logical(df$isTopLevel[i]),
                                                            as.numeric(df$DL[i]),
                                                            as.numeric(df$LL[i]),
-                                                           as.numeric(df$IL[i]),
+                                                           as.numeric(df$AL[i]),
                                                            as.numeric(df$TL[i]),
                                                            as.numeric(df$Lcry[i]))$MEd
   }

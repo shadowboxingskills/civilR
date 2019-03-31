@@ -4,12 +4,12 @@
 \alias{first_order_bending_moment}
 \title{Calculate first order bending moment about major axis \eqn{y-y} [\eqn{kN.m}]}
 \usage{
-first_order_bending_moment(combined_vertical_load, Lcry)
+first_order_bending_moment(combined_vertical_load, L)
 }
 \arguments{
 \item{combined_vertical_load}{combined_vertical_load [\eqn{kN/m}]}
 
-\item{Lcry}{critical length major axis [\eqn{m}]}
+\item{L}{Length of strut between restraints [\eqn{m}]}
 }
 \value{
 \eqn{M^I_{Ed}} First order bending moment [\eqn{kN.m}]

@@ -4,18 +4,14 @@
 \alias{combined_vertical_load}
 \title{USL vs ALS verical load combinations}
 \usage{
-combined_vertical_load(isTopLevel, DL, LL, IL, TL)
+combined_vertical_load(DL, LL, AL)
 }
 \arguments{
-\item{isTopLevel}{Is member located at top level? [boolean]}
-
 \item{DL}{Dead load / self-weight of member [\eqn{kN/m}]}
 
 \item{LL}{Live load / imposed load [\eqn{kN/m}]}
 
-\item{IL}{Accidental Impact Load [\eqn{kN/m}]}
-
-\item{TL}{Temperature Load [\eqn{kN}]}
+\item{AL}{Accidental Impact Load [\eqn{kN/m}]}
 }
 \value{
 combined_vertical_load [\eqn{kN/m}]
@@ -27,7 +23,7 @@ USL vs ALS verical load combinations
 Calculation steps are as follows:
 \enumerate{
   \item \eqn{ULS: F=(1.35\,DL +1.5\,LL+1.5\,TL)}
-  \item \eqn{ALS: F=(1.0\,DL +0.7\,LL+1.0\,IL)}
-  \item \eqn{ALS: F=(1.0\,DL +0.6\,LL+1.0\,IL+0.5\,TL)}
+  \item \eqn{ALS: F=(1.0\,DL +0.7\,LL+1.0\,AL)}
+  \item \eqn{ALS: F=(1.0\,DL +0.6\,LL+1.0\,AL+0.5\,TL)}
 }
 }

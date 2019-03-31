@@ -7,7 +7,7 @@
 axial_compression_force(isTopLevel = T, DL = 1, LL = 1, L = 12.5,
   P = 247, theta = 90, spacing = 6, Lcry = 12.7, Lcrz = 1,
   steel_grade = "S355", member_type = "UB", alpha_T = 1.2e-05,
-  delta_T = 10, k_T = 0.8, E = 210, IL = 50, gamma = 1.35,
+  delta_T = 10, k_T = 0.8, E = 210, AL = 50, gamma = 1.35,
   list_reference_tables)
 }
 \arguments{
@@ -41,7 +41,7 @@ axial_compression_force(isTopLevel = T, DL = 1, LL = 1, L = 12.5,
 
 \item{E}{Young's Modulus of Elasticity [\eqn{GPa}]}
 
-\item{IL}{Accidental Impact Load [\eqn{kN/m}]}
+\item{AL}{Accidental Impact Load [\eqn{kN/m}]}
 
 \item{gamma}{Partial factor for action [dimensionless], as per EN 1990:2002 standard}
 
