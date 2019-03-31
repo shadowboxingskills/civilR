@@ -454,24 +454,18 @@ second_order_bending_moment <- function(L, Ned, Sv, Ncr, isTopLevel, DL, LL, IL,
 #'
 #' Generate Shear force at support \eqn{V_{Ed}} [\eqn{kN}].
 #'
-#' @param isTopLevel Is member located at top level? [boolean]
 #' @param DL Dead load / self-weight of member [\eqn{kN/m}]
 #' @param LL Live load / imposed load [\eqn{kN/m}]
-#' @param TL  Temperature load [\eqn{kN/m}]
-#' @param Lcry critical length about major axis [\eqn{m}]
+#' @param L Length of strut between restraints [\eqn{m}]
 #'
 #' @export
 #'
 #' @return \eqn{V_{Ed}} Shear force at support [\eqn{kN}]
 #'
-shear_force_at_support <- function(isTopLevel, DL, LL, TL, Lcry) {
-  # isTopLevel=T; DL=2.5; LL=1; TL=150; Lcry=12.5
+shear_force_at_support <- function(DL, LL, L) {
+  # DL=2.5; LL=1; L=13.5
 
-  if ( isTopLevel ) {
-    Ved <- round( 0.6 * ( 1.35 * DL + 1.5 * LL + 1.5 * TL ) * Lcry )
-  } else {
-    Ved <- round( 0.6 * ( 1.35 * DL + 1.5 * LL) * Lcry )
-  }
+  Ved <- round( 0.6 * ( 1.35 * DL + 1.5 * LL ) * L )
 
   return (Ved)
 }
@@ -1198,7 +1192,7 @@ max_compressive_axial_force_in_chords <- function(trial_member_size, member_type
   MEd <- civilR::second_order_bending_moment(L, Ned, Sv, Ncr, isTopLevel, DL, LL, IL, TL, Lcry)
 
   # Output maximum compressive axial force in the chords
-  N_ch_Ed <- round( (0.5 * Ned) + (MEd * h0 * l$A) / (2*Ieff) )
+  N_ch_Ed <- round( (2/3 * Ned) + (MEd * h0 * l$A) / (2*Ieff) )
 
   return(
     list("N_ch_Ed" = round(N_ch_Ed),
@@ -1232,15 +1226,10 @@ max_compressive_axial_force_in_chords <- function(trial_member_size, member_type
 #' @return combined_vertical_load [\eqn{kN/m}]
 #'
 combined_vertical_load <- function(isTopLevel, DL, LL, IL, TL) {
-  # isTopLevel=T; DL=2.5; LL=1; IL=50; TL=150
+  # isTopLevel=T; DL=2.5; LL=1; IL=50
 
-  if (isTopLevel) {
-    ULS <- 1.35 * DL + 1.5 * LL + 1.5 * TL
-    ALS <- 1.0 * DL + 0.6 * LL + 1.0 * IL + 0.5 * TL
-  } else {
-    ULS <- 1.35 * DL + 1.5 * LL
-    ALS <- 1.0 * DL + 0.7 * LL + 1.0 * IL
-  }
+  ULS <- 1.35 * DL + 1.5 * LL
+  ALS <- 1.0 * DL + 0.7 * LL + 1.0 * IL
 
   combined_vertical_load <- round( max(ULS, ALS) )
 
@@ -1839,11 +1828,9 @@ compute_output_table <- function(
   for (row in 1:nrow(t)) {
     # calculate shear force Ved [kN]
     t[row, "Ved"] <- civilR::shear_force_at_support(
-      as.logical(t[row, "top.level.y.n"]),
       as.numeric(t[row, "DL"]),
       as.numeric(t[row, "LL.kN.m"]),
-      as.numeric(t[row, "TL"]),
-      as.numeric(t[row, "Lcry.m"])
+      as.numeric(t[row, "L.m"])
     )
     print(as.character(t[row, "Ved"]))
   }
