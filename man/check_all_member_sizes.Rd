@@ -7,7 +7,7 @@
 check_all_member_sizes(steel_grade = "S355", member_type = "UB",
   k = 0.8, L = 12.5, E = 210, h0 = 1000, Lch = 1000, Ad = 1140,
   n = 2, isTopLevel = T, alpha_T = 1.2e-05, delta_T = 10,
-  k_T = 0.8, Ned_no_TL = 6987, LL, AL, Lcry, ml,
+  k_T = 0.8, Ned_no_TL = 6987, LL, AL, Lcry, Lcrz, ml,
   strut_name = "strut #",
   base_file_name = "tables/input/all_member_sizes_checked",
   export_xlsx = T)
@@ -46,6 +46,8 @@ check_all_member_sizes(steel_grade = "S355", member_type = "UB",
 \item{AL}{Accidental Impact Load [\eqn{kN/m}]}
 
 \item{Lcry}{critical length about major axis [\eqn{m}]}
+
+\item{Lcrz}{critical length minor axis [\eqn{m}]}
 
 \item{ml}{Lacing weight [\eqn{kN/m}]}
 

@@ -1282,7 +1282,11 @@ read_input_table <- function(file_name="tables/input/trial1_kotik.xlsx") {
                  "Ned_no_TL.kN", "AL.kN.m", "steel.grade", "member.type", "alpha_T", "k_T" )
   t$steel.grade <- paste0( 'S', t$steel.grade )
   t$top.level.y.n <- (t$top.level.y.n == "y")
-  t$Ned_no_TL.kN <- round( t$Ned_no_TL.kN * 2/3 )
+
+  t$Ned_no_TL.kN <- ifelse( t$theta.deg==90,
+                            round( t$Ned_no_TL.kN * 2/3 ),
+                            round( t$Ned_no_TL.kN * 1/2 * cos(t$theta.deg * pi / 180) )
+  )
 
   t$delta_T <- 10
   t$gamma <- 1.35
@@ -1447,6 +1451,7 @@ compute_output_table <- function(
       as.numeric(t[row, "LL.kN.m"]),
       as.numeric(t[row, "AL.kN.m"]),
       as.numeric(t[row, "Lcry.m"]),
+      as.numeric(t[row, "Lcrz.m"]),
       as.numeric(t[row, "ml"]),
       as.character(t[row, "Strut.name"]),
       base_file_name_all_member_sizes,
@@ -1475,6 +1480,7 @@ compute_output_table <- function(
       as.numeric(t[row, "LL.kN.m"]),
       as.numeric(t[row, "AL.kN.m"]),
       as.numeric(t[row, "Lcry.m"]),
+      as.numeric(t[row, "Lcrz.m"]),
       as.numeric(t[row, "ml"]),
       as.character(t[row, "Strut.name"]),
       base_file_name_all_member_sizes,
@@ -1504,6 +1510,7 @@ compute_output_table <- function(
       as.numeric(t[row, "LL.kN.m"]),
       as.numeric(t[row, "AL.kN.m"]),
       as.numeric(t[row, "Lcry.m"]),
+      as.numeric(t[row, "Lcrz.m"]),
       as.numeric(t[row, "ml"]),
       as.character(t[row, "Strut.name"]),
       base_file_name_all_member_sizes,
@@ -1516,17 +1523,6 @@ compute_output_table <- function(
   #            Check 1                #
   #-----------------------------------#
 
-  for (row in 1:nrow(t)) {
-    # calculate N_b_Rd_X for check 1 [kN]
-    t[row, "N_b_Rd_X"] <- civilR::check_overall_buckling_resistance_about_yy_axis(as.character(t[row, "selected_member_size"]),
-                                                                                  as.character(t[row, "member.type"]),
-                                                                                  as.character(t[row, "steel.grade"]),
-                                                                                  as.numeric(t[row, "k"]),
-                                                                                  as.numeric(t[row, "L.m"]),
-                                                                                  as.numeric(t[row, "E.GPa"]),
-                                                                                  list_reference_tables)$N_b_Rd_X
-    print(as.character(t[row, "N_b_Rd_X"]))
-  }
 
   for (row in 1:nrow(t)) {
     # calculate fy for check 1
@@ -1534,7 +1530,7 @@ compute_output_table <- function(
                                                                               as.character(t[row, "member.type"]),
                                                                               as.character(t[row, "steel.grade"]),
                                                                               as.numeric(t[row, "k"]),
-                                                                              as.numeric(t[row, "L.m"]),
+                                                                              as.numeric(t[row, "Lcry.m"]),
                                                                               as.numeric(t[row, "E.GPa"]),
                                                                               list_reference_tables)$fy
     print(as.character(t[row, "fy_1"]))
@@ -1546,7 +1542,7 @@ compute_output_table <- function(
                                                                                    as.character(t[row, "member.type"]),
                                                                                    as.character(t[row, "steel.grade"]),
                                                                                    as.numeric(t[row, "k"]),
-                                                                                   as.numeric(t[row, "L.m"]),
+                                                                                   as.numeric(t[row, "Lcry.m"]),
                                                                                    as.numeric(t[row, "E.GPa"]),
                                                                                    list_reference_tables)$N_pl_Rd
     print(as.character(t[row, "N_pl_Rd_1"]))
@@ -1558,7 +1554,7 @@ compute_output_table <- function(
                                                                                as.character(t[row, "member.type"]),
                                                                                as.character(t[row, "steel.grade"]),
                                                                                as.numeric(t[row, "k"]),
-                                                                               as.numeric(t[row, "L.m"]),
+                                                                               as.numeric(t[row, "Lcry.m"]),
                                                                                as.numeric(t[row, "E.GPa"]),
                                                                                list_reference_tables)$Ncr
     print(as.character(t[row, "Ncr_1"]))
@@ -1570,7 +1566,7 @@ compute_output_table <- function(
                                                                                       as.character(t[row, "member.type"]),
                                                                                       as.character(t[row, "steel.grade"]),
                                                                                       as.numeric(t[row, "k"]),
-                                                                                      as.numeric(t[row, "L.m"]),
+                                                                                      as.numeric(t[row, "Lcry.m"]),
                                                                                       as.numeric(t[row, "E.GPa"]),
                                                                                       list_reference_tables)$lambda_bar
     print(as.character(t[row, "lambda_bar_1"]))
@@ -1582,7 +1578,7 @@ compute_output_table <- function(
                                                                                     as.character(t[row, "member.type"]),
                                                                                     as.character(t[row, "steel.grade"]),
                                                                                     as.numeric(t[row, "k"]),
-                                                                                    as.numeric(t[row, "L.m"]),
+                                                                                    as.numeric(t[row, "Lcry.m"]),
                                                                                     as.numeric(t[row, "E.GPa"]),
                                                                                     list_reference_tables)$alpha_yy
     print(as.character(t[row, "alpha_yy_1"]))
@@ -1594,10 +1590,23 @@ compute_output_table <- function(
                                                                              as.character(t[row, "member.type"]),
                                                                              as.character(t[row, "steel.grade"]),
                                                                              as.numeric(t[row, "k"]),
-                                                                             as.numeric(t[row, "L.m"]),
+                                                                             as.numeric(t[row, "Lcry.m"]),
                                                                              as.numeric(t[row, "E.GPa"]),
                                                                              list_reference_tables)$X
     print(as.character(t[row, "X_1"]))
+  }
+
+
+  for (row in 1:nrow(t)) {
+    # calculate N_b_Rd_X for check 1 [kN]
+    t[row, "N_b_Rd_X"] <- civilR::check_overall_buckling_resistance_about_yy_axis(as.character(t[row, "selected_member_size"]),
+                                                                                  as.character(t[row, "member.type"]),
+                                                                                  as.character(t[row, "steel.grade"]),
+                                                                                  as.numeric(t[row, "k"]),
+                                                                                  as.numeric(t[row, "Lcry.m"]),
+                                                                                  as.numeric(t[row, "E.GPa"]),
+                                                                                  list_reference_tables)$N_b_Rd_X
+    print(as.character(t[row, "N_b_Rd_X"]))
   }
 
 
@@ -1605,18 +1614,6 @@ compute_output_table <- function(
   #            Check 2                #
   #-----------------------------------#
 
-  for (row in 1:nrow(t)) {
-    # calculate N_b_Rd_Y for check 2 [kN]
-    t[row, "N_b_Rd_Y"] <- civilR::check_overall_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
-                                                                                  as.character(t[row, "member.type"]),
-                                                                                  as.character(t[row, "steel.grade"]),
-                                                                                  as.numeric(t[row, "k"]),
-                                                                                  as.numeric(t[row, "L.m"]),
-                                                                                  as.numeric(t[row, "E.GPa"]),
-                                                                                  as.numeric(t[row, "h0.mm"]),
-                                                                                  list_reference_tables)$N_b_Rd_Y
-    print(as.character(t[row, "N_b_Rd_Y"]))
-  }
 
   for (row in 1:nrow(t)) {
     # calculate fy for check 2
@@ -1624,12 +1621,13 @@ compute_output_table <- function(
                                                                               as.character(t[row, "member.type"]),
                                                                               as.character(t[row, "steel.grade"]),
                                                                               as.numeric(t[row, "k"]),
-                                                                              as.numeric(t[row, "L.m"]),
+                                                                              as.numeric(t[row, "Lcrz.m"]),
                                                                               as.numeric(t[row, "E.GPa"]),
                                                                               as.numeric(t[row, "h0.mm"]),
                                                                               list_reference_tables)$fy
     print(as.character(t[row, "fy_2"]))
   }
+
 
   for (row in 1:nrow(t)) {
     # calculate N_pl_Rd for check 2
@@ -1637,12 +1635,13 @@ compute_output_table <- function(
                                                                                    as.character(t[row, "member.type"]),
                                                                                    as.character(t[row, "steel.grade"]),
                                                                                    as.numeric(t[row, "k"]),
-                                                                                   as.numeric(t[row, "L.m"]),
+                                                                                   as.numeric(t[row, "Lcrz.m"]),
                                                                                    as.numeric(t[row, "E.GPa"]),
                                                                                    as.numeric(t[row, "h0.mm"]),
                                                                                    list_reference_tables)$N_pl_Rd
     print(as.character(t[row, "N_pl_Rd_2"]))
   }
+
 
   for (row in 1:nrow(t)) {
     # calculate Ieff for check 2
@@ -1650,12 +1649,13 @@ compute_output_table <- function(
                                                                                 as.character(t[row, "member.type"]),
                                                                                 as.character(t[row, "steel.grade"]),
                                                                                 as.numeric(t[row, "k"]),
-                                                                                as.numeric(t[row, "L.m"]),
+                                                                                as.numeric(t[row, "Lcrz.m"]),
                                                                                 as.numeric(t[row, "E.GPa"]),
                                                                                 as.numeric(t[row, "h0.mm"]),
                                                                                 list_reference_tables)$Ieff
     print(as.character(t[row, "Ieff_2"]))
   }
+
 
   for (row in 1:nrow(t)) {
     # calculate Ncr for check 2
@@ -1663,12 +1663,13 @@ compute_output_table <- function(
                                                                                as.character(t[row, "member.type"]),
                                                                                as.character(t[row, "steel.grade"]),
                                                                                as.numeric(t[row, "k"]),
-                                                                               as.numeric(t[row, "L.m"]),
+                                                                               as.numeric(t[row, "Lcrz.m"]),
                                                                                as.numeric(t[row, "E.GPa"]),
                                                                                as.numeric(t[row, "h0.mm"]),
                                                                                list_reference_tables)$Ncr
     print(as.character(t[row, "Ncr_2"]))
   }
+
 
   for (row in 1:nrow(t)) {
     # calculate lambda_bar for check 2
@@ -1676,12 +1677,13 @@ compute_output_table <- function(
                                                                                       as.character(t[row, "member.type"]),
                                                                                       as.character(t[row, "steel.grade"]),
                                                                                       as.numeric(t[row, "k"]),
-                                                                                      as.numeric(t[row, "L.m"]),
+                                                                                      as.numeric(t[row, "Lcrz.m"]),
                                                                                       as.numeric(t[row, "E.GPa"]),
                                                                                       as.numeric(t[row, "h0.mm"]),
                                                                                       list_reference_tables)$lambda_bar
     print(as.character(t[row, "lambda_bar_2"]))
   }
+
 
   for (row in 1:nrow(t)) {
     # calculate alpha_yy for check 2
@@ -1689,12 +1691,13 @@ compute_output_table <- function(
                                                                                     as.character(t[row, "member.type"]),
                                                                                     as.character(t[row, "steel.grade"]),
                                                                                     as.numeric(t[row, "k"]),
-                                                                                    as.numeric(t[row, "L.m"]),
+                                                                                    as.numeric(t[row, "Lcrz.m"]),
                                                                                     as.numeric(t[row, "E.GPa"]),
                                                                                     as.numeric(t[row, "h0.mm"]),
                                                                                     list_reference_tables)$alpha_yy
     print(as.character(t[row, "alpha_yy_2"]))
   }
+
 
   for (row in 1:nrow(t)) {
     # calculate X for check 2
@@ -1702,7 +1705,7 @@ compute_output_table <- function(
                                                                              as.character(t[row, "member.type"]),
                                                                              as.character(t[row, "steel.grade"]),
                                                                              as.numeric(t[row, "k"]),
-                                                                             as.numeric(t[row, "L.m"]),
+                                                                             as.numeric(t[row, "Lcrz.m"]),
                                                                              as.numeric(t[row, "E.GPa"]),
                                                                              as.numeric(t[row, "h0.mm"]),
                                                                              list_reference_tables)$X
@@ -1710,21 +1713,24 @@ compute_output_table <- function(
   }
 
 
+  for (row in 1:nrow(t)) {
+    # calculate N_b_Rd_Y for check 2 [kN]
+    t[row, "N_b_Rd_Y"] <- civilR::check_overall_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                                  as.character(t[row, "member.type"]),
+                                                                                  as.character(t[row, "steel.grade"]),
+                                                                                  as.numeric(t[row, "k"]),
+                                                                                  as.numeric(t[row, "Lcrz.m"]),
+                                                                                  as.numeric(t[row, "E.GPa"]),
+                                                                                  as.numeric(t[row, "h0.mm"]),
+                                                                                  list_reference_tables)$N_b_Rd_Y
+    print(as.character(t[row, "N_b_Rd_Y"]))
+  }
+
+
   #-----------------------------------#
   #            Check 3                #
   #-----------------------------------#
 
-  for (row in 1:nrow(t)) {
-    # calculate N_b_Rd_ch for check 3 [kN]
-    t[row, "N_b_Rd_ch"] <- civilR::check_local_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
-                                                                                 as.character(t[row, "member.type"]),
-                                                                                 as.character(t[row, "steel.grade"]),
-                                                                                 as.numeric(t[row, "k"]),
-                                                                                 as.numeric(t[row, "Lch.mm"]),
-                                                                                 as.numeric(t[row, "E.GPa"]),
-                                                                                 list_reference_tables)$N_b_Rd_ch
-    print(as.character(t[row, "N_b_Rd_ch"]))
-  }
 
   for (row in 1:nrow(t)) {
     # calculate fy for check 3
@@ -1799,9 +1805,36 @@ compute_output_table <- function(
   }
 
 
+  for (row in 1:nrow(t)) {
+    # calculate N_b_Rd_ch for check 3 [kN]
+    t[row, "N_b_Rd_ch"] <- civilR::check_local_buckling_resistance_about_zz_axis(as.character(t[row, "selected_member_size"]),
+                                                                                 as.character(t[row, "member.type"]),
+                                                                                 as.character(t[row, "steel.grade"]),
+                                                                                 as.numeric(t[row, "k"]),
+                                                                                 as.numeric(t[row, "Lch.mm"]),
+                                                                                 as.numeric(t[row, "E.GPa"]),
+                                                                                 list_reference_tables)$N_b_Rd_ch
+    print(as.character(t[row, "N_b_Rd_ch"]))
+  }
+
+
   #-----------------------------------#
   #            Check 4                #
   #-----------------------------------#
+
+  for (row in 1:nrow(t)) {
+    # calculate DL [kN/m]
+    # t[row, "DL"] <- round( 0.0098 * (2 * (sqrt( (as.numeric(t[row, "h0.mm"]))^2 + (as.numeric(t[row, "Lch.mm"]))^2 ) + as.numeric(t[row, "h0.mm"])) * as.numeric(t[row, "ml"]) + civilR::convert_member_dimensions_string_to_elements(as.character(t[row, "selected_member_size"]))$m * as.numeric(t[row, "Lch.mm"])), 2 )
+    t[row, "DL"] <- round( 0.0098 * (civilR::convert_member_dimensions_string_to_elements(as.character(t[row, "selected_member_size"]))$m + 46.5), 2 )
+    print(as.character(t[row, "DL"]))
+  }
+
+  # d <- sqrt( h0^2 + Lch^2 )  # length of the diagonal
+  # sw_lacing <- 2 * (d + h0) * ml_input # [kg]
+  # DL <- 0.0098 * (sw_lacing + m * Lch)
+
+  # DL <- 0.0098 * (2 * (sqrt( (as.numeric(t[row, "h0.mm"]))^2 + (as.numeric(t[row, "Lch.mm"]))^2 ) + as.numeric(t[row, "h0.mm"])) * as.numeric(t[row, "ml"]) + civilR::convert_member_dimensions_string_to_elements(as.character(t[row, "selected_member_size"]))$m * as.numeric(t[row, "Lch.mm"]))
+
 
   for (row in 1:nrow(t)) {
     # calculate combined vertical load [kN/m]
@@ -1812,6 +1845,7 @@ compute_output_table <- function(
     )
     print(as.character(t[row, "load"]))
   }
+
 
   for (row in 1:nrow(t)) {
     # calculate MEd_1st [kN.m]
@@ -1833,42 +1867,6 @@ compute_output_table <- function(
     print(as.character(t[row, "Ved"]))
   }
 
-  for (row in 1:nrow(t)) {
-    # calculate DL [kN/m]
-    # t[row, "DL"] <- round( 0.0098 * (2 * (sqrt( (as.numeric(t[row, "h0.mm"]))^2 + (as.numeric(t[row, "Lch.mm"]))^2 ) + as.numeric(t[row, "h0.mm"])) * as.numeric(t[row, "ml"]) + civilR::convert_member_dimensions_string_to_elements(as.character(t[row, "selected_member_size"]))$m * as.numeric(t[row, "Lch.mm"])), 2 )
-    t[row, "DL"] <- round( 0.0098 * (civilR::convert_member_dimensions_string_to_elements(as.character(t[row, "selected_member_size"]))$m + 0), 2 )
-    print(as.character(t[row, "DL"]))
-  }
-
-  # d <- sqrt( h0^2 + Lch^2 )  # length of the diagonal
-  # sw_lacing <- 2 * (d + h0) * ml_input # [kg]
-  # DL <- 0.0098 * (sw_lacing + m * Lch)
-
-  # DL <- 0.0098 * (2 * (sqrt( (as.numeric(t[row, "h0.mm"]))^2 + (as.numeric(t[row, "Lch.mm"]))^2 ) + as.numeric(t[row, "h0.mm"])) * as.numeric(t[row, "ml"]) + civilR::convert_member_dimensions_string_to_elements(as.character(t[row, "selected_member_size"]))$m * as.numeric(t[row, "Lch.mm"]))
-
-
-  for (row in 1:nrow(t)) {
-    # calculate N_ch_Ed [kN]
-    t[row, "N_ch_Ed"] <- civilR::max_compressive_axial_force_in_chords(as.character(t[row, "selected_member_size"]),
-                                                                       as.character(t[row, "member.type"]),
-                                                                       as.character(t[row, "steel.grade"]),
-                                                                       as.numeric(t[row, "k"]),
-                                                                       as.numeric(t[row, "L.m"]),
-                                                                       as.numeric(t[row, "n"]),
-                                                                       as.numeric(t[row, "Ad.mm2"]),
-                                                                       as.numeric(t[row, "Lch.mm"]),
-                                                                       as.numeric(t[row, "E.GPa"]),
-                                                                       as.numeric(t[row, "h0.mm"]),
-                                                                       as.numeric(t[row, "Ned"]),
-                                                                       list_reference_tables,
-                                                                       as.logical(t[row, "top.level.y.n"]),
-                                                                       as.numeric(t[row, "DL"]),
-                                                                       as.numeric(t[row, "LL.kN.m"]),
-                                                                       as.numeric(t[row, "AL.kN.m"]),
-                                                                       as.numeric(t[row, "TL"]),
-                                                                       as.numeric(t[row, "Lcry.m"]))$N_ch_Ed
-    print(as.character(t[row, "N_ch_Ed"]))
-  }
 
   for (row in 1:nrow(t)) {
     # calculate Sv
@@ -1941,6 +1939,30 @@ compute_output_table <- function(
 
 
   for (row in 1:nrow(t)) {
+    # calculate N_ch_Ed [kN]
+    t[row, "N_ch_Ed"] <- civilR::max_compressive_axial_force_in_chords(as.character(t[row, "selected_member_size"]),
+                                                                       as.character(t[row, "member.type"]),
+                                                                       as.character(t[row, "steel.grade"]),
+                                                                       as.numeric(t[row, "k"]),
+                                                                       as.numeric(t[row, "L.m"]),
+                                                                       as.numeric(t[row, "n"]),
+                                                                       as.numeric(t[row, "Ad.mm2"]),
+                                                                       as.numeric(t[row, "Lch.mm"]),
+                                                                       as.numeric(t[row, "E.GPa"]),
+                                                                       as.numeric(t[row, "h0.mm"]),
+                                                                       as.numeric(t[row, "Ned"]),
+                                                                       list_reference_tables,
+                                                                       as.logical(t[row, "top.level.y.n"]),
+                                                                       as.numeric(t[row, "DL"]),
+                                                                       as.numeric(t[row, "LL.kN.m"]),
+                                                                       as.numeric(t[row, "AL.kN.m"]),
+                                                                       as.numeric(t[row, "TL"]),
+                                                                       as.numeric(t[row, "Lcry.m"]))$N_ch_Ed
+    print(as.character(t[row, "N_ch_Ed"]))
+  }
+
+
+  for (row in 1:nrow(t)) {
     # calculate final_check [T/F]
     t[row, "final_check"] <- as.logical(
       (as.numeric(t[row, "N_ch_Ed"]) / min(as.numeric(t[row, "N_b_Rd_X"]), as.numeric(t[row, "N_b_Rd_Y"]), as.numeric(t[row, "N_b_Rd_ch"]))) < 1.0
@@ -1990,6 +2012,7 @@ compute_output_table <- function(
 #' @param LL Live load / imposed load [\eqn{kN/m}]
 #' @param AL Accidental Impact Load [\eqn{kN/m}]
 #' @param Lcry critical length about major axis [\eqn{m}]
+#' @param Lcrz critical length minor axis [\eqn{m}]
 #' @param ml Lacing weight [\eqn{kN/m}]
 #' @param strut_name Strut name
 #' @param file_name Path and file name of the output table
@@ -2023,6 +2046,7 @@ check_all_member_sizes <- function(
   LL,
   AL,
   Lcry,
+  Lcrz,
   ml,
   strut_name="strut #",
   base_file_name="tables/input/all_member_sizes_checked",
@@ -2055,6 +2079,7 @@ check_all_member_sizes <- function(
     LL = LL,
     AL = AL,
     Lcry = Lcry,
+    Lcrz = Lcrz,
     ml = ml,
 
     # Check 1
@@ -2110,7 +2135,7 @@ check_all_member_sizes <- function(
                                                                               member_type,
                                                                               steel_grade,
                                                                               k,
-                                                                              L,
+                                                                              Lcry,
                                                                               E,
                                                                               list_reference_tables)$N_b_Rd_X
     }
@@ -2121,7 +2146,7 @@ check_all_member_sizes <- function(
                                                                       member_type,
                                                                       steel_grade,
                                                                       k,
-                                                                      L,
+                                                                      Lcry,
                                                                       E,
                                                                       list_reference_tables)$fy
     }
@@ -2132,7 +2157,7 @@ check_all_member_sizes <- function(
                                                                            member_type,
                                                                            steel_grade,
                                                                            k,
-                                                                           L,
+                                                                           Lcry,
                                                                            E,
                                                                            list_reference_tables)$N_pl_Rd
     }
@@ -2143,7 +2168,7 @@ check_all_member_sizes <- function(
                                                                        member_type,
                                                                        steel_grade,
                                                                        k,
-                                                                       L,
+                                                                       Lcry,
                                                                        E,
                                                                        list_reference_tables)$Ncr
     }
@@ -2154,7 +2179,7 @@ check_all_member_sizes <- function(
                                                                               member_type,
                                                                               steel_grade,
                                                                               k,
-                                                                              L,
+                                                                              Lcry,
                                                                               E,
                                                                               list_reference_tables)$lambda_bar
     }
@@ -2165,7 +2190,7 @@ check_all_member_sizes <- function(
                                                                             member_type,
                                                                             steel_grade,
                                                                             k,
-                                                                            L,
+                                                                            Lcry,
                                                                             E,
                                                                             list_reference_tables)$alpha_yy
     }
@@ -2176,7 +2201,7 @@ check_all_member_sizes <- function(
                                                                      member_type,
                                                                      steel_grade,
                                                                      k,
-                                                                     L,
+                                                                     Lcry,
                                                                      E,
                                                                      list_reference_tables)$X
     }
@@ -2192,7 +2217,7 @@ check_all_member_sizes <- function(
                                                                           member_type,
                                                                           steel_grade,
                                                                           k,
-                                                                          L,
+                                                                          Lcrz,
                                                                           E,
                                                                           h0,
                                                                           list_reference_tables)$N_b_Rd_Y
@@ -2204,7 +2229,7 @@ check_all_member_sizes <- function(
                                                                       member_type,
                                                                       steel_grade,
                                                                       k,
-                                                                      L,
+                                                                      Lcrz,
                                                                       E,
                                                                       h0,
                                                                       list_reference_tables)$fy
@@ -2216,7 +2241,7 @@ check_all_member_sizes <- function(
                                                                            member_type,
                                                                            steel_grade,
                                                                            k,
-                                                                           L,
+                                                                           Lcrz,
                                                                            E,
                                                                            h0,
                                                                            list_reference_tables)$N_pl_Rd
@@ -2228,7 +2253,7 @@ check_all_member_sizes <- function(
                                                                         member_type,
                                                                         steel_grade,
                                                                         k,
-                                                                        L,
+                                                                        Lcrz,
                                                                         E,
                                                                         h0,
                                                                         list_reference_tables)$Ieff
@@ -2240,7 +2265,7 @@ check_all_member_sizes <- function(
                                                                        member_type,
                                                                        steel_grade,
                                                                        k,
-                                                                       L,
+                                                                       Lcrz,
                                                                        E,
                                                                        h0,
                                                                        list_reference_tables)$Ncr
@@ -2252,7 +2277,7 @@ check_all_member_sizes <- function(
                                                                               member_type,
                                                                               steel_grade,
                                                                               k,
-                                                                              L,
+                                                                              Lcrz,
                                                                               E,
                                                                               h0,
                                                                               list_reference_tables)$lambda_bar
@@ -2264,7 +2289,7 @@ check_all_member_sizes <- function(
                                                                             member_type,
                                                                             steel_grade,
                                                                             k,
-                                                                            L,
+                                                                            Lcrz,
                                                                             E,
                                                                             h0,
                                                                             list_reference_tables)$alpha_yy
@@ -2276,7 +2301,7 @@ check_all_member_sizes <- function(
                                                                      member_type,
                                                                      steel_grade,
                                                                      k,
-                                                                     L,
+                                                                     Lcrz,
                                                                      E,
                                                                      h0,
                                                                      list_reference_tables)$X
@@ -2372,8 +2397,9 @@ check_all_member_sizes <- function(
   for (i in 1:nrow(df)) {
     # calculate DL [kN/m]
     # df$DL[i] <- round( 0.0098 * (2 * (sqrt( h0^2 + Lch^2 ) + h0) * ml + civilR::convert_member_dimensions_string_to_elements(as.character(df$member.size[i]))$m * Lch), 2 )
-    df$DL[i] <- round( 0.0098 * (civilR::convert_member_dimensions_string_to_elements(as.character(df$member.size[i]))$m + 0), 2 )
+    df$DL[i] <- round( 0.0098 * (civilR::convert_member_dimensions_string_to_elements(as.character(df$member.size[i]))$m + 46.5), 2 )
   }
+
 
   for (i in 1:nrow(df)) {
     # calculate TL (kN)
