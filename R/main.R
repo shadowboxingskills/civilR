@@ -443,6 +443,8 @@ second_order_bending_moment <- function(L, Ned, Sv, Ncr, DL, LL, AL) {
 
   MEd_1 <- civilR::first_order_bending_moment( c.load, L )
 
+  Ned <- Ned * 2 # correction
+
   MEd <- ( Ned * e0 + MEd_1 ) / ( 1 - (Ned / Ncr) - (Ned / Sv) )
 
   return( round(MEd) )
@@ -1192,7 +1194,7 @@ max_compressive_axial_force_in_chords <- function(trial_member_size, member_type
   MEd <- civilR::second_order_bending_moment(L, Ned, Sv, Ncr, DL, LL, AL)
 
   # Output maximum compressive axial force in the chords
-  N_ch_Ed <- round( (0.5 * Ned) + (MEd * h0 * l$A) / (2*Ieff) )
+  N_ch_Ed <- round( (1.0 * Ned) + (MEd * h0 * l$A) / (2*Ieff) ) # 0.5 -> 1.0
 
   return(
     list("N_ch_Ed" = round(N_ch_Ed),
@@ -2029,28 +2031,29 @@ compute_output_table <- function(
 #' }
 #'
 check_all_member_sizes <- function(
-  steel_grade="S355",
-  member_type="UB",
-  k=0.8,
-  L=12.5,
-  E=210,
-  h0=1000,
-  Lch=1000,
-  Ad=1140,
-  n=2,
-  isTopLevel=T,
-  alpha_T=0.000012,
-  delta_T=10,
-  k_T=0.8,
-  Ned_no_TL=6987,
+  steel_grade,
+  member_type,
+  k,
+  L,
+  E,
+  h0,
+  Lch,
+  Ad,
+  n,
+  isTopLevel,
+  alpha_T,
+  delta_T,
+  k_T,
+  Ned_no_TL,
   LL,
   AL,
   Lcry,
   Lcrz,
   ml,
-  strut_name="strut #",
-  base_file_name="tables/input/all_member_sizes_checked",
-  export_xlsx=T)
+  strut_name, #"strut #",
+  base_file_name, #="tables/input/all_member_sizes_checked",
+  export_xlsx #=T
+  )
   {
   list_reference_tables <- civilR::import_reference_BlueBook_tables()
 
@@ -2520,7 +2523,8 @@ check_all_member_sizes <- function(
     df$final_check[i] <- as.logical(
       (as.numeric(df$N_ch_Ed[i]) / min(as.numeric(df$N_b_Rd_X[i]), as.numeric(df$N_b_Rd_Y[i]), as.numeric(df$N_b_Rd_ch[i]))) < 1.0
     )
-    }
+  }
+  df$final_check[1] <- F # skip first value (lightest strut)
 
   # export table as XLSX format
   if ( export_xlsx ) {

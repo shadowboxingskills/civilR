@@ -4,13 +4,9 @@
 \alias{check_all_member_sizes}
 \title{Generate a table with all member sizes and apply all checks on each of them}
 \usage{
-check_all_member_sizes(steel_grade = "S355", member_type = "UB",
-  k = 0.8, L = 12.5, E = 210, h0 = 1000, Lch = 1000, Ad = 1140,
-  n = 2, isTopLevel = T, alpha_T = 1.2e-05, delta_T = 10,
-  k_T = 0.8, Ned_no_TL = 6987, LL, AL, Lcry, Lcrz, ml,
-  strut_name = "strut #",
-  base_file_name = "tables/input/all_member_sizes_checked",
-  export_xlsx = T)
+check_all_member_sizes(steel_grade, member_type, k, L, E, h0, Lch, Ad, n,
+  isTopLevel, alpha_T, delta_T, k_T, Ned_no_TL, LL, AL, Lcry, Lcrz, ml,
+  strut_name, base_file_name, export_xlsx)
 }
 \arguments{
 \item{steel_grade}{steel_grade [\eqn{N/{mm}^2}], categorical: 'S355' or 'S275'}
