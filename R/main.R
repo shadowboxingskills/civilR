@@ -858,7 +858,7 @@ all_member_sizes <- function(steel_grade, member_type, list_reference_tables) {
   t$m <- as.numeric(t$m)
 
   # arrange the table by ascending mass
-  t <- dplyr::arrange(t, m)
+  t <- dplyr::arrange(t, m, h, b)
 
   # convert mass back to character
   t$m <- as.character(t$m)
@@ -1194,7 +1194,7 @@ max_compressive_axial_force_in_chords <- function(trial_member_size, member_type
   MEd <- civilR::second_order_bending_moment(L, Ned, Sv, Ncr, DL, LL, AL)
 
   # Output maximum compressive axial force in the chords
-  N_ch_Ed <- round( (1.0 * Ned) + (MEd * h0 * l$A) / (2*Ieff) ) # 0.5 -> 1.0
+  N_ch_Ed <- round( (0.5 * Ned) + (MEd * h0 * l$A) / (2*Ieff) )
 
   return(
     list("N_ch_Ed" = round(N_ch_Ed),
@@ -1228,7 +1228,7 @@ max_compressive_axial_force_in_chords <- function(trial_member_size, member_type
 combined_vertical_load <- function(DL, LL, AL) {
   # DL=2.5; LL=1; AL=50
 
-  ULS <- 1.35 * DL + 1.5 * LL
+  ULS <- 1.35 * DL + 1.5 * LL # 1.05
   ALS <- 1.0 * DL + 0.7 * LL + 1.0 * AL
 
   combined_vertical_load <- round( max(ULS, ALS) )
@@ -1285,9 +1285,16 @@ read_input_table <- function(file_name="tables/input/trial1_kotik.xlsx") {
   t$steel.grade <- paste0( 'S', t$steel.grade )
   t$top.level.y.n <- (t$top.level.y.n == "y")
 
+  # t$Ned_no_TL.kN <- ifelse( t$theta.deg==90,
+  #                           round( t$Ned_no_TL.kN * 2/3 ),
+  #                           round( t$Ned_no_TL.kN * 1/2 * cos(t$theta.deg * pi / 180) )
+  # )
+
+  t$AL.kN.m <- 0 # Accidental Load not factored in
+
   t$Ned_no_TL.kN <- ifelse( t$theta.deg==90,
-                            round( t$Ned_no_TL.kN * 2/3 ),
-                            round( t$Ned_no_TL.kN * 1/2 * cos(t$theta.deg * pi / 180) )
+                            round( t$Ned_no_TL.kN * 4/3 ),
+                            round( t$Ned_no_TL.kN / cos(t$theta.deg * pi / 180) )
   )
 
   t$delta_T <- 10
@@ -2545,9 +2552,10 @@ check_all_member_sizes <- function(
 
   # extract optimal member size
   df_optimal <- subset(df, final_check==T)
-  optimal_member_size <- as.character( df_optimal$member.size[1] )
-  optimal_TL <- as.character( df_optimal$TL[1] )
-  optimal_Ned <- as.character( df_optimal$Ned[1] )
+  strut_lightest_number <- 1 # >1 to skip lightest one (as safety factor)
+  optimal_member_size <- as.character( df_optimal$member.size[strut_lightest_number] )
+  optimal_TL <- as.character( df_optimal$TL[strut_lightest_number] )
+  optimal_Ned <- as.character( df_optimal$Ned[strut_lightest_number] )
 
   return( list(
     "df"=df,
