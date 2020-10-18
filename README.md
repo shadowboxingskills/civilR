@@ -10,7 +10,11 @@
 
 # CivilR
 
-(Open Source Civil Engineering Calculations)
+This is an initiative to start consolidating civil engineering calculation methods.<br>
+The field is obviously broad and this repository only scratches the surface of what could be put together, collectively.<br>
+The ambition here is to provide a starting point - focusing specifically on struts mesh design for excavations.<br>
+Let's start sharing more and stop reinventing the wheel everytime a new project starts.<br>
+Your source code contributions are very welcome!
 
 ## Table of Contents
 
