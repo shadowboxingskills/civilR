@@ -1,6 +1,10 @@
-<p align="center"><img src="CivilR_logo.png" /></p>
+<p align="center">
+  <a href="https://valuegrid.io/pages/civim.html" target="_blank">
+    <img border="0" alt="CivilR" src="CivilR_logo.png" width="auto" height="120">
+  </a>
+</p>
 
-<h1 align="center"> Open Source Civil Engineering Calculations </h1>
+<h1 align="center">Open Source Civil Engineering Calculations</h1>
 
 <hr/>
 
