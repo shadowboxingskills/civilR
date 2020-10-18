@@ -18,20 +18,20 @@ A template of README best practices to make your README simple to understand and
 - [Usage](#usage)
 - [Support](#support)
 - [Contributing](#contributing)
+- [License](#license)
 
 ## Installation
 
-Download to your project directory, add `README.md`, and commit:
+```r
+# install.packages("devtools")
 
-```sh
-curl -LO http://git.io/Xy0Chg
-git add README.md
-git commit -m "Use README Boilerplate"
+library(devtools)
+devtools::install_github("shadowboxingskills/civilR")
+
+library(civilR)
 ```
 
 ## Usage
-
-Replace the contents of `README.md` with your project's:
 
 - Name
 - Description
@@ -40,8 +40,6 @@ Replace the contents of `README.md` with your project's:
 - Support instructions
 - Contributing instructions
 - Licence
-
-Feel free to remove any sections that aren't applicable to your project.
 
 ## Support
 
