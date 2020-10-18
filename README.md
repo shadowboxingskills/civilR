@@ -10,7 +10,7 @@
 
 # CivilR
 
-A template of README best practices to make your README simple to understand and easy to use. 
+(Open Source Civil Engineering Calculations)
 
 ## Table of Contents
 
@@ -33,13 +33,8 @@ library(civilR)
 
 ## Usage
 
-- Name
-- Description
-- Installation instructions
-- Usage instructions
-- Support instructions
-- Contributing instructions
-- Licence
+Please check the <a href="https://github.com/shadowboxingskills/civilR/blob/master/doc/civilR_0.1.0.pdf" target="_blank">documentation</a> for currently available methods, description and usage. 
+
 
 ## Support
 

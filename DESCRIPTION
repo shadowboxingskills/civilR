@@ -3,7 +3,7 @@ Type: Package
 Title: Civil Engineering R package
 Version: 0.2.0
 Author: Alena Fournier-Carrie & Marc Fournier-Carrie
-Maintainer: Marc Fournier-Carrie <marc@shadowboxingskills.com>
+Maintainer: Marc Fournier-Carrie <marc@valuegrid.io>
 Description: Civil Engineering R package
 License: MIT + file LICENSE
 Encoding: UTF-8
