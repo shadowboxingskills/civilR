@@ -2,8 +2,6 @@
 
 <h1 align="center"> Open Source Civil Engineering Calculations </h1>
 
-<p align="center"> Intro - xxx </p>
-
 <hr/>
 
 # CivilR
