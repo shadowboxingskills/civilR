@@ -4,8 +4,15 @@
 \alias{check_overall_buckling_resistance_about_yy_axis}
 \title{Perform check #1, calculating the overall buckling resistance of member about major \eqn{y-y} axis}
 \usage{
-check_overall_buckling_resistance_about_yy_axis(trial_member_size,
-  member_type, steel_grade, k, L, E, list_reference_tables)
+check_overall_buckling_resistance_about_yy_axis(
+  trial_member_size,
+  member_type,
+  steel_grade,
+  k,
+  L,
+  E,
+  list_reference_tables
+)
 }
 \arguments{
 \item{trial_member_size}{Trial member size}

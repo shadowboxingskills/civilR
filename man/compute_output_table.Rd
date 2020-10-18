@@ -4,9 +4,10 @@
 \alias{compute_output_table}
 \title{Export output table to Excel file}
 \usage{
-
-  compute_output_table(file_name = "tables/input/output_processed_table.xlsx",
-  export_xlsx = T)
+compute_output_table(
+  file_name = "tables/input/output_processed_table.xlsx",
+  export_xlsx = T
+)
 }
 \arguments{
 \item{file_name}{Path and file name of the output table}

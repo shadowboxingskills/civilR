@@ -4,9 +4,16 @@
 \alias{axial_compression_force_given_member}
 \title{Calculate the axial compression force for a given member size}
 \usage{
-axial_compression_force_given_member(isTopLevel = T, Ned_no_TL = 6987,
-  member_size, alpha_T = 1.2e-05, delta_T = 10, k_T = 0.8, E = 210,
-  list_reference_tables)
+axial_compression_force_given_member(
+  isTopLevel = T,
+  Ned_no_TL = 6987,
+  member_size,
+  alpha_T = 1.2e-05,
+  delta_T = 10,
+  k_T = 0.8,
+  E = 210,
+  list_reference_tables
+)
 }
 \arguments{
 \item{isTopLevel}{Is member located at top level? [boolean]}

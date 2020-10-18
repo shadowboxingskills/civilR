@@ -3,7 +3,6 @@
 \docType{package}
 \name{civilR}
 \alias{civilR}
-\alias{civilR-package}
 \title{Package civilR}
 \description{
 Civil Engineering package.

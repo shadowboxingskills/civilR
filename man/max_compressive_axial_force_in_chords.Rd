@@ -4,9 +4,26 @@
 \alias{max_compressive_axial_force_in_chords}
 \title{Maximum compressive axial force in the chords}
 \usage{
-max_compressive_axial_force_in_chords(trial_member_size, member_type,
-  steel_grade, k, L, n, Ad, Lch, E, h0, Ned, list_reference_tables,
-  isTopLevel, DL, LL, AL, TL, Lcry)
+max_compressive_axial_force_in_chords(
+  trial_member_size,
+  member_type,
+  steel_grade,
+  k,
+  L,
+  n,
+  Ad,
+  Lch,
+  E,
+  h0,
+  Ned,
+  list_reference_tables,
+  isTopLevel,
+  DL,
+  LL,
+  AL,
+  TL,
+  Lcry
+)
 }
 \arguments{
 \item{trial_member_size}{Trial member size}
@@ -55,4 +72,7 @@ max_compressive_axial_force_in_chords(trial_member_size, member_type,
 }
 \description{
 Determine maximum compressive axial force in the chords at mid-length of the strut, \eqn{N_{ch,E_d}} [\eqn{kN}]
+}
+\details{
+
 }

@@ -4,8 +4,7 @@
 \alias{temperature_load}
 \title{Calculate the temperature load}
 \usage{
-temperature_load(alpha_T = 1.2e-05, delta_T = 10, k_T = 0.8,
-  E = 210, A = 94.4)
+temperature_load(alpha_T = 1.2e-05, delta_T = 10, k_T = 0.8, E = 210, A = 94.4)
 }
 \arguments{
 \item{alpha_T}{Thermal coefficient of expansion [\eqn{degC}]}

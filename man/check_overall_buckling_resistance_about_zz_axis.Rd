@@ -4,8 +4,16 @@
 \alias{check_overall_buckling_resistance_about_zz_axis}
 \title{Perform check #2, calculating the overall buckling resistance of struts about major \eqn{z-z} axis}
 \usage{
-check_overall_buckling_resistance_about_zz_axis(trial_member_size,
-  member_type, steel_grade, k, L, E, h0, list_reference_tables)
+check_overall_buckling_resistance_about_zz_axis(
+  trial_member_size,
+  member_type,
+  steel_grade,
+  k,
+  L,
+  E,
+  h0,
+  list_reference_tables
+)
 }
 \arguments{
 \item{trial_member_size}{Trial member size}

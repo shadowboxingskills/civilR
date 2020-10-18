@@ -4,8 +4,14 @@
 \alias{trial_member_size}
 \title{Determine member size}
 \usage{
-trial_member_size(Lcry, Lcrz, Ned, steel_grade, member_type,
-  list_reference_tables)
+trial_member_size(
+  Lcry,
+  Lcrz,
+  Ned,
+  steel_grade,
+  member_type,
+  list_reference_tables
+)
 }
 \arguments{
 \item{Lcry}{critical length major axis [\eqn{m}]}
